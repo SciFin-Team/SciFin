@@ -1,6 +1,7 @@
 # Created on 2020/7/15
 
 # Packages
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -98,5 +99,32 @@ class timeseries:
         elif start!=None and end!=None:
             ts_max = self.data[start:end].values.max()
         return ts_max
+    
+    
+    def autocorrelation(self, lag=1, start=None, end=None):
+        """
+        Method returning the autocorrelation of the time series for a specified lag.
+        We use the function $\rho_l = \frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])} where $x_t$ is the time series at time t. Cov denotes the covariance and Var the variance. We also use the properties $\rho_0 = 1$ and $\rho_{-l} = \rho_l$ (choosing LaTeX notations here).
+        """
+        l = abs(lag)
+        
+        # Trivial case
+        if l==0:
+            return 1
+        
+        # Preparing data frame
+        if start==None and end==None:
+            data = self.data
+        elif start==None and end!=None:
+            data = self.data[:end]
+        elif start!=None and end==None:
+            data = self.data[start:]
+        elif start!=None and end!=None:
+            data = self.data[start:end]
+        
+        # General case
+        Numerator = np.mean((data - data.mean()) * (data.shift(l) - data.shift(l).mean()))
+        Denominator = data.std() * data.shift(l).std()
+        return Numerator / Denominator
     
     
