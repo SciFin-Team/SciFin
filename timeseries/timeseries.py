@@ -141,6 +141,14 @@ class timeseries:
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
         plt.bar(x_range, ac, color='k')
-        title = "Autocorrelation from " + str(self.start)[:10] + " to " + str(self.end)[:10] + " for lags = [" + str(lag_min) + " , " + str(lag_max) + "]"
+        if start==None:
+            s = str(self.start)[:10]
+        else:
+            s = start
+        if end==None:
+            e = str(self.end)[:10]
+        else:
+            s = end
+        title = "Autocorrelation from " + s + " to " + e + " for lags = [" + str(lag_min) + "," + str(lag_max) + "]"
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
         plt.show()
