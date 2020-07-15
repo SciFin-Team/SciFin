@@ -123,8 +123,24 @@ class timeseries:
             data = self.data[start:end]
         
         # General case
+        assert(l < data.shape[0])
         Numerator = np.mean((data - data.mean()) * (data.shift(l) - data.shift(l).mean()))
         Denominator = data.std() * data.shift(l).std()
         return Numerator / Denominator
     
     
+    def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None, figsize=(8,4), dpi=100):
+        """
+        Method making use of the autocorrelation method in order to return a plot of the autocorrelation againts the lag values.
+        """
+        
+        assert(lag_max>lag_min)
+        x_range = list(range(lag_min, lag_max+1, 1))
+        ac = [self.autocorrelation(lag=x, start=start, end=end) for x in x_range]
+        
+        # Plotting
+        plt.figure(figsize=figsize, dpi=dpi)
+        plt.bar(x_range, ac, color='k')
+        title = "Autocorrelation from " + str(self.start)[:10] + " to " + str(self.end)[:10] + " for lags = [" + str(lag_min) + " , " + str(lag_max) + "]"
+        plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
+        plt.show()
