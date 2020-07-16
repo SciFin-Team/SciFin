@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+import scipy.stats as stats
+
 
 
 # CLASS timeseries
@@ -94,8 +96,7 @@ class timeseries:
     
     def hist_avg(self, start=None, end=None):
         """
-        Method that returns the historical average of the time series between two dates.
-        Default is for the whole series.
+        Method that returns the historical average of the time series between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         avg = data.values.mean()
@@ -104,12 +105,29 @@ class timeseries:
     
     def hist_std(self, start=None, end=None):
         """
-        Method that returns the historical standard deviation of the time series between two dates.
-        Default is for the whole series.
+        Method that returns the historical standard deviation of the time series between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         std = data.values.std()
         return std
+    
+    
+    def hist_skew(self, start=None, end=None):
+        """
+        Method that returns the historical skew of the time series between two dates (default is the whole series).
+        """
+        data = self.__specify_data(start, end)
+        skew = stats.skew(data.values)[0]
+        return skew
+    
+    
+    def hist_kurtosis(self, start=None, end=None):
+        """
+        Method that returns the historical (Fisher) kurtosis of the time series between two dates (default is the whole series).
+        """
+        data = self.__specify_data(start, end)
+        kurt = stats.kurtosis(data.values)[0]
+        return kurt
     
     
     def min(self, start=None, end=None):
