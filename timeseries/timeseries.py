@@ -222,6 +222,14 @@ class timeseries:
         new_ts = timeseries(new_df)
         return new_ts
     
-
-        
+    
+    def linear_combination(self, other_timeseries, factor1=1, factor2=1):
+        """
+        Method that adds a timeseries to the current one according to linear combination: factor1 * current_ts + factor2 * other_timeseries.
+        """
+        new_df = factor1 * self.data + factor2 * other_timeseries.data
+        new_ts = timeseries(new_df)
+        return new_ts
+    
+    
     
