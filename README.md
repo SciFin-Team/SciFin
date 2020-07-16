@@ -3,8 +3,7 @@ SciFin is a python package for Science &amp; Finance.
 
 ## Summary
 
-The SciFin Python package is designed to gather and develop methods for scientific studies and financial services. Its development goal is to offer a panel of tools that can be derived into more specific functions suitable for both research and business applications. Its purpose is not only to bring these fields together, but also to increase 
-interoperability between them, helping science turn into business and finance get new insights from science.
+The SciFin Python package is designed to gather and develop methods for scientific studies and financial services. It originates from the observation that numerous methods developed in scientific fields (such as mathematics, physics, biology and climate sciences) have direct applicability in finance and that, conversely, multiple methods developed in finance can benefit science. The development goal of this package is to offer a toolbox that can be used to derive specific applications both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science.
 
 
 ## Contents
@@ -15,5 +14,12 @@ The current development is focused on the following topics:
 - Genetic algorithms
 - Classification techniques
 - Neural networks
+
+
+## Contact
+
+If you wish to contribute, please contact me through GitHub.
+
+
 
 
