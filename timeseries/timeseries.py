@@ -2,6 +2,7 @@
 
 # Packages
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -233,3 +234,30 @@ class timeseries:
     
     
     
+    ### Fitting methods ###
+    
+    def rolling_avg(self, pts=1):
+        """
+        Method that transforms the time series into a rolling window average time series.
+        """
+        new_values = [self.data[x-pts+1:x].mean() for x in range(pts-1, self.nvalues, 1)]
+        new_df = pd.DataFrame(index=self.data.index[pts-1:self.nvalues], data=new_values)
+        new_ts = timeseries(new_df)
+        return new_ts
+    
+    
+    
+    
+    
+
+
+def multi_plot(timeseries, figsize=(12,5), dpi=100):
+    """
+    Function that plots multiple time series together.
+    """
+    
+    plt.figure(figsize=figsize, dpi=dpi)
+    for i in range(len(timeseries)):
+        plt.plot(timeseries[i].data.index, timeseries[i].data.values)
+    plt.plot()
+        
