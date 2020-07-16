@@ -9,11 +9,11 @@ The SciFin Python package is designed to gather and develop methods for scientif
 ## Contents
 
 The current development is focused on the following topics:
-- Time series analysis
-- Monte Carlo simulations
-- Genetic algorithms
-- Classification techniques
-- Neural networks
+- Time series analysis (module `timeseries`)
+- Monte Carlo simulations (module `montecarlo`)
+- Genetic algorithms (module `geneticalg`)
+- Classification techniques (module `classifier`)
+- Neural networks (module `neuralnets`)
 
 
 ## Contact
