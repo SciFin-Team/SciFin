@@ -24,9 +24,11 @@ class timeseries:
         self.nvalues = df.shape[0]
     
     
+    ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
+    
     def simple_plot(self, figsize=(12,5), dpi=100):
         """
-        Simple function to plot the time series.
+        Simple method to plot the time series.
 
         Arguments:
         - figsize: size of the figure as tuple of 2 integers.
@@ -38,6 +40,40 @@ class timeseries:
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
     
+    
+    def distribution(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
+        """
+        Method that plots the distribution of values between two dates.
+        """
+        
+        # Preparing data frame
+        if start==None and end==None:
+            data = self.data
+        elif start==None and end!=None:
+            data = self.data[:end]
+        elif start!=None and end==None:
+            data = self.data[start:]
+        elif start!=None and end!=None:
+            data = self.data[start:end]
+            
+        # Plotting its distribution of values
+        plt.figure(figsize=figsize, dpi=dpi)
+        data.hist(bins=bins)
+        if start==None:
+            s = str(self.start)[:10]
+        else:
+            s = start
+        if end==None:
+            e = str(self.end)[:10]
+        else:
+            e = end
+        title = "Distribution of values between " + s + " and " + e
+        plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
+        plt.show()
+        
+    
+    
+    ### SIMPLE DATA EXTRACTION ON THE TIME SERIES ###
     
     def hist_avg(self, start=None, end=None):
         """
@@ -101,6 +137,9 @@ class timeseries:
         return ts_max
     
     
+    
+    ### AUTOCORRELATION COMPUTATION ###
+    
     def autocorrelation(self, lag=1, start=None, end=None):
         """
         Method returning the autocorrelation of the time series for a specified lag.
@@ -148,7 +187,14 @@ class timeseries:
         if end==None:
             e = str(self.end)[:10]
         else:
-            s = end
+            e = end
         title = "Autocorrelation from " + s + " to " + e + " for lags = [" + str(lag_min) + "," + str(lag_max) + "]"
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
         plt.show()
+        
+    
+    
+    ### SIMPLE TRANSFORMATION OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
+    
+#    def trim(self, new_start=None, new_end=None):
+        
