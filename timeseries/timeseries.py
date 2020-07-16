@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+
 # CLASS timeseries
 class timeseries:
     """
@@ -24,6 +25,22 @@ class timeseries:
         self.end = df.index[-1]
         self.nvalues = df.shape[0]
     
+    
+    def __specify_data(self, start, end):
+        """
+        Private method that returns the appropriate data according to user's specifying or not the start and end dates.
+        """
+        # Preparing data frame
+        if start==None and end==None:
+            data = self.data
+        elif start==None and end!=None:
+            data = self.data[:end]
+        elif start!=None and end==None:
+            data = self.data[start:]
+        elif start!=None and end!=None:
+            data = self.data[start:end]
+        return data
+        
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
     
@@ -48,14 +65,7 @@ class timeseries:
         """
         
         # Preparing data frame
-        if start==None and end==None:
-            data = self.data
-        elif start==None and end!=None:
-            data = self.data[:end]
-        elif start!=None and end==None:
-            data = self.data[start:]
-        elif start!=None and end!=None:
-            data = self.data[start:end]
+        data = self.__specify_data(start, end)
             
         # Plotting its distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
@@ -81,14 +91,8 @@ class timeseries:
         Method that returns the historical average of the time series between two dates.
         Default is for the whole series.
         """
-        if start==None and end==None:
-            avg = self.data.values.mean()
-        elif start==None and end!=None:
-            avg = self.data[:end].values.mean()
-        elif start!=None and end==None:
-            avg = self.data[start:].values.mean()
-        elif start!=None and end!=None:
-            avg = self.data[start:end].values.mean()
+        data = self.__specify_data(start, end)
+        avg = data.values.mean()
         return avg
     
     
@@ -97,14 +101,8 @@ class timeseries:
         Method that returns the historical standard deviation of the time series between two dates.
         Default is for the whole series.
         """
-        if start==None and end==None:
-            std = self.data.values.std()
-        elif start==None and end!=None:
-            std = self.data[:end].values.std()
-        elif start!=None and end==None:
-            std = self.data[start:].values.std()
-        elif start!=None and end!=None:
-            std = self.data[start:end].values.std()
+        data = self.__specify_data(start, end)
+        std = data.values.std()
         return std
     
     
@@ -112,14 +110,8 @@ class timeseries:
         """
         Method that returns the minimum of the series.
         """
-        if start==None and end==None:
-            ts_min = self.data.values.min()
-        elif start==None and end!=None:
-            ts_min = self.data[:end].values.min()
-        elif start!=None and end==None:
-            ts_min = self.data[start:].values.min()
-        elif start!=None and end!=None:
-            ts_min = self.data[start:end].values.min()
+        data = self.__specify_data(start, end)
+        ts_min = data.values.min()
         return ts_min
     
     
@@ -127,16 +119,21 @@ class timeseries:
         """
         Method that returns the maximum of the series.
         """
-        if start==None and end==None:
-            ts_max = self.data.values.max()
-        elif start==None and end!=None:
-            ts_max = self.data[:end].values.max()
-        elif start!=None and end==None:
-            ts_max = self.data[start:].values.max()
-        elif start!=None and end!=None:
-            ts_max = self.data[start:end].values.max()
+        data = self.__specify_data(start, end)
+        ts_max = data.values.max()
         return ts_max
     
+    
+    def percent_change(self, start=None, end=None):
+        """
+        Method that returns the percent change of the series.
+        """
+        # Preparing data frame
+        data = self.__specify_data(start, end)
+        new_data = data.pct_change()
+        new_ts = timeseries(new_data)
+        return new_ts
+        
     
     
     ### AUTOCORRELATION COMPUTATION ###
