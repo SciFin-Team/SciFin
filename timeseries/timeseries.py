@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from datetime import datetime
 
 
 # CLASS timeseries
@@ -53,7 +53,7 @@ class timeseries:
         - dpi: dots-per-inch definition of the figure.
         """
         plt.figure(figsize=figsize, dpi=dpi)
-        plt.plot(self.data.index, self.data.value, color='k')
+        plt.plot(self.data.index, self.data.values, color='k')
         title = "Time series from " + str(self.start)[:10] + " to " + str(self.end)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
@@ -150,14 +150,7 @@ class timeseries:
             return 1
         
         # Preparing data frame
-        if start==None and end==None:
-            data = self.data
-        elif start==None and end!=None:
-            data = self.data[:end]
-        elif start!=None and end==None:
-            data = self.data[start:]
-        elif start!=None and end!=None:
-            data = self.data[start:end]
+        data = self.__specify_data(start, end)
         
         # General case
         assert(l < data.shape[0])
@@ -243,11 +236,27 @@ class timeseries:
         return new_ts
     
     
-    
-    
-    
+    def polyfit(self, order=1, start=None, end=None):
+        """
+        Method that provides a polynomial fit of the time series.
+        """
+        data = self.__specify_data(start, end)
+        new_index = [datetime.timestamp(x) for x in data.index]
+        new_values = [data.values.tolist()[x][0] for x in range(len(data))]
+        fit_formula = np.polyfit(new_index, new_values, deg=order)
+        model = np.poly1d(fit_formula)
+        print("Evaluated model: \n", model)
+        yfit = [model(x) for x in new_index]
+        assert(len(data.index)==len(yfit))
+        new_df = pd.DataFrame(index=data.index, data=yfit)
+        new_ts = timeseries(new_df)
+        return new_ts
 
 
+
+### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
+    
+    
 def multi_plot(timeseries, figsize=(12,5), dpi=100):
     """
     Function that plots multiple time series together.
