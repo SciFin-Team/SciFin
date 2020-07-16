@@ -194,7 +194,34 @@ class timeseries:
         
     
     
-    ### SIMPLE TRANSFORMATION OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
+    ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
     
-#    def trim(self, new_start=None, new_end=None):
+    def trim(self, new_start, new_end):
+        """
+        Method that trims the time series to the desired dates and send back a new time series.
+        """
+        new_df = self.data[new_start:new_end]
+        new_ts = timeseries(new_df)
+        return new_ts
+    
+    
+    def add_cst(self, cst=0):
+        """
+        Method that adds a constant to the time series.
+        """
+        new_df = self.data + cst
+        new_ts = timeseries(new_df)
+        return new_ts
+    
+    
+    def mult_by_cst(self, cst=1):
+        """
+        Method that multiplies the time series by a constant.
+        """
+        new_df = self.data * cst
+        new_ts = timeseries(new_df)
+        return new_ts
+    
+
         
+    
