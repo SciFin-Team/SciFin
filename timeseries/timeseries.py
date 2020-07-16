@@ -40,7 +40,20 @@ class timeseries:
         elif start!=None and end!=None:
             data = self.data[start:end]
         return data
-        
+    
+    
+    def __start_end_names(self, start, end):
+        if start==None:
+            s = str(self.start)[:10]
+        else:
+            s = start
+        if end==None:
+            e = str(self.end)[:10]
+        else:
+            e = end
+        return s,e
+    
+    
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
     
@@ -70,14 +83,7 @@ class timeseries:
         # Plotting its distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
         data.hist(bins=bins)
-        if start==None:
-            s = str(self.start)[:10]
-        else:
-            s = start
-        if end==None:
-            e = str(self.end)[:10]
-        else:
-            e = end
+        s,e = self.__start_end_names(start, end)
         title = "Distribution of values between " + s + " and " + e
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
         plt.show()
@@ -171,14 +177,7 @@ class timeseries:
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
         plt.bar(x_range, ac, color='k')
-        if start==None:
-            s = str(self.start)[:10]
-        else:
-            s = start
-        if end==None:
-            e = str(self.end)[:10]
-        else:
-            e = end
+        s,e = self.__start_end_names(start, end)
         title = "Autocorrelation from " + s + " to " + e + " for lags = [" + str(lag_min) + "," + str(lag_max) + "]"
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
         plt.show()
@@ -263,7 +262,15 @@ def multi_plot(timeseries, figsize=(12,5), dpi=100):
     """
     
     plt.figure(figsize=figsize, dpi=dpi)
+    min_date = timeseries[0].data.index[0]
+    max_date = timeseries[0].data.index[-1]
     for i in range(len(timeseries)):
+        if timeseries[i].data.index[0] < min_date:
+            min_date = timeseries[i].data.index[0]
+        if timeseries[i].data.index[-1] > max_date:
+            max_date = timeseries[i].data.index[-1]
         plt.plot(timeseries[i].data.index, timeseries[i].data.values)
-    plt.plot()
+    title = "Multiplot of time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
+    plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+    plt.show()
         
