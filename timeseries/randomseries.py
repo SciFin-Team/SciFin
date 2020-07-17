@@ -11,7 +11,7 @@ import timeseries.timeseries as ts
 
 def AutoRegressive(start_date, end_date, frequency, start_values, coeffs, order, sigma):
     """
-    Function generating a time series from the AutoRegressive (AR) model of an arbitrary order P.
+    Function generating a time series from the Auto-Regressive (AR) model of an arbitrary order P.
     The model is of the form: x_t = coeff_0 + coeff_1 * x_{t-1} + ... + coeff_P * x_{t-P} + eps_t
     where eps_t is the white noise with standard deviation sigma.
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
@@ -32,10 +32,9 @@ def AutoRegressive(start_date, end_date, frequency, start_values, coeffs, order,
     for t_ini in range(P):
         data_values[t_ini] = start_values[t_ini]
     for t in range(P,T,1):
-        data_values[t] = coeffs[0]
+        data_values[t] = coeffs[0] + eps[t]
         for p in range(1,P+1,1):
             data_values[t] += coeffs[p] * data_values[t-p]
-        data_values[t] += eps[t]
     
     # Computing theoretical expectation value
     SumCoeff1toP = sum(coeffs) - coeffs[0]
@@ -101,7 +100,7 @@ def DriftRandomWalk(start_date, end_date, frequency, start_value, drift, sigma):
 
 def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     """
-    Function generating a time series from the MovingAverage (MA) model of an arbitrary order Q.
+    Function generating a time series from the Moving Average (MA) model of an arbitrary order Q.
     The model is of the form: x_t = coeff_0 + eps_t + coeff_1 * eps_{t-1} + ... + coeff_Q * eps_{t-Q}
     where {eps_t} is the white noise series with standard deviation sigma.
     We don't need to impose any initial values for {x_t} are imposed directly from {eps_t}.
@@ -125,7 +124,7 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
         data_values[t] = coeffs[0] + eps[t]
         for q in range(1,Q+1,1):
             if t-q >= 0:
-                data_values[t] += coeffs[q] * eps[t-q]
+                data_values[t] -= coeffs[q] * eps[t-q]
     
     # Computing theoretical values
     V = 1.
@@ -142,3 +141,44 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     return rs
 
 
+
+def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
+    """
+    Function generating a time series from the Auto-Regressive Moving Average (ARMA) model of orders (P,Q).
+    The model is of the form: x_t = cst + Sum_{i=1}^P ARcoeffs_i * eps_{t-i} + eps_t + Sum_{j=1}^Q MAcoeffs_j * eps_{t-j}
+    where {eps_t} is the white noise series with standard deviation sigma.
+    Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
+    """
+    assert(len(ARcoeffs)==ARorder)
+    assert(len(MAcoeffs)==MAorder)
+    assert(len(start_values)==ARorder)
+    P = ARorder
+    Q = MAorder
+    
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generating the white noise
+    eps = np.random.normal(loc=0., scale=sigma, size=T)
+    
+    # Generating the random series
+    data_values = [0.] * T
+    # Taking care of {x_0, x_1, ..., x_P}
+    for t_ini in range(P):
+        data_values[t_ini] = start_values[t_ini]
+    # Taking care of the rest
+    for t in range(P,T,1):
+        data_values[t] = cst + eps[t]
+        for p in range(P):
+            data_values[t] += ARcoeffs[p] * data_values[t-p]
+        for q in range(Q):
+            if t-q-1 >= 0:
+                data_values[t] -= MAcoeffs[q] * data_values[t-q-1]  # Note: it is t-q-1 instead of t-q (as in MovingAverage)
+                                                                    # simply because the "zero-coefficient" is now called cst
+                                                                    # and not included in list of coeffs.
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=data_values)
+    rs = ts.timeseries(df)
+    return rs
