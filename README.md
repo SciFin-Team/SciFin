@@ -19,7 +19,9 @@ Other topics will later follow.
 
 ## Contact
 
-If you wish to contribute, please contact me through GitHub.
+- If you have comments or suggestions, you can reach Fabien Nugier on [LinkedIn](https://www.linkedin.com/in/fabien-nugier/).
+- If you wish to contribute, please contact me through GitHub.
+
 
 
 
