@@ -34,6 +34,11 @@ def AutoRegressive(start_date, end_date, frequency, start_values, coeffs, order,
             data_values[t] += coeffs[p] * data_values[t-p]
         data_values[t] += eps[t][0]
     
+    # Computing theoretical expectation value
+    SumCoeff1toP = sum(coeffs) - coeffs[0]
+    E = coeffs[0] / (1 - SumCoeff1toP)
+    print("Under stationarity assumption, the expectation value for this AR(" + str(P) + ") model is: " + str(E) + "\n")
+    
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=data_values)
     rs = ts.timeseries(df)
