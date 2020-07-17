@@ -40,7 +40,7 @@ def AutoRegressive(start_date, end_date, frequency, start_values, coeffs, order,
     # Computing theoretical expectation value
     SumCoeff1toP = sum(coeffs) - coeffs[0]
     E = coeffs[0] / (1 - SumCoeff1toP)
-    print("Under stationarity assumption, the expectation value for this AR(" + str(P) + ") model is: " + str(E) + "\n")
+    print("Under stationarity assumption, the expected value for this AR(" + str(P) + ") model is: " + str(E) + "\n")
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=data_values)
@@ -57,7 +57,8 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     where {eps_t} is the white noise series with standard deviation sigma.
     We don't need to impose any initial values for {x_t} are imposed directly from {eps_t}.
     
-    Clarification: We thus assume {x_0 = coeff_0 + eps_0 ; x_1 = coeff_0 + eps_1 + coeff_1 * eps_0 ; x_2 = coeff_0 + eps_2 + coeff_1 * eps_1 + coeff_2 * eps_0}.
+    Clarification: We thus assume {x_0 = coeff_0 + eps_0 ; x_1 = coeff_0 + eps_1 + coeff_1 * eps_0 ;
+    x_2 = coeff_0 + eps_2 + coeff_1 * eps_1 + coeff_2 * eps_0} ; ...
     """
     assert(len(coeffs)==order+1)
     Q = order
@@ -82,7 +83,7 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     for q in range(1,Q+1,1):
         V += coeffs[q]**2
     V *= sigma**2
-    print("The expectation value for this MA(" + str(Q) + ") model is: " + str(coeffs[0]))
+    print("The expected value for this MA(" + str(Q) + ") model is: " + str(coeffs[0]))
     print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
           " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
     
