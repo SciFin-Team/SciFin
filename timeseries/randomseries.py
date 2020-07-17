@@ -49,6 +49,55 @@ def AutoRegressive(start_date, end_date, frequency, start_values, coeffs, order,
     
 
 
+def RandomWalk(start_date, end_date, frequency, start_value, sigma):
+    """
+    Function generating a time series from the Random Walk process, i.e. an AR(1) model with {coeff_0 = 0, coeff_1 = 1}.
+    The model is of the form: x_t = x_{t-1} + eps_t where eps_t is the white noise with standard deviation sigma.
+    """
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generating the white noise (Note: first value is not used)
+    eps = np.random.normal(loc=0., scale=sigma, size=T)
+    
+    # Generating the random series
+    data_values = [0.] * T
+    data_values[0] = start_value
+    for t in range(1,T,1):
+        data_values[t] = data_values[t-1] + eps[t]
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=data_values)
+    rs = ts.timeseries(df)
+    return rs
+    
+
+    
+def DriftRandomWalk(start_date, end_date, frequency, start_value, drift, sigma):
+    """
+    Function generating a time series from the Random Walk with Drift process, i.e. an AR(1) model with {coeff_0 != 0, coeff_1 = 1}.
+    The model is of the form: x_t = drift + x_{t-1} + eps_t where eps_t is the white noise with standard deviation sigma.
+    """
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generating the white noise (Note: first value is not used)
+    eps = np.random.normal(loc=0., scale=sigma, size=T)
+    
+    # Generating the random series
+    data_values = [0.] * T
+    data_values[0] = start_value
+    for t in range(1,T,1):
+        data_values[t] = drift + data_values[t-1] + eps[t]
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=data_values)
+    rs = ts.timeseries(df)
+    return rs
+    
+    
 
 def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     """
@@ -67,7 +116,7 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise (Note: p first values are not used)
+    # Generating the white noise
     eps = np.random.normal(loc=0., scale=sigma, size=T)
     
     # Generating the random series
@@ -91,3 +140,5 @@ def MovingAverage(start_date, end_date, frequency, coeffs, order, sigma):
     df = pd.DataFrame(index=data_index, data=data_values)
     rs = ts.timeseries(df)
     return rs
+
+
