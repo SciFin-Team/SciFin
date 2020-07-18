@@ -211,10 +211,20 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
     The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite.
     """
+    # Conditions
     assert(len(coeffs)==order)
+    # Non-negativity
+    if(cst<=0):
+        print("cst must be strictly positive.")
     assert(cst>0)
     for x in coeffs:
+        if (x<0):
+            print("coefficients are not allowed to take negative values.")
         assert(x>=0)
+    # Sum less than unity
+    if(sum(coeffs)>=1):
+        print("Sum of coefficients must be less than one in order to have positive variance.")
+    assert(sum(coeffs)<1)
     M = order
     
     # Generating index
@@ -233,6 +243,11 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
                 sig_square += coeffs[m] * a[t-m-1]**2
         sig = np.sqrt(sig_square)
         a[t] = sig * eps[t]
+    
+    # Computing theoretical values
+    print("The expected value for this ARCH(" + str(M) + ") model is 0, like any other ARCH model, and the estimated value is : " + str(np.mean(a)))
+    V = cst / (1 - sum(coeffs))
+    print("The theoretical standard deviation value for this ARCH(" + str(M) + ") model is: " + str(V))
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
