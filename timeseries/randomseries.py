@@ -314,11 +314,45 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
 
 
 
+def CHARMA(start_date, end_date, frequency, cst, order, cov_matrix, sigma):
+    """
+    Function generating a volatility series from the Conditional Heterescedastic ARMA (CHARMA) model of order M.
+    The model is of the form: a_t = Sum_{m=0}^{M-1} coeffs[m] * a_{t-m-1} + eta_t.
+    Here {eta_t} is a Gaussian white noise with standard deviation sigma and coeffs_t are generated from the covariance matrix cov_matrix.
+    Note: we assume coeffs_t follow a multivariate Gaussian distribution. Also cov_matrix should be a non-negative definite matrix.
+    """
+    # Checks
+    assert(len(cov_matrix)==order and len(cov_matrix[0])==order)
+    for row in cov_matrix:
+        for x in row:
+            assert(x>=0)
+    M = order
+    
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generating the "unit" white noise
+    eta = np.random.normal(loc=0., scale=sigma, size=T)
+    
+    # Generating the random series
+    a = [0.] * T
+    for t in range(T):
+        a[t] = eta[t]
+        # Generating the list of coefficients
+        coeffs = np.random.multivariate_normal(mean=[0.] * M, cov=cov_matrix, size=1)[0]
+        for m in range(M):
+            if t-m > 0:
+                a[t] += coeffs[m] * a[t-m-1]
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=a)
+    rs = ts.timeseries(df)
+    return rs
 
+    
+    
 
-
-# EGARCH = Exponential GARCH
-# CHARMA = Conditional Heterescedastic ARMA
 # RCA = Random Coefficient Auto-Regressive
 # SV = Stochastic Volatility
 
