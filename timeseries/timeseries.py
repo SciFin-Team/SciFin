@@ -84,7 +84,7 @@ class timeseries:
             
         # Plotting its distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
-        data.hist(bins=bins)
+        data.hist(bins=bins, color='k', grid=False)
         s,e = self.__start_end_names(start, end)
         title = "Distribution of values between " + s + " and " + e
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")

@@ -9,6 +9,9 @@ from datetime import datetime
 import timeseries.timeseries as ts
 
 
+
+### TIME SERIES MODELS ###
+
 def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
     """
     Function generating a time series from the Auto-Regressive (AR) model of an arbitrary order P.
@@ -179,3 +182,12 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
     df = pd.DataFrame(index=data_index, data=data_values)
     rs = ts.timeseries(df)
     return rs
+
+
+
+
+### HETEROSCEDASTIC MODELS ###
+
+
+
+
