@@ -136,7 +136,7 @@ def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
     for t in range(T):
         x[t] = cst + a[t]
         for q in range(Q):
-            if t-q-1 >= 0:
+            if t-q > 0:
                 x[t] -= coeffs[q] * a[t-q-1]
     
     # Computing theoretical values
@@ -158,7 +158,7 @@ def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
 def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA) model of orders (P,Q).
-    The model is of the form: x_t = cst + Sum_{i=0}^{P-1} ARcoeffs[i] * a_{t-i} + a_t + Sum_{j=0}^{Q-1} MAcoeffs[j] * a_{t-j}
+    The model is of the form: x_t = cst + Sum_{i=0}^{P-1} ARcoeffs[i] * a_{t-i-1} + a_t + Sum_{j=0}^{Q-1} MAcoeffs[j] * a_{t-j-1}
     where {a_t} is the white noise series with standard deviation sigma.
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
     
@@ -188,7 +188,7 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
         for p in range(P):
             x[t] += ARcoeffs[p] * x[t-p]
         for q in range(Q):
-            if t-q-1 >= 0:
+            if t-q > 0:
                 x[t] -= MAcoeffs[q] * x[t-q-1]
     
     # Combining them into a time series
@@ -203,15 +203,42 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
 
 # These models describe the volatility of a time series.
 
-def ARCH(start_date, end_date, frequency, cst, coeffs, order):
+def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     """
     Function generating a volatility series from the Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
+    The model is of the form: a_t = sig_t * eps_t
+    with sig_t^2 = cst + coeffs[0] * a_{t-1}^2 + ... + coeffs[M-1] * a_{t-M}^2.
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
+    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite.
     """
-
-
-
+    assert(len(coeffs)==order)
+    assert(cst>0)
+    for x in coeffs:
+        assert(x>=0)
+    M = order
     
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
     
+    # Generating the "unit" white noise
+    eps = np.random.normal(loc=0., scale=1, size=T)
+
+    # Generating the random series
+    a = [0.] * T
+    for t in range(T):
+        sig_square = cst
+        for m in range(M):
+            if t-m > 0:
+                sig_square += coeffs[m] * a[t-m-1]**2
+        sig = np.sqrt(sig_square)
+        a[t] = sig * eps[t]
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=a)
+    rs = ts.timeseries(df)
+    return rs
+
     
     
 # GARCH = Generalized ARCH
