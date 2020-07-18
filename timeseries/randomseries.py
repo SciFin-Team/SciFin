@@ -209,7 +209,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     The model is of the form: a_t = sig_t * eps_t
     with sig_t^2 = cst + coeffs[0] * a_{t-1}^2 + ... + coeffs[M-1] * a_{t-M}^2.
     Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
-    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite.
+    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite with positive variance.
     """
     # Conditions
     assert(len(coeffs)==order)
@@ -254,9 +254,69 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     rs = ts.timeseries(df)
     return rs
 
+
+
+def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig):
+    """
+    Function generating a volatility series from the Generalized ARCH (GARCH) model of order M.
+    The model is of the form: a_t = sig_t * eps_t
+    with sig_t^2 = cst + Sum_{i=0}^{M-1} coeffs_a[i] * a_{t-i-1}^2 + Sum_{j=0}^{S-1} coeffs_sig[j] * sig_{t-j-1}^2.
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
+    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite with positive variance.
+    """
+    # Conditions
+    assert(len(coeffs_a)==order_a)
+    assert(len(coeffs_sig)==order_sig)
+    # Non-negativity
+    if(cst<=0):
+        print("cst must be strictly positive.")
+    assert(cst>0)
+    for x in coeffs_a + coeffs_sig:
+        if (x<0):
+            print("coefficients are not allowed to take negative values.")
+        assert(x>=0)
+    # Sum less than unity
+    if(sum(coeffs_a) + sum(coeffs_sig) >= 1):
+        print("Sum of coefficients must be less than one in order to have positive variance.")
+    assert(sum(coeffs_a) + sum(coeffs_sig) < 1)
+    M = order_a
+    S = order_sig
     
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
     
-# GARCH = Generalized ARCH
+    # Generating the "unit" white noise
+    eps = np.random.normal(loc=0., scale=1, size=T)
+
+    # Generating the random series
+    a = [0.] * T
+    sig = [0.] * T
+    for t in range(T):
+        sig_square = cst
+        for m in range(M):
+            if t-m > 0:
+                sig_square += coeffs_a[m] * a[t-m-1]**2
+        for s in range(S):
+            if t-s > 0:
+                sig_square += coeffs_sig[s] * sig[t-s-1]**2
+        sig[t] = np.sqrt(sig_square)
+        a[t] = sig[t] * eps[t]
+
+    # Computing theoretical values
+    V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
+    print("The theoretical standard deviation for this GARCH(" + str(M) + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=a)
+    rs = ts.timeseries(df)
+    return rs
+
+
+
+
+
+
 # EGARCH = Exponential GARCH
 # CHARMA = Conditional Heterescedastic ARMA
 # RCA = Random Coefficient Auto-Regressive
