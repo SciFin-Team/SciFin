@@ -110,6 +110,17 @@ class timeseries:
         return True
                 
     
+    def get_sampling_interval(self):
+        """
+        Function that returns the sampling interval for a uniformly-sampled time series.
+        """
+        if(self.is_sampling_uniform()==False):
+            print("Error: the timeseries is not uniformly sampled.")
+        else:
+            interval = datetime.timestamp(self.data.index[1]) - datetime.timestamp(self.data.index[0])
+            return interval
+        
+        
     
     
     ### SIMPLE DATA EXTRACTION ON THE TIME SERIES ###
