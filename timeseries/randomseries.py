@@ -201,6 +201,8 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
 
 
 
+
+
 ### HETEROSCEDASTIC MODELS ###
 
 # These models describe the volatility of a time series.
@@ -316,7 +318,7 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
 
 
 
-def CHARMA(start_date, end_date, frequency, cst, order, cov_matrix, sigma):
+def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
     """
     Function generating a volatility series from the Conditional Heterescedastic ARMA (CHARMA) model of order M.
     The model is of the form: a_t = Sum_{m=0}^{M-1} coeffs[m] * a_{t-m-1} + eta_t.
@@ -353,8 +355,4 @@ def CHARMA(start_date, end_date, frequency, cst, order, cov_matrix, sigma):
     return rs
 
     
-    
-
-# RCA = Random Coefficient Auto-Regressive
-# SV = Stochastic Volatility
 
