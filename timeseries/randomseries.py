@@ -208,6 +208,8 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     In addition, we have some imposed coefficients of the Auto-Regressive type in ARcoeffs.
     
     Note: we assume coeffs_t follow a multivariate Gaussian distribution. Also cov_matrix should be a non-negative definite matrix.
+    Note: here we do not have an argument called start_value, compared to randomseries.AutoRegressive(). This choice is made as there are already random coefficients
+    involved, here there is no real use in imposing the first values of the time series other than just ARcoeffs and the generated coeffs.
     """
     # Checks
     assert(len(ARcoeffs)==order)
