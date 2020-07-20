@@ -200,6 +200,47 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
 
 
 
+def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma):
+    """
+    Function generating a time series from the Random Coefficient Auto-Regressive (RCA) model of order M.
+    The model is of the form: x_t = cst + Sum_{m=0}^{M-1} (ARcoeffs[m] + coeffs[m]) * x_{t-m-1} + a_t.
+    Here {a_t} is a Gaussian white noise with standard deviation sigma and coeffs_t are randomly generated from the covariance matrix cov_matrix.
+    In addition, we have some imposed coefficients of the Auto-Regressive type in ARcoeffs.
+    
+    Note: we assume coeffs_t follow a multivariate Gaussian distribution. Also cov_matrix should be a non-negative definite matrix.
+    """
+    # Checks
+    assert(len(ARcoeffs)==order)
+    assert(len(cov_matrix)==order and len(cov_matrix[0])==order)
+    for row in cov_matrix:
+        for x in row:
+            assert(x>=0)
+    M = order
+    
+    # Generating index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generating the white noise
+    a = np.random.normal(loc=0., scale=sigma, size=T)
+    
+    # Generating the random series
+    x = [0.] * T
+    for t in range(T):
+        x[t] = cst + a[t]
+        # Generating the list of coefficients
+        coeffs = np.random.multivariate_normal(mean=[0.] * M, cov=cov_matrix, size=1)[0]
+        for m in range(M):
+            if t-m > 0:
+                x[t] += (ARcoeffs[m] + coeffs[m]) * a[t-m-1]
+    
+    # Combining them into a time series
+    df = pd.DataFrame(index=data_index, data=a)
+    rs = ts.timeseries(df)
+    return rs
+
+
+
 
 
 
