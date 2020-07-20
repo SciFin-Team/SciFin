@@ -1,5 +1,7 @@
 # Created on 2020/7/16
 
+# This module is for functions generating random time series.
+
 # Packages
 import numpy as np
 import pandas as pd

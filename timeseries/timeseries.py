@@ -90,6 +90,26 @@ class timeseries:
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
         plt.show()
         
+        
+    def is_sampling_uniform(self):
+        """
+        Function that tests if the sampling of a time series is uniform or not.
+
+        Returns a boolean value True, when the sampling is uniform, False otherwise.
+        """
+        # Preparing data
+        sampling = [datetime.timestamp(x) for x in self.data.index]
+        assert(len(sampling)==self.nvalues)
+        intervals = [sampling[x] - sampling[x-1] for x in range(1,self.nvalues,1)]
+        
+        # Testing
+        prev = intervals[0]
+        for i in range(1,len(intervals),1):
+            if intervals[i] - prev > 1.e-6:
+                return False
+        return True
+                
+    
     
     
     ### SIMPLE DATA EXTRACTION ON THE TIME SERIES ###
@@ -241,7 +261,7 @@ class timeseries:
     
     
     
-    ### Fitting methods ###
+    ### FITTING METHODS ###
     
     def rolling_avg(self, pts=1):
         """
@@ -269,6 +289,62 @@ class timeseries:
         new_ts = timeseries(new_df)
         return new_ts
 
+    
+    def sample_uniformly(self):
+        """
+        Method that returns a new time series for which the sampling is uniform.
+        """
+        # Check actually we need to do something
+        if self.is_sampling_uniform() == True:
+            print("Time series already has a uniform sampling. Returning the same time series.")
+            return self
+        
+        # Preparing the new index
+        original_timestamps = [datetime.timestamp(x) for x in self.data.index]
+        original_values = self.data.values
+        N = len(original_values)
+        assert(N>2)
+        new_timestamps = np.linspace(original_timestamps[0], original_timestamps[-1], N)
+        new_index = [datetime.fromtimestamp(x) for x in new_timestamps]
+        
+        # Obtaining the new values from interpolation
+        before = [original_timestamps[0], original_values[0][0]]
+        after = [original_timestamps[1], original_values[1][0]]
+        new_values = [0.] * N
+        j=0
+        k=0
+        
+        for i in range(len(new_timestamps)):
+            
+            # Move forward in original table
+            # Known point before interpolation point
+            while (before[0] <= new_timestamps[i] and j<N-1):
+                j+=1
+                before[0] = original_timestamps[j]
+            j-=1
+            before[0] = original_timestamps[j]
+            before[1] = original_values[j][0]
+            # Known point after interpolation point
+            while (after[0] <= new_timestamps[i] and k<N-1):
+                k+=1
+                after[0] = original_timestamps[k]
+            after[1] = original_values[k][0]
+                
+            # Check the new date is sandwiched between the 2 original dates
+            assert(before[0] <= new_timestamps[i])
+            assert(new_timestamps[i] <= after[0])
+            assert(j<=k)
+            
+            # Find the new value from interpolation
+            slope = (after[1] - before[1]) / (after[0] - before[0])
+            new_values[i] = before[1] + slope * (new_timestamps[i] - before[0])
+
+        # Building the time series
+        new_df = pd.DataFrame(index=new_index, data=new_values)
+        new_ts = timeseries(new_df)
+        return new_ts
+        
+    
 
 
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
@@ -291,4 +367,6 @@ def multi_plot(timeseries, figsize=(12,5), dpi=100):
     title = "Multiplot of time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
     plt.gca().set(title=title, xlabel="Date", ylabel="Value")
     plt.show()
+        
+        
         
