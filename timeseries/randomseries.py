@@ -17,7 +17,7 @@ import timeseries.timeseries as ts
 # These models describe the evolution of time series.
 
 
-def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
+def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma=None, model='standard', noise_model=None):
     """
     Function generating a time series from the Auto-Regressive (AR) model of an arbitrary order P.
     The model is of the form: x_t = cst + coeffs[0] * x_{t-1} + ... + coeffs[P-1] * x_{t-P} + a_t
@@ -35,7 +35,15 @@ def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, co
     T = len(data_index)
     
     # Generating the white noise (Note: p first values are not used)
-    a = np.random.normal(loc=0., scale=sigma, size=T)
+    if model == 'standard':
+        assert(sigma!=None)
+        a = np.random.normal(loc=0., scale=sigma, size=T)
+    elif model == 'other':
+        assert(noise_model!=None)
+        #assert(noise_model.start == start_date) # Note: in principle should be imposed. But problems because pd.date_range does not generate exact same dates.
+        #assert(noise_model.end == end_date)
+        assert(len(noise_model.data)==T)
+        a = noise_model.data.values
     
     # Generating the random series
     x = [0.] * T
