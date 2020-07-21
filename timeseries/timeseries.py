@@ -15,7 +15,7 @@ class timeseries:
     Class defining a time series and its methods.
     """
     
-    def __init__(self, df):
+    def __init__(self, df, name=""):
         """
         Initializer. Function that receives a data frame as an argument and initialize the time series class.
         """
@@ -26,6 +26,7 @@ class timeseries:
         self.start = df.index[0]
         self.end = df.index[-1]
         self.nvalues = df.shape[0]
+        self.name = name
     
     
     def __specify_data(self, start, end):
