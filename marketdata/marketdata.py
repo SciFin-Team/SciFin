@@ -14,6 +14,7 @@ import requests
 import pandas_datareader as pdr
 from IPython.display import display, clear_output
 
+import timeseries.timeseries as ts
 
 
 def scrape_sp500_tickers():
@@ -41,11 +42,13 @@ def scrape_sp500_tickers():
 
 
 
-def get_assets_from_yahoo(list_assets, feature, start_time, end_time):
+def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     """
     Function which extracts values associated to a feature for a list of assets between 2 dates, using Yahoo Finance data.
     
     The choices for the feature provided by Yahoo Finance are: 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    
+    Returns a list of timeseries all having the same index and distinctive names.
     """
     
     # Check the feature is right
@@ -59,7 +62,7 @@ def get_assets_from_yahoo(list_assets, feature, start_time, end_time):
     listassets = np.sort(list_assets)
     
     # Initialization
-    assets_adj_close = pd.DataFrame(data=None, columns=listassets)
+    assets = pd.DataFrame(data=None, columns=listassets)
     N = len(listassets)
     counter = 1
     
@@ -72,9 +75,25 @@ def get_assets_from_yahoo(list_assets, feature, start_time, end_time):
         counter += 1
         
         try:
-            adj_close_tmp = pdr.get_data_yahoo(listassets[i], start=start_time, end=end_time)[feature]
-            assets_adj_close[listassets[i]] = adj_close_tmp
+            tmp = pdr.get_data_yahoo(listassets[i], start=start_date, end=end_date)[feature]
+            assets[listassets[i]] = tmp
         except:
             print(listassets[i], " could not be imported.")
 
-    return assets_adj_close
+    return assets
+
+
+
+def convert_multicol_df_tolist(df, start_date, end_date):
+    """
+    Converts the multi-columns data frame obtained from get_assets_from_yahoo() into a list of timeseries.
+    """
+    # Forming a list of timeseries
+    list_ts = []
+    shared_index = df.index
+    for c in df.columns:
+        tmp_df = pd.DataFrame(data=df[start_date:end_date][c], index=shared_index)
+        list_ts.append(ts.timeseries(tmp_df, name=c))
+    
+    return list_ts
+

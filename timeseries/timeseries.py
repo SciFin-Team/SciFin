@@ -70,7 +70,7 @@ class timeseries:
         """
         plt.figure(figsize=figsize, dpi=dpi)
         plt.plot(self.data.index, self.data.values, color='k')
-        title = "Time series from " + str(self.start)[:10] + " to " + str(self.end)[:10]
+        title = "Time series " + self.name + " from " + str(self.start)[:10] + " to " + str(self.end)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
     
