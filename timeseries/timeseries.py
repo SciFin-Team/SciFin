@@ -6,7 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import scipy.stats as stats
+
 from pandas.plotting import lag_plot
+from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
 # CLASS timeseries
@@ -252,7 +255,6 @@ class timeseries:
         We use the function $\rho_l = \frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])} where $x_t$ is the time series at time t. Cov denotes the covariance and Var the variance. We also use the properties $\rho_0 = 1$ and $\rho_{-l} = \rho_l$ (choosing LaTeX notations here).
         """
         l = abs(lag)
-        
         # Trivial case
         if l==0:
             return 1
@@ -262,8 +264,9 @@ class timeseries:
         
         # General case
         assert(l < data.shape[0])
-        Numerator = np.mean((data - data.mean()) * (data.shift(l) - data.shift(l).mean()))
-        Denominator = data.std() * data.shift(l).std()
+        shifted_data = data.shift(l)
+        Numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
+        Denominator = data.std() * shifted_data.std()
         return Numerator / Denominator
     
     
@@ -284,6 +287,17 @@ class timeseries:
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
         plt.show()
         
+    
+    def ACF_PACF(self, lag_max=25, figsize=(12,3), dpi=100):
+        """
+        Returns a plot of the AutoCorrelation Function (ACF) and Partial AutoCorrelation Function (PACF) from statsmodels.
+        """
+        # Plotting
+        fig, axes = plt.subplots(1,2, figsize=figsize, dpi=dpi)
+        plot_acf(self.data.values.tolist(), lags=lag_max, ax=axes[0])
+        plot_pacf(self.data.values.tolist(), lags=lag_max, ax=axes[1])
+        plt.show()
+    
     
     
     ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
