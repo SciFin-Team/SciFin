@@ -10,6 +10,12 @@ import scipy.stats as stats
 from pandas.plotting import lag_plot
 from statsmodels.tsa.stattools import acf, pacf
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
+import timeseries.timeseries as ts
 
 
 # CLASS timeseries
@@ -422,6 +428,61 @@ class timeseries:
         new_ts = timeseries(new_df)
         return new_ts
         
+    
+    
+    def decompose(self, polyn_order=None, start=None, end=None):
+        """
+        Method that performs a decomposition of the time series and returns the different components.
+        """
+        # Check
+        if polyn_order != None:
+            try:
+                assert(polyn_order>1)
+            except AssertionError:
+                raise AssertionError("polyn_order must be equal or more than 2.")
+        
+        # Preparing data in the specified period
+        data = self.__specify_data(start, end)
+        X = [datetime.timestamp(x) for x in data.index]
+        X = np.reshape(X, (len(X), 1))
+        y = [data.values.tolist()[x][0] for x in range(len(data))]
+        
+        # Fitting the linear component
+        model = LinearRegression()
+        model.fit(X, y)
+        
+        # Extract the linear trend
+        lin_trend_y = model.predict(X)
+        lin_trend_df = pd.DataFrame(index=data.index, data=lin_trend_y)
+        lin_trend_ts = ts.timeseries(lin_trend_df)
+        
+        # Remove the linear trend to the initial time series
+        nonlin_y = y - lin_trend_y
+        
+        # Remove a polynomial component of a certain order
+        if polyn_order != None:
+            polyn_model = make_pipeline(PolynomialFeatures(polyn_order), Ridge())
+            polyn_model.fit(X, nonlin_y)
+            polyn_component_y = polyn_model.predict(X)
+            polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
+            polyn_comp_ts = ts.timeseries(polyn_comp_df)
+        
+        # Generating the residue time series
+        if polyn_order != None:
+            residue_y = nonlin_y - polyn_component_y
+        else:
+            residue_y = nonlin_y
+        residue_df = pd.DataFrame(index=data.index, data=residue_y)
+        residue_ts = ts.timeseries(residue_df)
+        
+        # Return results
+        if polyn_order != None:
+            return [lin_trend_ts, polyn_comp_ts, residue_ts]
+        else:
+            return [lin_trend_ts, residue_ts]
+
+        
+    
     
 
 
