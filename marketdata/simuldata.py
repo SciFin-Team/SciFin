@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 
 
 
-
 def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
     """
     Method that creates a market from a Geometric Brownian process for each stock of the form:
@@ -116,8 +115,6 @@ def create_market_shares(market, mean=100000, stdv=10000):
         raise Exception("A negative market share was generated, please launch again.")
     
     return market_shares
-
-
 
 
 

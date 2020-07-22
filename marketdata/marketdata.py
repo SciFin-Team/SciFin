@@ -97,3 +97,60 @@ def convert_multicol_df_tolist(df, start_date, end_date):
     
     return list_ts
 
+
+
+def get_marketcap_today(market):
+    """
+    Function returning the market capitalization as it is today.
+    """
+    marketcap_today = pdr.data.get_quote_yahoo(market.columns)['marketCap']
+    marketcap = pd.Series(data=marketcap_today, index=marketcap_today.index)
+    return marketcap
+
+
+def market_EWindex(market):
+    """
+    Sums all assets to make an index, corresponds to the EW portfolio.
+    
+    The formula for the weights here is:
+    w_i = c / N for all i
+    and we choose c = N so that \sum_i w_i = N.
+    Thus we get the value at time t of the whole portfolio:
+    M_t = \sum_i w_i m_{ti} = \sum_i m_{ti}
+    """
+    
+    market_index = pd.DataFrame(market.sum(axis=1), columns=["Market EW Index"])
+    return market_index
+
+
+def market_CWindex(market, marketcap):
+    """
+    Function that returns the cap-weighted portfolio associated with the assets of a market.
+    We compute the total return at time t, called R_t as:
+    R_t = \sum_{i=1}^N v_i^t r_i^t / (\sum_{j=1}^N v_j^t)
+    And since we only have data of the v_j's today we compute it is:
+    R_t = \sum_{i=1}^N v_i^today r_i^t / (\sum_{j=1}^N v_j^today)
+    
+    Arguments:
+    - market: the assets composing the market
+    - marketvol: the volatility of these assets
+    """
+    
+    # Initialization
+    if (set(market.columns) != set(marketcap.index)):
+        print(market.columns)
+        print(marketcap.index)
+        raise Exception("Error: the two data sources need to have same columns.")
+    Nassets = market.shape[1]
+    
+    # Computing weighted returns
+    M = Nassets * (market * marketcap / marketcap.sum()).sum(axis=1)
+    market_index = pd.DataFrame(data=M, index=market.index, columns=["Market CW Index (Cap from last day)"])
+    
+    return market_index
+
+
+
+
+
+
