@@ -82,6 +82,20 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
 
 
 
+def is_index_valid(market):
+    """
+    Checks if the market has a correct index, meaning no date value is repeated.
+    """
+    index = market.index.tolist()
+    market_set = set(index)
+    
+    is_valid = True
+    for s in market_set:
+        if index.count(s) > 1:
+            return False
+    
+
+
 def create_market_shares(market, mean=100000, stdv=10000):
     """
     Function that creates a list of randomly generated numbers of shares
