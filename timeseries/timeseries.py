@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import scipy.stats as stats
-
+from pandas.plotting import lag_plot
 
 
 # CLASS timeseries
@@ -120,6 +120,53 @@ class timeseries:
         else:
             interval = datetime.timestamp(self.data.index[1]) - datetime.timestamp(self.data.index[0])
             return interval
+        
+
+    def lag_plot(self, lag=1, figsize=(5,5), dpi=100, alpha=0.5):
+        """
+        Function that returns the scatter plot x_t v.s. x_{t-l}.
+        """
+        # Doing the plot
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        lag_plot(self.data, lag=lag, c='black', alpha=alpha)
+        
+        # Setting title
+        title = "Lag plot of time series " + self.name
+        plt.gca().set(title=title, xlabel="x(t)", ylabel="x(t+"+str(lag)+")")
+        plt.show()
+        
+        
+    def lag_plots(self, nlags=5, figsize=(10,10), dpi=100, alpha=0.5):
+        """
+        Function that returns a number of scatter plots x_t v.s. x_{t-l} where l is the lag value taken from [0,...,nlags].
+        We require nlags > 1.
+        """
+        # Check
+        try:
+            assert(nlags>1)
+        except AssertionError:
+            raise AssertionError("nlags must be an integer starting from 2.")
+            
+        # Rule for the number of rows/cols
+        ncols = int(np.sqrt(nlags))
+        if(nlags%ncols==0):
+            nrows = nlags//ncols
+        else:
+            nrows = nlags//ncols + 1
+        print(nlags, ncols, nrows)
+        
+        # Doing the plots
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, figsize=figsize, dpi=dpi)
+        for i, ax in enumerate(axes.flatten()[:nlags]):
+            lag_plot(self.data, lag=i+1, ax=ax, c='black', alpha=alpha)
+            ax.set_xlabel("x(t)")
+            ax.set_ylabel("x(t+"+str(i+1)+")")
+        
+        # Setting title
+        title = "Multiple lag plots of time series " + self.name
+        fig.suptitle(title)
+        plt.show()
+        
         
         
     
