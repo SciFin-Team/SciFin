@@ -126,6 +126,12 @@ class timeseries:
         """
         Function that returns the scatter plot x_t v.s. x_{t-l}.
         """
+        # Check
+        try:
+            assert(lag>0)
+        except AssertionError:
+            raise AssertionError("The lag must be an integer equal or more than 1.")
+        
         # Doing the plot
         fig = plt.figure(figsize=figsize, dpi=dpi)
         lag_plot(self.data, lag=lag, c='black', alpha=alpha)
@@ -153,7 +159,6 @@ class timeseries:
             nrows = nlags//ncols
         else:
             nrows = nlags//ncols + 1
-        print(nlags, ncols, nrows)
         
         # Doing the plots
         fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, figsize=figsize, dpi=dpi)
@@ -164,7 +169,7 @@ class timeseries:
         
         # Setting title
         title = "Multiple lag plots of time series " + self.name
-        fig.suptitle(title)
+        fig.suptitle(title, )
         plt.show()
         
         
