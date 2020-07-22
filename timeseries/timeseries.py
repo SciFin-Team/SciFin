@@ -430,7 +430,7 @@ class timeseries:
         
     
     
-    def decompose(self, polyn_order=None, start=None, end=None):
+    def decompose(self, polyn_order=None, start=None, end=None, extract_seasonality=False, period=None):
         """
         Method that performs a decomposition of the time series and returns the different components.
         """
@@ -467,19 +467,64 @@ class timeseries:
             polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
             polyn_comp_ts = ts.timeseries(polyn_comp_df)
         
-        # Generating the residue time series
+        # Generating the resting part time series
         if polyn_order != None:
-            residue_y = nonlin_y - polyn_component_y
+            rest_y = nonlin_y - polyn_component_y
         else:
-            residue_y = nonlin_y
-        residue_df = pd.DataFrame(index=data.index, data=residue_y)
-        residue_ts = ts.timeseries(residue_df)
+            rest_y = nonlin_y
+        rest_df = pd.DataFrame(index=data.index, data=rest_y)
+        rest_ts = ts.timeseries(rest_df)
+        
+        # Extracting seasonality
+        if extract_seasonality==True:
+            # Receiving the period of seasonality in the residue
+            try:
+                assert(period)
+            except AssertionError:
+                raise AssertionError("Period must be specified for extrac_seasonality=True mode.")
+            P = period
+
+            # Cutting the series into seasonality-period chunks
+            t = []
+            if int(len(rest_y))%P==0:
+                nchunks = int(len(rest_y))//P
+            else:
+                nchunks = int(len(rest_y))//P + 1
+
+            for i in range(nchunks):
+                if i == nchunks - 1:
+                    t.append(rest_y[i*P:])
+                else:
+                    t.append(rest_y[i*P:i*P+P])
+
+            # Doing the average of the chunks
+            t_avg = []
+            for i in range(P):
+                t_avg.append(np.mean([t[x][i] for x in range(nchunks)]))
+
+            # Creating a new series repeating this pattern
+            seasonal_y = []
+            for i in range(len(rest_y)):
+                seasonal_y.append(t_avg[i%P])
+            seasonal_df = pd.DataFrame(index=data.index, data=seasonal_y)
+            seasonal_ts = ts.timeseries(seasonal_df)
+
+            # Building the residue time series
+            residue_y = rest_y - seasonal_y
+            residue_df = pd.DataFrame(index=data.index, data=residue_y)
+            residue_ts = ts.timeseries(residue_df)
         
         # Return results
         if polyn_order != None:
-            return [lin_trend_ts, polyn_comp_ts, residue_ts]
+            if extract_seasonality==True:
+                return [lin_trend_ts, polyn_comp_ts, seasonal_ts, residue_ts]
+            else:
+                return [lin_trend_ts, polyn_comp_ts, rest_ts]
         else:
-            return [lin_trend_ts, residue_ts]
+            if extract_seasonality==True:
+                return [lin_trend_ts, seasonal_ts, residue_ts]
+            else:
+                return [lin_trend_ts, rest_ts]
 
         
     
