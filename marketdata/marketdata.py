@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
+
 import bs4 as bs
 import pickle
 import requests
