@@ -382,7 +382,74 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,
 
 
 
+def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates, dims=(10,5), xlim=None, ylim=None, savefile=False, namefile="Result.png"):
+    """
+    Function that allows a quick visualization of market, some sparse individuals, and the evaluation dates
+    """
+    
+    # Initialization
+    fig, axis = plt.subplots(nrows=1, ncols=1)
+    
+    # Computing the EW portfolio
+    market_EW = md.market_EWindex(market)
+    market_CW = md.market_CWindex(market, marketcap)
 
+    # Plotting market
+    market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis, legend=False)
+    
+    # Plotting evaluation dates
+    for ed in evaluation_dates:
+        axis.axvline(x=ed, color='grey', linestyle='--', linewidth=1)
+    
+    # Computing the PW portfolio
+    # market_shares = market.iloc[0]
+    # market_PW = market_PWindex(market, market_shares)
+    # market_PW.plot(ax=axis, color='k', linestyle='-', linewidth=2)
+    
+    # Plotting individual portfolios
+    for name in list_individuals.columns:
+        list_individuals[name].plot(ax=axis)
+
+    # Re-Plotting market to appear on top
+    #axis = market_EW.plot(figsize=dims, color='gray', linestyle='-', linewidth=1)
+    market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis)
+
+    # Plotting the Cap-Weighted index so that it appears on top
+    market_CW.plot(figsize=dims, color='black', linestyle='-', linewidth=1, ax=axis)
+    
+    # Set axes limits
+    axis.set_xlim(xlim)
+    axis.set_ylim(ylim)
+    
+    # Saving plot as a png file
+    if savefile:
+        plt.savefig('./' + namefile)
+
+
+        
+        
+def show_allocation_distrib(step, save_gens, save_eval_dates, Nbins=50, savefile=False, namefile="Allocation_Distribution.png"):
+    """
+    Plots the distribution of a generation (including elites and individuals) for a certain step of the loop that ran in Genetic_Portfolio_Routine.
+    Since there are different individuals, we sum over these elements for each asset, and we divide by the number of individuals.
+    """
+    
+    # Initialization
+    Nloops = len(save_gens)-1
+    tmp = (save_gens[step].sum() / save_gens[step].shape[0]).tolist()
+    fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(15,5))
+
+    # Assuming the largest allocations are always at the last step (which may not be true)
+    xmin = min((save_gens[Nloops].sum() / save_gens[Nloops].shape[0]).tolist()) * 1.2
+    xmax = max((save_gens[Nloops].sum() / save_gens[Nloops].shape[0]).tolist()) * 1.2
+
+    # Plotting
+    plt.hist(x=tmp, bins=Nbins, range=[xmin,xmax])
+    plt.title("Histogram of allocations - " + save_eval_dates[step].to_timestamp().strftime("%Y-%m-%d"))
+    
+    # Saving plot as a png file
+    if savefile:
+        plt.savefig('./' + namefile)
 
 
 
