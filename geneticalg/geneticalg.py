@@ -501,6 +501,75 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target, mu
 
 
 
+def mutation_set(num_indiv, num_genes, num_mut=0):
+    """
+    Function that prepares a list of genes to be mutated.
+    """
+    
+    if num_genes <= 1 :
+        return 0
+    
+    mutated_genes = []
+    for i in range(num_indiv):
+        tmp_set = [random.randint(0, num_genes-1), random.randint(0, num_genes-1)]
+        while tmp_set[0] == tmp_set[1]:
+            tmp_set[1] = random.randint(0, num_genes-1)
+        mutated_genes.append(tmp_set)
+    
+    return mutated_genes
+
+
+def mutate_population(input_individuals, upper_limit, lower_limit, sum_target, mutation_rate=2, method='Reset', standard_deviation = 0.001):
+    """
+    Function that makes the mutation of a population of individuals
+    
+    Arguments:
+    - individual: the individual we want to mutate
+    - upper_limit: the upper limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
+    - lower_limit: the lower limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
+    - sum_target: the tarket sum of genes (asset allocations) used for renormalization. Only for 'Reset' method.
+    - mutation_rate: the number of mutations to apply.
+    - method: method used for the mutations. 'Gauss' is a normal-distributed modification of affected genes. 'Reset' is a uniformly distributed modification.
+    - standard_deviation: the standard deviation of the mutation modification. Only for 'Gauss' method.
+    """
+    
+    # Initialization
+    individuals = input_individuals.filter(regex="Asset")
+    birth_dates = input_individuals["Born"]
+    fitness_cols = input_individuals.filter(regex="Fit")
+    M = individuals.shape[0]
+    Ngene = individuals.shape[1]
+    mutated_genes = mutation_set(num_indiv=M, num_genes=Ngene, num_mut=mutation_rate)
+    mutated_individuals = individuals.copy()
+    
+    # Making mutations happen and renormalizing assets allocation to keep their sum constant
+    for i in range(M):
+        if method == 'Gauss':
+            sum_genes = mutated_individuals.iloc[i].sum()
+            for x in mutated_genes[i]:
+                mutated_individuals.iloc[i,x] = mutated_individuals.iloc[i,x] + random.gauss(0, standard_deviation)
+            normalization = sum_genes / mutated_individuals.iloc[i].sum()
+            for x in range(Ngene):
+                mutated_individuals.iloc[i,x] *= normalization
+
+        if method == 'Reset':
+            for x in mutated_genes[i]:
+                mutated_individuals.iloc[i,x] = random.random() * (upper_limit-lower_limit) + lower_limit
+            normalization = sum_target / mutated_individuals.iloc[i].sum()
+            for x in range(Ngene):
+                mutated_individuals.iloc[i,x] *= normalization
+
+    # Adding back the birth date
+    mutated_individuals["Born"] = birth_dates
+    
+    # Adding back the earlier Fitness columns
+    for col in fitness_cols.columns:
+        mutated_individuals[col] = fitness_cols[col]
+    
+    return mutated_individuals
+
+
+
 
 
 
