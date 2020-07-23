@@ -206,12 +206,17 @@ def evaluation_dates(market, Ndates=10, interval_type='M'):
     return special_dates
 
 
+
 def find_tick_before_eval(market_dates, date):
+    """
+    Function returning the tick before the evaluation date.
+    """
     
     # Check:
-    if (str(date) in market_dates) == False:
+    if (date in market_dates) == False:
         raise Exception("It appears that the date does not belong to the market dates.")
     
+    # Returning value
     for d in market_dates:
         if d == date:
             return d-1
