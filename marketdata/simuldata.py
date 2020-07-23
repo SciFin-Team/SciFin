@@ -172,3 +172,28 @@ def propagate_investments(investment, market, name_indiv="Portfolio"):
     return portfolio_total
 
 
+
+def evaluation_dates(market, Ndates=10, interval_type='M'):
+    """
+    Function producing a number of equally spaced dates at which the portfolios will be evaluated.
+    
+    Arguments:
+    - market: the dataframe representing the market (assets values over time)
+    - Ndates: the number of dates
+    """
+    
+    # Initialization
+    Nticks = market.shape[0]
+    indices = np.linspace(start=0, stop=Nticks-1, num=Ndates+1).astype('int')
+    
+    # Find the corresponding dates
+    special_dates = market.index.to_timestamp()[indices].to_period(interval_type)
+    
+    # Check
+    if special_dates[0] != market.index[0]:
+        raise Exception("ERROR !")
+    if special_dates[-1] != market.index[-1]:
+        raise Exception("ERROR !")
+    
+    return special_dates
+
