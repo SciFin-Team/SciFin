@@ -189,6 +189,65 @@ def selection(generation, method='Fittest Half'):
     return pd.DataFrame(selected_individuals)
 
 
+
+def pairing(elite, selected, method = 'Fittest'):
+    """
+    Function that establishes the pairing of the selected population and elite all together.
+    
+    Methods:
+    - 'Fittest': the top fitness individuals are paired in order, this does not check if the elite is fit however (we let evolution do that).
+                 The selected individuals should be ranked from fittest to less fit if things have been done in the proper order before.
+    - 'Random': the pairing is done at random, but no individual can reproduce more than once.
+    - 'Weighted Random': the pairing is done with higher probability among high fitness individuals. Some individuals may reproduce several times.
+    """
+    
+    # Combining elite and previously selected individuals
+    cumsumcols_toremove = selected.filter(regex="CumSum").columns
+    individuals = pd.concat([elite, selected.drop(columns=cumsumcols_toremove)])
+    individuals.reindex(np.random.permutation(individuals.index))
+    
+    # Getting the fitness of all of them (not necessarily ordered)
+    last_fitness = selected.filter(regex="Fit").columns[-1]
+    Fitness = individuals[last_fitness]
+
+    # Initialization for pairing
+    M = individuals.shape[0]
+    
+    # odd_indiv = False
+    if M%2 != 0:
+        raise Exception("NUMBER OF INDIVIDUALS IS ODD ! PROBLEM WITH PAIRING !")
+    
+    # Start the pairing
+    pairs = []
+    if method == 'Fittest':
+        parents_pairs = [[individuals.index[x], individuals.index[x+1]] for x in range(0,M,2)]
+        parents_values = [[individuals.iloc[x], individuals.iloc[x+1]] for x in range(0,M,2)]
+        
+    if method == 'Random':
+        pairs = [x for x in range(M)]
+        random.shuffle(pairs)
+        parents_pairs = []
+        parents_values = []
+        for x in range(0,M,2):
+            parents_pairs.append([individuals.index[pairs[x]], individuals.index[pairs[x+1]]])
+            parents_values.append([individuals.iloc[pairs[x]], individuals.iloc[pairs[x+1]]])
+                
+    if method == 'Weighted Random': # This method does not allow a parent to reproduce with himself, but allows some parent to reproduce several times!
+        Normalized_Fitness = sorted([Fitness[x]/sum(Fitness) for x in range(len(Fitness))], reverse = True)
+        Cumulative_Sum = np.array(Normalized_Fitness).cumsum()
+        parents_pairs = []
+        parents_values = []
+        for x in range(M//2):
+            pair = [roulette(Cumulative_Sum, random.random()), roulette(Cumulative_Sum, random.random())]
+            parents_pairs.append([individuals.index[pair[0]], individuals.index[pair[1]]])
+            parents_values.append([individuals.iloc[pair[0]], individuals.iloc[pair[1]]])
+            while parents_pairs[x][0] == parents_pairs[x][1]:
+                new_element = roulette(Cumulative_Sum, random.random())
+                parents_pairs[x][1] = individuals.index[new_element]
+                parents_values[x][1] = individuals.iloc[new_element]
+                
+    return parents_pairs, parents_values
+
     
     
 
