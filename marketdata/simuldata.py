@@ -254,4 +254,133 @@ def limited_propagation(population, market, start, end):
 
 
 
+def portfolio_vol(weights, cov_matrix):
+    """
+    Function returning the volatility of a portfolio from a covariance matrix and weights.
+    weights are a numpy array or N x 1 matrix and covmat is an N x N matrix.
+    """
+    vol = (weights.T @ cov_matrix @ weights)**0.5
+    return vol
+
+
+
+def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method="Max Return and Vol"):
+    """
+    Function that simply collects the last value in time of each portfolio and consider it as the fitness measure.
+    
+    Note: - population has rows which are the names of the portfolio, and columns which are the assets.
+          - propagation has rows which are the time stamps, and columns which are the names of the portfolios.
+    """
+        
+    # Method of max return
+    if fitness_method == "Max Return":
+        fitness_value = [propagation[x][-1] for x in propagation.columns]
+        
+        
+    # Method combining max return and average volatility
+    elif fitness_method == "Max Return and Vol":
+        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
+        fitness_from_return = [propagation[x][-1] for x in propagation.columns]
+
+        # Defining the market correlation over a period of time (here it does not really matter which one)
+        covmat = market.loc[current_eval_date : next_eval_date].corr()
+
+        # Loop over portfolios
+        pop = population.filter(regex="Asset")
+        fitness_from_vol = []
+        for x in propagation.columns:
+            # Taking the weights for an output portfolio
+            weights = pop.loc[x]
+            # Computing fitness from volatility
+            fitness_from_vol.append(portfolio_vol(weights, covmat))
+
+        # Normalizing
+        normalized_fitness_from_return = fitness_from_return / sum(fitness_from_return)
+        normalized_fitness_from_vol = fitness_from_vol / sum(fitness_from_vol)
+
+        # Combining the 2 fitnesses
+        fitness_value = [lamb * normalized_fitness_from_return[x] + (1-lamb) / normalized_fitness_from_vol[x]  for x in range(len(fitness_from_return))]
+    
+    
+    # Method combining average return and average volatility
+    elif fitness_method == "Avg Return and Vol":
+        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
+        fitness_from_return = [propagation[x].pct_change()[1:].mean() for x in propagation.columns]
+
+        # Defining the market correlation over a period of time (here it does not really matter which one)
+        covmat = market.loc[current_eval_date : next_eval_date].corr()
+
+        # Loop over portfolios
+        pop = population.filter(regex="Asset")
+        fitness_from_vol = []
+        for x in propagation.columns:
+            # Taking the weights for an output portfolio
+            weights = pop.loc[x]
+            # Computing fitness from volatility
+            fitness_from_vol.append(portfolio_vol(weights, covmat))
+
+        # Combining the 2 fitnesses
+        fitness_value = [lamb * fitness_from_return[x] + (1-lamb) / fitness_from_vol[x]  for x in range(len(fitness_from_return))]
+    
+    
+    # Method based on the Sharpe Ratio - We assume the risk-free rate is 0% to avoid introducing an arbitrary value here.
+    elif fitness_method == "Sharpe Ratio":
+        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
+        fitness_from_return = [propagation[x].pct_change()[1:].mean() for x in propagation.columns]
+
+        # Defining the market correlation over a period of time (here it does not really matter which one)
+        covmat = market.loc[current_eval_date : next_eval_date].corr()
+
+        # Loop over portfolios
+        pop = population.filter(regex="Asset")
+        fitness_from_vol = []
+        for x in propagation.columns:
+            # Taking the weights for an output portfolio
+            weights = pop.loc[x]
+            # Computing fitness from volatility
+            fitness_from_vol.append(portfolio_vol(weights, covmat))
+
+        # Combining the 2 fitnesses
+        fitness_value = [fitness_from_return[x] / fitness_from_vol[x]  for x in range(len(fitness_from_return))]
+        
+        
+    # Otherwise return Exception
+    else:
+        raise Exception("Specified fitness method does not seem to exist.")
+    
+    
+    return fitness_value
+
+
+
+
+
+def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,5), xlim=None, ylim=None):
+    """
+    Function that allows a quick visualization of market, some sparse individuals, and the evaluation dates
+    """
+    
+    # Computing the EW portfolio
+    market_EW = md.market_EWindex(market)
+
+    # Plotting market
+    axis = market_EW.plot(figsize=dims)
+    
+    # Plotting individual portfolios
+    for name in list_individuals.columns:
+        list_individuals[name].plot(ax=axis)
+        
+    # Plotting evaluation dates
+    for ed in evaluation_dates:
+        axis.axvline(x=ed, color='grey', linestyle='--')
+    
+    # Set axes limits
+    axis.set_xlim(xlim)
+    axis.set_ylim(ylim)
+    
+    return
+
+
+
+
 
