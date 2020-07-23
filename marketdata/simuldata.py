@@ -89,10 +89,10 @@ def is_index_valid(market):
     index = market.index.tolist()
     market_set = set(index)
     
-    is_valid = True
     for s in market_set:
         if index.count(s) > 1:
             return False
+    return True
     
 
 def create_market_shares(market, mean=100000, stdv=10000):
@@ -140,6 +140,14 @@ def plot_market_components(market, dims=(10,5), legend=True):
 
 
 
+        
+        
+        
+        
+        
+        
+        
+        
         
 
 # FUNCTIONS USED WITH GENETIC ALGORITHM
@@ -196,4 +204,49 @@ def evaluation_dates(market, Ndates=10, interval_type='M'):
         raise Exception("ERROR !")
     
     return special_dates
+
+
+def find_tick_before_eval(market_dates, date):
+    
+    # Check:
+    if (str(date) in market_dates) == False:
+        raise Exception("It appears that the date does not belong to the market dates.")
+    
+    for d in market_dates:
+        if d == date:
+            return d-1
+    raise Exception("Apparently no date was found.")
+    
+    
+
+def limited_propagation(population, market, start, end):
+    """
+    Function that propagates the initial investments into a portfolio over time, like `propagate_investments`, but only for a limited period of time.
+    Also, the function is extended from the case of one individual portfolio to a dataframe of them.
+    
+    Argument:
+    - individual: that's a list of Nassets elements that represent our initial investment
+    - market: the market (set of assets) on which the investments are applied
+    - start: starting date or period
+    - end: ending date or period
+    - name_indiv: name of the individual portfolio
+    """
+    
+    # Initialization
+    Nindiv = population.shape[0]
+    Nassets = market.shape[1]
+    
+    # Propagating investments, we will do a list of dataframes
+    list_portfolios = pd.DataFrame()
+    for x in range(Nindiv):
+        portfolio_name = population.index[x]
+        # Computing (price of asset) x (asset allocation)
+        # portfolio = market[start:end] / 100 * population.iloc[x]
+        portfolio = market[start:end] * population.iloc[x][:Nassets] * ( Nassets / population.iloc[x][:Nassets].sum())
+        list_portfolios[portfolio_name] = portfolio.sum(axis=1)
+
+    return pd.DataFrame(list_portfolios)
+
+
+
 
