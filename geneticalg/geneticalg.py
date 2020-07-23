@@ -9,6 +9,8 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
+import marketdata.simuldata as sd
+
 
 def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     """
@@ -64,7 +66,64 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
 
 
 
+def get_generation(population, market, current_eval_date, next_eval_date, lamb=0.5, fitness_method="Max Return and Vol", return_propag=False, date_format="%Y-%m"):
+    """
+    Takes a population, propagate its elements to the next evaluation event, and compute their fitness
+    
+    Arguments:
+    - population: the population to evolve
+    - market: the market which serves as a basis for propagation
+    - current_eval_date: the present date on which we evaluate the portfolios
+    - next_eval_date: the target date until which we want to make the portfolios evolve
+    - return_propag: an option to return the propagations
+    - date_format: format of the dates in the data frames
+    
+    Note: we define a generation as a population for which the fitness has been computed and who is sorted according to it.
+    
+    Note: - population has rows which are the names of the portfolio, and columns which are the assets.
+          - propagation has rows which are the time stamps, and columns which are the names of the portfolios.
+    """
+    
+    # Make sure all the individual portfolios were born before the current date:
+    for birth_date in population['Born']:
+        if birth_date >= next_eval_date:
+            raise Exception("Individuals can't be born at/after the evaluation date.")
+    # Make sure the next evaluation date is later than the current date:
+    if current_eval_date >= next_eval_date:
+        raise Exception("Current date can't be after the evaluation date.")
+    
+    # Getting the date just before the next evaluation date (at which reproduction will happen)
+    date_before_eval = sd.find_tick_before_eval(market.index, next_eval_date)
+    
+    # Propagate individuals
+    propagation = sd.limited_propagation(population, market, current_eval_date, date_before_eval)
+    
+    # Create the generation from the population copy
+    try:
+        generation = population.copy()
+    except:
+        print(population)
+    
+    # Remove any fitness column if it existed already (otherwise we will sum it/them after... potentially disrupting the fitness calculation)
+    # This is in case we use a generation (i.e. a population with computed fitness and ranked by it) as a population argument
+    # if len(generation.filter(regex='Fit').columns) != 0:
+    #     generation.drop(columns=generation.filter(regex='Fit').columns.tolist(), inplace=True)
+    # Not needed if we want to keep the fitness columns with dates, which sounds like a better solution for the moment
+        
+    # Compute the fitness of individuals and sort them by fitness
+    fitness_name = "Fitness " + date_before_eval.strftime(date_format)
+    generation[fitness_name] = sd.fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method)
+    generation.sort_values(by=[fitness_name], ascending=False, inplace=True)
+    
+    if return_propag == True:
+        return generation, propagation
+    else:
+        return generation
 
+    
+    
+    
+    
 
 
 

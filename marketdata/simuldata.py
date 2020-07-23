@@ -264,7 +264,7 @@ def portfolio_vol(weights, cov_matrix):
 
 
 
-def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method="Max Return and Vol"):
+def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb=0.5, fitness_method="Max Return and Vol"):
     """
     Function that simply collects the last value in time of each portfolio and consider it as the fitness measure.
     
