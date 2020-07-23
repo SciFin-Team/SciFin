@@ -653,7 +653,74 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date, upper
 
 
 
+def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
+    """
+    Function that creates the elite and non-elite individual populations by ranking them according to the last fitness
+    and proceeding to a simple cut, highest fitnesses going to the new elite. Some formerly non-elite can become new elite
+    and formerly elite can become non-elite depending on values.
+    """
+    
+    # Initialization
+    M = generation.shape[0]
+    fitness_cols = generation.filter(regex="Fit").columns
+    
+    # Just to make sure that the generation is sorted
+    generation.sort_values(by=fitness_cols[-1], ascending=False, inplace=True)
+    
+    # Decide for a cut in the top fitness individuals
+    cut = int(M * elite_rate)
+    
+    # Applying the cut - Form the elite
+    new_elite = generation.iloc[:cut]
+    if renaming:
+        new_elite_names = ["New Elite " + str(x) for x in range(cut)]
+        new_elite.index = new_elite_names
 
+    # Applying the cut - Form the "non-elite" individuals
+    new_individuals = generation.iloc[cut:]
+    if renaming:
+        new_individuals_names = ["New Individual " + str(x) for x in range(M-cut)]
+        new_individuals.index = new_individuals_names
+    
+    return new_elite, new_individuals
+
+
+def fitness_similarity_check(generation, number_of_similarity, precision_decimals=1):
+    """
+    Function that checks the fitness similarity based on the last fitness.
+    
+    Note: this function should be applied after the new generation is created and before we do a split into Elite + "Normal" individuals.
+    """
+    
+    # Initialization
+    result = False
+    similarity = 0
+    max_fitness = generation.filter(regex="Fit").iloc[:,-1]
+    
+    for n in range(len(max_fitness)-1):
+        if round(max_fitness[n], precision_decimals) == round(max_fitness[n+1], precision_decimals):
+            similarity += 1
+        else:
+            similarity = 0
+    if similarity == number_of_similarity-1:
+        result = True
+        
+    return result
+
+
+def sum_top_fitness(generation, num_elements=4):
+    """
+    Function that computes the sum of the top elements in the population.
+    """
+    
+    gen = generation.filter(regex="Fit").iloc[:,-1]
+    
+    if num_elements <= gen.shape[0]:
+        sum_top_fitness = gen[0:num_elements].sum()
+    else:
+        ValueError("Generation does not have enough elements.")
+
+    return sum_top_fitness
 
 
 
