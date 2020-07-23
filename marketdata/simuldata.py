@@ -531,3 +531,70 @@ def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_qu
         
         
         
+def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates, savefile=False, namefile="ResultDifference.png"):
+    """
+    Computes and plot the difference between the portfolios of the genetic algorithm and the Cap-Weighted Portfolio.
+    """
+    
+    # Computing values - Old way (very slow)
+    # Diff_GenPort_CW = save_propags.copy()
+    # for i in range(Diff_GenPort_CW.shape[0]):
+    #     market = market_CW.values[i][0]
+    #     for j in range(Diff_GenPort_CW.shape[1]):
+    #         Diff_GenPort_CW.iloc[i][j] = (Diff_GenPort_CW.iloc[i][j] - market) / market * 100
+    
+    # Computing values - New way (much much faster !)
+    diff_array = (save_propags.to_numpy() - market_CW.to_numpy()) / market_CW.to_numpy() * 100
+    Diff_GenPort_CW = pd.DataFrame(diff_array, columns = save_propags.columns, index=save_propags.index)
+
+    # Plotting
+    fig, axis = plt.subplots(nrows=1, ncols=1)
+    Diff_GenPort_CW.plot(legend=False, figsize=(20,7), ax=axis)
+    
+    # Adding evaluation dates
+    for ed in evaluation_dates:
+        axis.axvline(x=ed, color='grey', linestyle='--', linewidth=1)
+    
+    # Setting axes
+    axis.axhline(y=0, color='grey', linestyle='--')
+    plt.title("Difference Genetic Portfolios - CW Portfolio")
+    plt.xlabel("Time")
+    plt.ylabel("Difference in %")
+    
+    
+    # Saving plot as a png file
+    if savefile:
+        plt.savefig('./' + namefile)
+    
+    return
+
+
+
+def plot_asset_evol(n, save_eval_dates, save_gens, savefile=False, namefile="asset_evol.png"):
+
+    # Forming the set of portfolio names
+    set_indices = []
+    for x in range(len(save_gens)):
+        set_indices = set(set_indices).union(set(save_gens[x].index.tolist()))
+    
+    # Creating the empty data frame
+    asset_evol = pd.DataFrame(data=None, columns=save_eval_dates, index=set_indices)
+
+    # Computing
+    for x in range(len(save_eval_dates)):
+        colname = save_eval_dates[x].to_timestamp().strftime("%Y-%m-%d")
+        for y in save_gens[x].index:
+            asset_evol.loc[y,colname] = save_gens[x].loc[y,'Asset ' + str(n)]
+    
+    # Transpose
+    asset_t = asset_evol.transpose()
+    
+    # Plot
+    asset_t.plot(figsize=(15,5), legend=False)
+    
+    # Saving plot as a png file
+    if savefile:
+        plt.savefig('./' + namefile)
+        
+        
+        
