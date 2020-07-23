@@ -32,3 +32,4 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     return normalized_individual
 
 
+

@@ -9,6 +9,7 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
+import marketdata.marketdata as md
 
 
 def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
@@ -94,7 +95,6 @@ def is_index_valid(market):
             return False
     
 
-
 def create_market_shares(market, mean=100000, stdv=10000):
     """
     Function that creates a list of randomly generated numbers of shares
@@ -116,5 +116,26 @@ def create_market_shares(market, mean=100000, stdv=10000):
     
     return market_shares
 
+
+
+def plot_market_components(market, dims=(10,5), legend=True):
+    """
+    Function that plots the assets contribution to the EW index
+    """
+    
+    # Computing the EW portfolio
+    market_EW = md.market_EWindex(market)
+
+    # Plotting market
+    axis = market_EW.plot(figsize=dims, legend=legend)
+    
+    # Plotting individual portfolios
+    x = market.index.values.tolist()
+    # y = np.array([market[c].values.tolist() for c in market.columns])
+    y = market.to_numpy().transpose()
+
+    axis.stackplot(x, y, labels=market.columns.tolist())
+    if legend:
+        axis.legend(loc='upper left')
 
 
