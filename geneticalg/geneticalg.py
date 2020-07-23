@@ -426,6 +426,29 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=Non
 
 
 
+def get_offsprings(parents_values, mating_date, method='Single Point', Npoints=None, name_indiv="Offspring"):
+    """
+    Function that takes all the pairs of parents and make a reproduction of them to produce two offsprings for each, putting all of them in a dataframe.
+    
+    Methods:
+    - 'Single Point': using only one pivot value for exchange of genes
+    - 'Two Points': using two pivot value for exchange of genes
+    """
+    
+    # Selecting only the columns with Asset allocations, i.e. the genes
+    Npairs = len(parents_values)
+    asset_columns = pd.DataFrame(parents_values[0]).filter(regex="Asset").columns.tolist() + ["Born"]
+    
+    # Creating the offsprings
+    offsprings_pop = pd.DataFrame(columns=asset_columns)
+    for x in range(Npairs):
+        offsprings = mating_pair(parents_values[x], mating_date, method=method, Npoints=Npoints) # 2 offspring
+        offsprings_pop.loc[name_indiv + str(x*2)] = offsprings[0]
+        offsprings_pop.loc[name_indiv + str(x*2 + 1)] = offsprings[1]
+        
+    return offsprings_pop
+
+
 
 
 
