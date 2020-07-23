@@ -450,6 +450,55 @@ def get_offsprings(parents_values, mating_date, method='Single Point', Npoints=N
 
 
 
+def mutate_individual(input_individual, upper_limit, lower_limit, sum_target, mutation_rate=2, method='Reset', standard_deviation = 0.001):
+    """
+    Function that makes the mutation of a single individual
+    
+    Arguments:
+    - individual: the individual we want to mutate
+    - upper_limit: the upper limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
+    - lower_limit: the lower limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
+    - sum_target: the tarket sum of genes (asset allocations) used for renormalization. Only for 'Reset' method.
+    - mutation_rate: the number of mutations to apply.
+    - method: method used for the mutations. 'Gauss' is a normal-distributed modification of affected genes. 'Reset' is a uniformly distributed modification.
+    - standard_deviation: the standard deviation of the mutation modification. Only for 'Gauss' method.
+    """
+    
+    # Initialization
+    individual = input_individual.filter(regex="Asset")
+    birth_date = input_individual["Born"]
+    Ngene = len(individual)
+    gene = []
+    
+    for x in range(mutation_rate):
+        gene.append(random.randint(0, Ngene-1))
+        while len(set(gene)) < len(gene):
+            gene[x] = random.randint(0, Ngene-1)
+    mutated_individual = individual.copy()
+    
+    # Saving the sum of assets
+    sum_genes = mutated_individual.sum()
+    
+    # Generate the mutations:
+    if method == 'Gauss':
+        for x in gene:
+            mutated_individual[x] = individual[x] + random.gauss(0, standard_deviation)
+        normalization = sum_genes / mutated_individual.sum()
+        for x in range(Ngene):
+            mutated_individual[x] *= normalization
+    
+    if method == 'Reset':
+        for x in gene:
+            mutated_individual[x] = random.random() * (upper_limit-lower_limit) + lower_limit
+        normalization = sum_target / mutated_individual.sum()
+        for x in range(Ngene):
+            mutated_individual[x] *= normalization
+    
+    # Adding back the birth date
+    mutated_individual["Born"] = birth_date
+    
+    return mutated_individual
+
 
 
 
