@@ -384,3 +384,83 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,
 
 
 
+
+
+
+
+
+
+def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_quantities.png"):
+    """
+    Function that plots the evaluation dates, ndays, mutation rate and fitness lambda from the VIX and 4 structure numbers.
+    It also mimicks the general loop, so that we can see how dates are evaluated and how quantities are computed.
+    """
+
+    market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
+    
+    save_eval_dates = []
+    save_mutation_rate = []
+    save_ndays = []
+    save_fitness_lambda = []
+
+    loop = 0
+    eval_date = market.index[0]
+    next_eval_date = market.index[10]
+
+
+    while next_eval_date < market.index[-1]:
+
+        # Updating
+        eval_date = next_eval_date
+        save_eval_dates.append(next_eval_date)
+
+        # Computing the number of days to next date
+        VIX_ateval = 1 + (VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]/n1).astype('int')
+        ndays = n2 - VIX_ateval
+        save_ndays.append(ndays)
+
+        if ndays <= 0:
+            raise Exception("Distance between dates must be strictly positive !")
+
+        # Computing next date of evaluation
+        current_date_index = market_dates.index(eval_date.to_timestamp().strftime("%Y-%m-%d"))
+        if current_date_index + ndays < market.shape[0]:
+            next_eval_date = market.index[current_date_index + ndays]
+        else:
+            next_eval_date = market.index[-1]
+
+        # Computing the mutation rate
+        ng_mutation_rate = (1 + (VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]/10).astype('int')) * (market.shape[1] / n3) # Big change here!
+        save_mutation_rate.append(ng_mutation_rate)
+        
+        # Computing the fitness lambda
+        fitness_lambda = 1 - VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")] / (VIX[:eval_date.to_timestamp().strftime("%Y-%m-%d")].max() * n4)
+        save_fitness_lambda.append(100 * fitness_lambda)
+        
+        # Loop counter update
+        loop +=1
+        
+        
+    # Converting the mutation rate into a dataFrame
+    df_mutation_rate = pd.DataFrame(data=save_mutation_rate, index=save_eval_dates, columns=["Mutation Rate"])
+    df_ndays = pd.DataFrame(data=save_ndays, index=save_eval_dates, columns=["ndays"])
+    df_fitness_lambda = pd.DataFrame(data=save_fitness_lambda, index=save_eval_dates, columns=["100 x Fitness lambda"])
+
+    # PLOTTING EVALUATION DATES / MUTATION RATES
+    fig, axis = plt.subplots(nrows=1, ncols=1)
+    VIX.plot(label="VIX")
+    df_ndays.plot(figsize=(25,5), ax=axis, color="orange", linewidth=2, legend=True)
+    df_mutation_rate.plot(legend=True, ax=axis, color="green", linewidth=2)
+    df_fitness_lambda.plot(legend=True, ax=axis, color="purple", linewidth=2)
+    axis.axhline(0, color='red', linestyle='--', linewidth=2)
+    for ed in save_eval_dates:
+        axis.axvline(x=ed.to_timestamp().strftime("%Y-%m-%d"), color='grey', linestyle='--')
+    axis.legend()
+
+    # Saving plot as a png file
+    if savefile:
+        plt.savefig('./' + namefile)
+        
+        
+        
+        
