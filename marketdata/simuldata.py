@@ -139,3 +139,36 @@ def plot_market_components(market, dims=(10,5), legend=True):
         axis.legend(loc='upper left')
 
 
+
+        
+
+# FUNCTIONS USED WITH GENETIC ALGORITHM
+
+def propagate_investments(investment, market, name_indiv="Portfolio"):
+    """
+    Function that propagates the initial investments into a portfolio over time.
+    
+    Argument:
+    - individual: that's a list of Nassets elements that represent our initial investment.
+    - market: the market (set of assets) on which the investments are applied.
+    - name_indiv: name of the individual portfolio.
+    """
+    
+    # Check
+    first_row = market.iloc[0]
+    is_uniform = True
+    first_value = first_row[0]
+    for x in first_row:
+        if x != first_value:
+            raise Error("First row of market must be uniform in value.")
+    
+    Nassets = len(investment)
+    
+    # Propagating investments
+    portfolio = market / first_value * investment
+    
+    # Summing contributions
+    portfolio_total = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
+    return portfolio_total
+
+
