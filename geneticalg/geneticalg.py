@@ -248,8 +248,182 @@ def pairing(elite, selected, method = 'Fittest'):
                 
     return parents_pairs, parents_values
 
+
+
+def non_adjacent_random_list(Nmin, Nmax, Npoints):
+    """
+    Function that generates a list of Npoints non-adjacent numbers at random, taken from a list of integers between Nmin and Nmax.
+    Extreme ends of the list Nmin, Nmin+1, ..., Nmax-1, Nmax are excluded.
+    
+    Note: this function is written to be used in the function `mating_pair`.
+    """
+    
+    # Initial tests
+    if Nmin%1!=0 or Nmax%1!=0 or Npoints%1!=0:
+        raise Exception("Nmin, Nmax and Npoints must be integers.")
+
+    if Npoints > int((Nmax-Nmin-2)/3):
+        print("For Nmin =",Nmin,"and Nmax =",Nmax,"we must have Npoints <=",int((Nmax-Nmin-2)/5))
+        raise Exception("Please take a lower value to avoid slowness.")
+
+    # Initialization
+    list_pts=[]
+    count = 0
+
+    # Process
+    while count < Npoints:
+        pt = random.randint(Nmin+1, Nmax-1) 
+        pt_is_fine = True
+        for p in list_pts:
+            if np.abs(p-pt)<2:
+                pt_is_fine = False
+                continue
+        if pt_is_fine:
+            list_pts.append(pt)
+            count +=1
+            
+    # Plot
+    # fig = plt.figure(figsize=(15,5))
+    # plt.hist(list_pts, bins=Nmax-Nmin)
+    
+    return sorted(list_pts)
+
+
+
+def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=None):
+    """
+    Function that takes a pair of parents and make a reproduction of them to produce two offsprings.
+    
+    Methods:
+    - 'Single Point': using only one pivot value for exchange of genes
+    - 'Two Points': using two pivot value for exchange of genes
+    
+    Note: Since the echange of genes have changed the sum of each portfolio, we are enforced to renormalize the values.
+          This makes the exchange of genes harder to compare when looking at values, but it is necessary to avoi
+          portfolios overall investment to change.
+    """
+    
+    # Check that there is only 2 parents here
+    if len(pair_of_parents) != 2:
+        raise Exception("Only a pair of parents allowed here!")
+    
+    # Selecting only the columns with Asset allocations, i.e. the genes
+    parents = pd.DataFrame(pair_of_parents).filter(regex="Asset")
+    Ngene = parents.shape[1]
+    
+    # Check that the parents have the same sum
+    if parents.iloc[0].sum() - parents.iloc[1].sum() > 1E-5 :
+        print(parents.iloc[0].sum(), parents.iloc[1].sum())
+        raise Exception("Parents must have the same sum of assets allocations.")
+    parents_sum = parents.iloc[0].sum()
+        
+    # Creating offsprings - Method 1
+    if method == 'Single Point':
+        pivot_point = random.randint(1, Ngene-2)
+        
+        offspring1 = parents.iloc[0,0:pivot_point].append(parents.iloc[1,pivot_point:])
+        if offspring1.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring1_renorm = offspring1 * parents_sum / offspring1.sum()
+        offsprings = [offspring1_renorm]
+        
+        offspring2 = parents.iloc[1,0:pivot_point].append(parents.iloc[0,pivot_point:])
+        if offspring2.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring2_renorm = offspring2 * parents_sum / offspring2.sum()
+        offsprings.append(offspring2_renorm)
     
     
+    # Creating offsprings - Method 2
+    if method == 'Two Points':
+        pivot_point_1 = random.randint(1, Ngene-1)
+        pivot_point_2 = random.randint(1, Ngene)
+        
+        while pivot_point_2 < pivot_point_1:
+            pivot_point_2 = random.randint(1, Ngene)
+            
+        offspring1 = parents.iloc[0,0:pivot_point_1].append(parents.iloc[1,pivot_point_1:pivot_point_2]).append(parents.iloc[0,pivot_point_2:])
+        if offspring1.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring1_renorm = offspring1 * parents_sum / offspring1.sum()
+        offsprings = [offspring1_renorm]
+        
+        offspring2 = parents.iloc[1,0:pivot_point_1].append(parents.iloc[0,pivot_point_1:pivot_point_2]).append(parents.iloc[1,pivot_point_2:])
+        if offspring2.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring2_renorm = offspring2 * parents_sum / offspring2.sum()
+        offsprings.append(offspring2_renorm)
+    
+    
+    # Creating offsprings - Method 3
+    if method == 'Multi Points':
+        if (Npoints == None) or (Npoints == 0):
+            raise Exception("Npoints must be specified.")
+        if Npoints%1!=0:
+            raise Exception("Npoints must be integer.")
+        
+        # Create a set of pivot points
+        pivots = non_adjacent_random_list(0, Ngene, Npoints)
+        
+        # Case where Npoints is odd
+        if Npoints%2==1:
+            offspring1 = parents.iloc[0,0:pivots[0]]
+            offspring2 = parents.iloc[1,0:pivots[0]]
+            for i in range(Npoints-1):
+                offspring1 = offspring1.append(parents.iloc[int((1+(-1)**i)/2), pivots[i]:pivots[i+1]])
+                offspring2 = offspring2.append(parents.iloc[int((1+(-1)**(i+1))/2), pivots[i]:pivots[i+1]])
+            offspring1 = offspring1.append(parents.iloc[1, pivots[Npoints-1]:Ngene])
+            offspring2 = offspring2.append(parents.iloc[0, pivots[Npoints-1]:Ngene])
+        
+        # Case where Npoints is even
+        elif Npoints%2==0:
+            offspring1 = parents.iloc[0,0:pivots[0]]
+            offspring2 = parents.iloc[1,0:pivots[0]]
+            for i in range(Npoints-1):
+                offspring1 = offspring1.append(parents.iloc[int((1+(-1)**i)/2), pivots[i]:pivots[i+1]])
+                offspring2 = offspring2.append(parents.iloc[int((1+(-1)**(i+1))/2), pivots[i]:pivots[i+1]])
+            offspring1 = offspring1.append(parents.iloc[0, pivots[Npoints-1]:Ngene])
+            offspring2 = offspring2.append(parents.iloc[1, pivots[Npoints-1]:Ngene])
+        
+        # To check visually
+        # print(Npoints)
+        # print(pivots)
+        # for d in range(parents.shape[1]):
+        #     print(d, " ", parents.iloc[0,d], parents.iloc[1,d], offspring1[d], offspring2[d])
+        
+        
+        # Renormalizations
+        if offspring1.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring1_renorm = offspring1 * parents_sum / offspring1.sum()
+        offsprings = [offspring1_renorm]
+        if offspring2.sum() < 0:
+            print("An offspring got the sum of asset allocations negative before renormalization.")
+        offspring2_renorm = offspring2 * parents_sum / offspring2.sum()
+        offsprings.append(offspring2_renorm)
+        
+    
+    # Check that the sums of asset allocations are the same as before
+    sum_allocations = parents.iloc[0].sum()
+    if sum_allocations - parents.iloc[1].sum() > 1E-5 :
+        print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
+        print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
+        raise Exception("Parents must all have the same sum of assets allocations.")
+    if sum_allocations - offsprings[0].sum() > 1E-5 :
+        print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
+        print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
+        raise Exception("Offsprings and parents must have the same sum of assets allocations.")
+    if sum_allocations - offsprings[1].sum() > 1E-5 :
+        print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
+        print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
+        raise Exception("Offsprings and parents must have the same sum of assets allocations.")
+        
+    # Adding the mating date, which is also the birth date of the offsprings (no gestation period here).
+    offsprings[0]["Born"] = mating_date
+    offsprings[1]["Born"] = mating_date
+    
+    return offsprings
+
 
 
 
