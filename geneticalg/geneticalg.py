@@ -29,7 +29,37 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     if normalization < 0:
         raise Exception("Shorting too many assets. Not allowed for now.")
     normalized_individual = np.array(individual) / normalization
+    
     return normalized_individual
+
+
+
+def population(number_of_individuals, number_of_genes, upper_limit, lower_limit, sum_target, birth_date, name_indiv="Indiv Portfolio"):
+    """
+    Function that creates a population of individuals from the function `individual`.
+    
+    Arguments:
+    number_of_individuals: the number of individuals we want in this creation of a population
+    number_of_genes: the number of genes each of these individuals have
+    upper_limit: the higher limit of genes, i.e. largest amount of long positions
+    lower_limit: the lowest limit of genes, i.e. the lowest amount we invest in a given asset. Value can be negative (short positions).
+    sum_target: the sum of all these positions.
+    birth_date: a date to specify at which time the individuals of that population were created.
+    name_indiv: the name we choose for the individuals.
+    """
+    
+    # Building a data frame of individuals
+    pop = pd.DataFrame([individual(number_of_genes, upper_limit, lower_limit, sum_target) for _ in range(number_of_individuals)])
+    pop.columns = ["Asset " + str(i) for i in range(number_of_genes)]
+    
+    # Setting the birthdate
+    pop["Born"] = [birth_date for _ in range(number_of_individuals)]
+    
+    # Setting the row names
+    pop.index = [name_indiv + str(i+1) for i in range(number_of_individuals)]
+    pop.index.names = ["Individuals"]
+    
+    return pop
 
 
 
