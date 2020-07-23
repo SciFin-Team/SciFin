@@ -121,7 +121,74 @@ def get_generation(population, market, current_eval_date, next_eval_date, lamb=0
         return generation
 
     
+def roulette(cum_sum, chance):
+    """
+    The function for roulette wheel selection takes the cumulative sums and the randomly generated value
+    for the selection process and returns the number of the selected individual. By calculating the cumulative sums,
+    each individual has a unique value between 0 and 1. To select individuals, a number between 0 and 1 is randomly
+    generated and the individual that is closes to the randomly generated number is selected.
+    """
+    variable = list(cum_sum.copy())
+    variable.append(chance)
+    variable = sorted(variable)
+    return variable.index(chance)
+
+
+def selection(generation, method='Fittest Half'):
+    """
+    Function that operates the selection among a generation, based on the last fitness.
+    Different methods can be used among 'Fittest Half', 'Random' and 'Roulette Wheel'.
     
+    Methods:
+    'Fittest Half': the first half of the top fitness is kept
+    'Random': rows are picked up at random, but they can't be the same
+    'Roulette Wheel': rows are picked up at random, but with a preference for high cumulative sum (high fitness).
+    """
+    
+    # Initialization
+    N = generation.shape[0]
+    
+    # Sorting:
+    # We use the last fitness column and normalize it
+    last_fitness = generation.filter(regex='Fit').columns[-1]
+    generation['Normalized Fitness'] = [generation[last_fitness][x]/sum(generation[last_fitness]) for x in range(len(generation[last_fitness]))]
+
+    # We sort the values from smallest to highest for computing the cumulative sum
+    generation.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
+    
+    # Computing the cumulative sum
+    cumsum_name = "CumSum " + last_fitness.split(" ")[1]
+    generation[cumsum_name] = np.array(generation['Normalized Fitness']).cumsum()
+    
+    # We sort the values back, from highest fitness to lowest
+    generation.sort_values(by=cumsum_name, ascending=False, inplace=True)
+    
+    # We get rid of the normalized fitness and just use the cumulative sum
+    generation.drop(columns=["Normalized Fitness"], inplace=True)
+    
+    
+    # Selection:
+    if method == 'Fittest Half':
+        select_rows = [x for x in range(N//2)]
+        selected_individuals = generation.iloc[select_rows,:]
+        
+    elif method == 'Random':
+        select_rows = [x for x in range(N)]
+        random.shuffle(select_rows)
+        selected_individuals = generation.iloc[select_rows[:N//2],:]
+        
+    elif method == 'Roulette Wheel':
+        selected = []
+        for x in range(N//2):
+            selected.append(roulette(generation[cumsum_name], random.random()))
+            while len(set(selected)) != len(selected):
+                selected[x] = roulette(generation[cumsum_name], random.random())
+        select_rows = [int(selected[x]) for x in range(N//2)]
+        selected_individuals = generation.iloc[select_rows,:]
+
+    return pd.DataFrame(selected_individuals)
+
+
     
     
 
