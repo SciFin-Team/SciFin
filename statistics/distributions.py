@@ -6,9 +6,11 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.special import erf, erfinv
 
 
 support = ['R', 'R+']
+
 
 class distribution:
     """
@@ -21,6 +23,7 @@ class distribution:
         """
         # Type of distribution
         self.type = None
+        self.support = None
         
         # moments
         self.mean = None
@@ -34,6 +37,7 @@ class distribution:
         
         # others
         self.mode = None
+        self.MAD = None
         
         # name (or nickname)
         self.name = name
@@ -62,6 +66,18 @@ class distribution:
         """
         self.mode = mode
         
+    def set_MAD(self, MAD):
+        """
+        Sets the Mean Absolute Deviation (MAD)
+        """
+        self.MAD = MAD
+        
+    def set_entropy(self, entropy):
+        """
+        Sets the entropy of the distribution.
+        """
+        self.entropy = entropy
+        
     def set_name(self, name):
         """
         Sets the name (or nickname).
@@ -88,7 +104,8 @@ class distribution:
         print("Kurtosis: \t", self.kurtosis)
         print("Median: \t", self.median)
         print("Mode: \t\t", self.mode)
-
+        print("MAD: \t\t", self.MAD)
+        print("Entropy: \t", self.entropy)
         
         
         
@@ -102,18 +119,45 @@ class Normal(distribution):
         """
         Initilialization function.
         """
+        assert(sigma>0)
+        # Type of distribution
         self.type = 'Normal'
+        self.support = 'R'
+        # moments
         self.mu = mu
         self.sigma = sigma
-        self.set_moments(mean=mu, variance=sigma*sigma, skewness=0., kurtosis=3.)
-        self.set_quantiles(median=mu)
-        self.set_mode(mode=mu)
+        self.set_moments(mean = mu, variance = sigma*sigma, skewness = 0., kurtosis = 3.)
+        # quantiles
+        self.set_quantiles(median = mu)
+        # others
+        self.set_mode(mode = mu)
+        self.set_MAD(MAD = sigma*np.sqrt(2/np.pi))
+        self.set_entropy(entropy = (1/2) * np.log(2*np.pi*np.e*sigma*sigma))
+        # name (or nickname)
         self.set_name(name)
         
-
     def PDF(self, x):
         """
         Method implementing the Probability Density Function (PDF) for the Normal distribution.
         """
-        PDF = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
-        return PDF
+        return np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
+
+    
+    def CDF(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Normal distribution.
+        """
+        return [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
+    
+    
+    def quantile(self, p):
+        """
+        Method returning the quantile associated to a certain probability.
+        """
+        assert(p>0 and p<1)
+        return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
+    
+    
+    
+    
+    
