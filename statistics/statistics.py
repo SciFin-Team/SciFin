@@ -1,6 +1,6 @@
 # Created on 2020/7/24
 
-# This module is for probability distributions.
+# This module is for simple statistics.
 
 # Packages
 import numpy as np
