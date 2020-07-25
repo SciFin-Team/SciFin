@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 from scipy.special import erf, erfinv
 
 
-support = ['R', 'R+', 'N']
-
 
 class distribution:
     """
@@ -104,15 +102,17 @@ class distribution:
         print("Kurtosis: \t", self.kurtosis)
         print("Median: \t", self.median)
         print("Mode: \t\t", self.mode)
-        print("MAD: \t\t", self.MAD)
         print("Entropy: \t", self.entropy)
         
         
         
         
+# CONTINUOUS DISTRIBUTIONS
+        
 class Normal(distribution):
     """
-    Class implementing the normal distribution, inheriting from class distribution.
+    Class implementing the normal distribution of mean 'mu' and standard deviation 'sigma'.
+    This class is inheriting from the class 'distribution'.
     """
     
     def __init__(self, mu=0., sigma=1., name=""):
@@ -125,9 +125,11 @@ class Normal(distribution):
         self.type = 'Normal'
         self.support = 'R'
         
-        # moments
+        # parameters
         self.mu = mu
         self.sigma = sigma
+        
+        # moments
         self.set_moments(mean = mu, variance = sigma*sigma, skewness = 0., kurtosis = 3.)
         
         # quantiles
@@ -163,10 +165,15 @@ class Normal(distribution):
     
     
     
+    
+# DISCRETE DISTRIBUTIONS
+    
 class Poisson(distribution):
     """
-    Class implementing the Poisson distribution, inheriting from class distribution.
-    We use a value k_max to set the limit of summation for the entropy calculation.
+    Class implementing the Poisson distribution with expected rate of event occurence 'lambda'.
+    This class is inheriting from the class 'distribution'.
+    
+    Note: We use a value k_max to set the limit of summation for the entropy calculation.
     """
     
     def __init__(self, lmbda=0., k_max=1000, name=""):
@@ -181,8 +188,10 @@ class Poisson(distribution):
         self.type = 'Poisson'
         self.support = 'N'
         
-        # moments
+        # parameters
         self.lmbda = lmbda
+        
+        # moments
         self.set_moments(mean = lmbda, variance = lmbda, skewness = 1./np.sqrt(lmbda), kurtosis = 3. + 1./np.sqrt(lmbda))
         
         # quantiles
@@ -257,6 +266,126 @@ class Poisson(distribution):
         
         # Completing the calculation
         return np.exp(-self.lmbda) * np.array(t)
+    
+    
+    
+    
+    
+    
+    
+class Binomial(distribution):
+    """
+    Class implementing the binomial distribution of "successes" having probability of success 'p' in a sequence of 'n' independent experiments (number of trials). I also applies to drawing an element with probability p in a population of n elements, with replacement after draw. This class is inheriting from the class 'distribution'.
+    
+    Note: Default value for n is taken to be 1, hence corresponding to the Bernoulli distribution.
+    Note 2: Computation of entropy is only an approximation valid at order O(1/n).
+    """
+    
+    def __init__(self, n=1, p=0.5, name=""):
+        """
+        Initilialization function.
+        """
+        # Checks
+        assert(n>=0)
+        assert(isinstance(n,int))
+        assert(p>=0 and p<=1)
+        
+        # Type of distribution
+        self.type = 'Binomial'
+        self.support = '{0,1,...,n}'
+        
+        # moments
+        self.n = n
+        self.p = p
+        self.q = 1 - p
+        self.set_moments(mean = n*p, variance = n*p*(1-p), skewness = ((1-p)-p)/np.sqrt(n*p*(1-p)), kurtosis = 3. + (1-6*p*(1-p))/(n*p*(1-p)))
+        
+        # quantiles
+        self.set_median(median = self.median_Binomial(self.n, self.p))
+        
+        # others
+        self.set_mode(mode = self.mode_Binomial(self.n, self.p))
+        self.set_entropy(entropy = (1/2) * np.log2(2 * np.pi * np.e * n*p*(1-p)))
+        
+        # name (or nickname)
+        self.set_name(name)
+        
+
+    def mode_Binomial(self, n, p):
+        """
+        Computes the mode of the Binomial distribution.
+        """
+        test_value = (n+1)*p
+        if test_value == 0 or isinstance(test_value,int) == False:
+            return np.floor(test_value)
+        elif test_value in range(1,n,1):
+            print("Binomial distribution for these values has two modes.")
+            return (test_value, test_value-1)
+        elif test_value == n+1:
+            return n
+
+        
+    def median_Binomial(self, n, p):
+        """
+        Partially computes the median of the Binomial distribution.
+        """
+        test_value = n*p
+        if test_value==int(test_value):
+            return test_value
+        else:
+            print("Median has a value in interval [", np.floor(test_value), ",", np.ceil(test_value), "].")
+            return None
+        
+    
+    def PMF(self, klist):
+        """
+        Method implementing the Probability Mass Function (PMF) for the binomial distribution.
+        """
+        assert(len(klist)>0)
+        for x in klist:
+            assert(isinstance(x,int))
+            assert(x>=0 and x<=self.n)
+        pmf = [np.math.factorial(self.n) / (np.math.factorial(x) * np.math.factorial(self.n-x)) * np.power(self.p,x) * np.power(1-self.p,self.n-x) for x in klist]
+        return pmf
+
+    
+    def CDF(self, klist):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the binomial distribution.
+        """
+        # Checks
+        assert(len(klist)>0)
+        N = len(klist)
+        for x in klist:
+            assert(isinstance(x,int))
+            
+        # Check if k's are consecutive
+        ks_consecutive = True
+        for i in range(N-1):
+            if (klist[i+1] != klist[i]+1):
+                ks_consecutive = False
+                break
+        
+        # Computing the list of elements to sum
+        t = []
+        if ks_consecutive==True:
+            k_range = np.floor(klist)
+            tmp_sum = 1.
+            t.append(tmp_sum)
+            for i in range(1,N,1):
+                tmp_sum += np.math.factorial(self.n) / (np.math.factorial(i) * np.math.factorial(self.n-i)) * np.power(self.p,i) * np.power(1-self.p,self.n-i)
+                t.append(tmp_sum)
+        else:
+            for i in range(N):
+                tmp_sum = [np.math.factorial(self.n) / (np.math.factorial(i) * np.math.factorial(self.n-i)) * np.power(self.p,i) * np.power(1-self.p,self.n-i) for i in range(np.floor(k_range[i]))].sum()
+                t.append(tmp_sum)
+        
+        # Completing the calculation
+        return np.array(t)
+    
+    
+    
+    
     
     
     
