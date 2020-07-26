@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.special import erf, erfinv
+from scipy.special import erf, erfinv, gamma
 
 
 
@@ -226,6 +226,111 @@ class Uniform(distribution):
                 cdf.append(1)
         return cdf
     
+
+    
+class Weibull(distribution):
+    """
+    Class implementing the Weibull distribution with shape parameter 'k' (>0) and scale parameter 'lmbda' (>0).
+    This class is inheriting from the class 'distribution'.
+    """
+    
+    def __init__(self, k=1, lmbda=1, name=""):
+        """
+        Initilialization function.
+        """
+        assert(k>0)
+        assert(lmbda>0)
+        
+        # Type of distribution
+        self.type = 'Weibull'
+        self.support = 'R+'
+        
+        # parameters
+        self.k = k
+        self.lmbda = lmbda
+                
+        # moments
+        self.set_moments(mean     = lmbda * gamma(1 + 1/k),
+                         variance = lmbda**2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))**2),
+                         skewness = self.skewness_Weibull(k, lmbda),
+                         kurtosis = self.kurtosis_Weibull(k, lmbda))
+        
+        # quantiles
+        self.set_median(median = lmbda * np.power(np.log(2), 1/k))
+        
+        # others
+        self.set_mode(mode = self.mode_Weibull(k, lmbda))
+        self.set_entropy(entropy = np.euler_gamma * (1-1/k) + np.log(lmbda/k) + 1)
+        
+        # name (or nickname)
+        self.set_name(name)
+        
+        
+    def skewness_Weibull(self, k, lmbda):
+        """
+        Function computing the skewness of the Weibull distribution.
+        """
+        G1 = gamma(1 + 1/k)
+        G2 = gamma(1 + 2/k)
+        G3 = gamma(1 + 3/k)
+        mu = lmbda * G1
+        var = lmbda**2 * (G2 - G1**2)
+        sig = np.sqrt(var)
+        skew = (G3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
+        return skew
+        
+    def kurtosis_Weibull(self, k, lmbda):
+        """
+        Function computing the kurtosis of the Weibull distribution.
+        """
+        G1 = gamma(1 + 1/k)
+        G2 = gamma(1 + 2/k)
+        G3 = gamma(1 + 3/k)
+        G4 = gamma(1 + 4/k)
+        mu = lmbda * G1
+        var = lmbda**2 * (G2 - G1**2)
+        sig = np.sqrt(var)
+        kurt = (G4 * lmbda**4 - 4 * self.skewness_Weibull(k,lmbda) * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
+        return kurt
+        
+    def mode_Weibull(self, k, lmbda):
+        """
+        Function computing the mode of the Weibull distribution.
+        """
+        if k>1:
+            return lmbda * np.power((k-1)/k, 1/k)
+        else:
+            return 0
+        
+        
+    def PDF(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the ... distribution.
+        """
+        pdf = []
+        for i in x:
+            if i>=0:
+                pdf.append((self.k/self.lmbda) * np.power(i/self.lmbda,self.k-1) * np.exp(-np.power(i/self.lmbda,self.k)))
+            else:
+                pdf.append(0)
+        return pdf
+
+    
+    def CDF(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the ... distribution.
+        """
+        cdf = []
+        for i in x:
+            if i>=0:
+                cdf.append(1 - np.exp(-np.power(i/self.lmbda,self.k)))
+            else:
+                cdf.append(0)
+        return cdf
+    
+    
+    
+    
     
     
     
@@ -266,7 +371,7 @@ class Poisson(distribution):
         # others
         self.k_max = k_max
         self.set_mode(mode = np.floor(lmbda))
-        self.set_entropy(entropy = self.entropy_Poisson(self.lmbda))
+        self.set_entropy(entropy = self.entropy_Poisson(lmbda))
         
         # name (or nickname)
         self.set_name(name)
@@ -367,10 +472,10 @@ class Binomial(distribution):
         self.set_moments(mean = n*p, variance = n*p*(1-p), skewness = ((1-p)-p)/np.sqrt(n*p*(1-p)), kurtosis = 3. + (1-6*p*(1-p))/(n*p*(1-p)))
         
         # quantiles
-        self.set_median(median = self.median_Binomial(self.n, self.p))
+        self.set_median(median = self.median_Binomial(n, p))
         
         # others
-        self.set_mode(mode = self.mode_Binomial(self.n, self.p))
+        self.set_mode(mode = self.mode_Binomial(n, p))
         self.set_entropy(entropy = (1/2) * np.log2(2 * np.pi * np.e * n*p*(1-p)))
         
         # name (or nickname)
