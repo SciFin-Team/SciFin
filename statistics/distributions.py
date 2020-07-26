@@ -163,6 +163,72 @@ class Normal(distribution):
         assert(p>0 and p<1)
         return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
     
+
+
+class Uniform(distribution):
+    """
+    Class implementing the uniform distribution taking a non-zero value between values 'a' and 'b>a'.
+    This class is inheriting from the class 'distribution'.
+    """
+    
+    def __init__(self, a=0., b=1., name=""):
+        """
+        Initilialization function.
+        """
+        assert(a<b)
+        
+        # Type of distribution
+        self.type = 'Uniform'
+        self.support = '[a,b]'
+        
+        # parameters
+        self.a = a
+        self.b = b
+                
+        # moments
+        self.set_moments(mean = (a+b)/2, variance = (b-a)**2 / 12, skewness = 0, kurtosis = 3. - 6./5)
+        
+        # quantiles
+        self.set_median(median = (a+b)/2)
+        
+        # others
+        self.set_mode(mode = 'Any value between a and b.')
+        self.set_entropy(entropy = np.log(b-a))
+        
+        # name (or nickname)
+        self.set_name(name)
+        
+
+    def PDF(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the uniform distribution.
+        """
+        pdf = []
+        for i in x:
+            if i>=self.a and i<=self.b:
+                pdf.append(1/(self.b-self.a))
+            else:
+                pdf.append(0)
+        return pdf
+    
+    
+    def CDF(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the uniform distribution.
+        """
+        cdf = []
+        for i in x:
+            if i<self.a:
+                cdf.append(0)
+            elif i>=self.a and i<=self.b:
+                cdf.append((i-self.a)/(self.b-self.a))
+            elif i>self.b:
+                cdf.append(1)
+        return cdf
+    
+    
+    
+    
     
     
     
