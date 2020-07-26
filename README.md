@@ -19,6 +19,14 @@ The current development is focused on the following topics:
 
 Other topics will later follow.
 
+
+## Installation
+
+Installing SciFin on Linux or Mac is very easy, you can simply run `pip install SciFin` on the Terminal command line. The last version available on PyPI is version 0.0.1.
+
+If you encounter problems during installation or after and think you know how the problem can be improved, please share it with me.
+
+
 ## Contact
 
 - If you have comments or suggestions, you can reach Fabien Nugier.
