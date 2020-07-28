@@ -13,6 +13,7 @@ The current development is focused on the following topics:
 - `classifier`: Classification techniques
 - `fouriertrf`: Fourier transforms
 - `geneticalg`: Genetic algorithms
+- `marketdata`: Reading market data
 - `montecarlo`: Monte Carlo simulations
 - `neuralnets`: Neural networks
 - `statistics`: Basic statistics
