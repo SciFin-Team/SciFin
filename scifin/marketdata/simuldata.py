@@ -9,7 +9,7 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
-import marketdata.marketdata as md
+from . import marketdata
 
 
 def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
@@ -124,7 +124,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
     """
     
     # Computing the EW portfolio
-    market_EW = md.market_EWindex(market)
+    market_EW = marketdata.market_EWindex(market)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims, legend=legend)
@@ -361,7 +361,7 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,
     """
     
     # Computing the EW portfolio
-    market_EW = md.market_EWindex(market)
+    market_EW = marketdata.market_EWindex(market)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims)
@@ -391,8 +391,8 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     fig, axis = plt.subplots(nrows=1, ncols=1)
     
     # Computing the EW portfolio
-    market_EW = md.market_EWindex(market)
-    market_CW = md.market_CWindex(market, marketcap)
+    market_EW = marketdata.market_EWindex(market)
+    market_CW = marketdata.market_CWindex(market, marketcap)
 
     # Plotting market
     market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis, legend=False)

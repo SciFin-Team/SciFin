@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-import timeseries.timeseries as ts
+from . import timeseries
 
 
 
@@ -52,7 +52,7 @@ def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, co
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
     
 
@@ -79,7 +79,7 @@ def RandomWalk(start_date, end_date, frequency, start_value, sigma):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
     
 
@@ -106,7 +106,7 @@ def DriftRandomWalk(start_date, end_date, frequency, start_value, drift, sigma):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
     
     
@@ -152,7 +152,7 @@ def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
 
@@ -195,7 +195,7 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
 
@@ -238,7 +238,7 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
 
@@ -298,7 +298,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
 
@@ -356,7 +356,7 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
 
@@ -394,7 +394,7 @@ def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = ts.timeseries(df)
+    rs =  timeseries(df)
     return rs
 
     

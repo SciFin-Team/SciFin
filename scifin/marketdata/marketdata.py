@@ -15,7 +15,7 @@ import requests
 import pandas_datareader as pdr
 from IPython.display import display, clear_output
 
-import timeseries.timeseries as ts
+from .. import timeseries
 
 
 def scrape_sp500_tickers():
@@ -94,7 +94,7 @@ def convert_multicol_df_tolist(df, start_date, end_date):
     shared_index = df.index
     for c in df.columns:
         tmp_df = pd.DataFrame(data=df[start_date:end_date][c], index=shared_index)
-        list_ts.append(ts.timeseries(tmp_df, name=c))
+        list_ts.append(timeseries.timeseries(tmp_df, name=c))
     
     return list_ts
 

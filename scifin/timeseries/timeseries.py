@@ -15,8 +15,6 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 
-import timeseries.timeseries as ts
-
 
 # CLASS timeseries
 class timeseries:
@@ -454,7 +452,7 @@ class timeseries:
         # Extract the linear trend
         lin_trend_y = model.predict(X)
         lin_trend_df = pd.DataFrame(index=data.index, data=lin_trend_y)
-        lin_trend_ts = ts.timeseries(lin_trend_df)
+        lin_trend_ts = timeseries(lin_trend_df)
         
         # Remove the linear trend to the initial time series
         nonlin_y = y - lin_trend_y
@@ -465,7 +463,7 @@ class timeseries:
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
             polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
-            polyn_comp_ts = ts.timeseries(polyn_comp_df)
+            polyn_comp_ts = timeseries(polyn_comp_df)
         
         # Generating the resting part time series
         if polyn_order != None:
@@ -473,7 +471,7 @@ class timeseries:
         else:
             rest_y = nonlin_y
         rest_df = pd.DataFrame(index=data.index, data=rest_y)
-        rest_ts = ts.timeseries(rest_df)
+        rest_ts = timeseries(rest_df)
         
         # Extracting seasonality
         if extract_seasonality==True:
@@ -507,12 +505,12 @@ class timeseries:
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
             seasonal_df = pd.DataFrame(index=data.index, data=seasonal_y)
-            seasonal_ts = ts.timeseries(seasonal_df)
+            seasonal_ts = timeseries(seasonal_df)
 
             # Building the residue time series
             residue_y = rest_y - seasonal_y
             residue_df = pd.DataFrame(index=data.index, data=residue_y)
-            residue_ts = ts.timeseries(residue_df)
+            residue_ts = timeseries(residue_df)
         
         # Return results
         if polyn_order != None:

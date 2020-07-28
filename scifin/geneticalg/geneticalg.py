@@ -9,7 +9,7 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
-import marketdata.simuldata as sd
+from .. import statistics
 
 
 def individual(number_of_genes, upper_limit, lower_limit, sum_target):
@@ -93,10 +93,10 @@ def get_generation(population, market, current_eval_date, next_eval_date, lamb=0
         raise Exception("Current date can't be after the evaluation date.")
     
     # Getting the date just before the next evaluation date (at which reproduction will happen)
-    date_before_eval = sd.find_tick_before_eval(market.index, next_eval_date)
+    date_before_eval = statistics.find_tick_before_eval(market.index, next_eval_date)
     
     # Propagate individuals
-    propagation = sd.limited_propagation(population, market, current_eval_date, date_before_eval)
+    propagation = statistics.limited_propagation(population, market, current_eval_date, date_before_eval)
     
     # Create the generation from the population copy
     try:
@@ -112,7 +112,7 @@ def get_generation(population, market, current_eval_date, next_eval_date, lamb=0
         
     # Compute the fitness of individuals and sort them by fitness
     fitness_name = "Fitness " + date_before_eval.strftime(date_format)
-    generation[fitness_name] = sd.fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method)
+    generation[fitness_name] = statistics.fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method)
     generation.sort_values(by=[fitness_name], ascending=False, inplace=True)
     
     if return_propag == True:
