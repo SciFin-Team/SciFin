@@ -1,0 +1,63 @@
+class ...name...(distribution):
+    """
+    Class implementing the ... distribution with ....params....
+    This class is inheriting from the class 'distribution'.
+    
+    Note: ....
+    """
+    
+    def __init__(self, lmbda=0., k_max=1000, name=""):
+        """
+        Initilialization function.
+        """
+        assert(....)
+        
+        # Type of distribution
+        self.type = 
+        self.support = 
+        
+        # parameters
+        self. ... = ...
+                
+        # moments
+        self.set_moments(mean = , variance = , skewness = , kurtosis = 3. + )
+        
+        # quantiles
+        self.set_median(median = )
+        
+        # others
+        self. ... = ...
+        self.set_mode(mode = )
+        self.set_entropy(entropy = )
+        
+        # name (or nickname)
+        self.set_name(name)
+        
+        
+    def PMF(self, ...):
+        """
+        Method implementing the Probability Mass Function (PMF) for the ... distribution.
+        """
+        ...
+        return pmf
+
+    def PDF(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the ... distribution.
+        """
+        ...
+        return pdf
+    
+    def CDF(self, ...):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the ... distribution.
+        """
+        ...
+
+        return cdf
+    
+    
+    
+    
+    
+    
