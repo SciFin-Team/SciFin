@@ -117,7 +117,7 @@ class Normal(Distribution):
     
     def quantile(self, p):
         """
-        Method returning the quantile associated to a certain probability.
+        Method returning the quantile associated to the Normal distribution.
         """
         assert(p>0 and p<1)
         return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
@@ -193,8 +193,9 @@ class Uniform(Distribution):
     
 class Weibull(Distribution):
     """
-    Class implementing the Weibull distribution with shape parameter 'k' (>0) and scale parameter 'lmbda' (>0).
-    This class is inheriting from the class 'Distribution'.
+    Class implementing the Weibull distribution with shape parameter 'k' (>0) and scale parameter 'lmbda' (>0). This class is inheriting from the class 'Distribution'.
+    
+    Note: default value for 'k' is 1, making it equivalent to an Exponential distribution.
     """
     
     def __init__(self, k=1, lmbda=1, name=""):
@@ -296,7 +297,143 @@ class Weibull(Distribution):
     
     
     
+    
+    
+class Rayleigh(Distribution):
+    """
+    Class implementing the Rayleigh distribution with scale parameter 'sigma'.
+    This class is inheriting from the class 'Distribution'.
+    """
+    
+    def __init__(self, sigma=1, name=""):
+        """
+        Initilialization function.
+        """
+        assert(sigma>0)
+        
+        # Type of distribution
+        self.type = 'Rayleigh'
+        self.support = 'R+'
+        
+        # parameters
+        self.sigma = sigma
+                
+        # moments
+        self.mean = sigma * np.sqrt(np.pi/2)
+        self.variance = (4 - np.pi) / 2 * sigma**2
+        self.std = np.sqrt(self.variance)
+        self.skewness = 2 * np.sqrt(np.pi) * (np.pi - 3) / np.power(4 - np.pi, 3/2)
+        self.kurtosis = 3 - (6*np.pi**2 - 24*np.pi + 16) / np.power(4 - np.pi, 2)
+        
+        # quantiles
+        self.median = sigma * np.sqrt(2*np.log(2))
+        
+        # others
+        self.mode = sigma
+        self.entropy = 1 + np.log(sigma/np.sqrt(2)) + np.euler_gamma / 2
+        
+        # name (or nickname)
+        self.name = name
 
+        
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Rayleigh distribution.
+        """
+        pdf = []
+        for i in x:
+            if i>=0:
+                pdf.append(i / (self.sigma**2) * np.exp(-i**2/(2*self.sigma**2)))
+            else:
+                pdf.append(0)
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Rayleigh distribution.
+        """
+        cdf = []
+        for i in x:
+            if i>=0:
+                cdf.append(1 - np.exp(-i**2/(2*self.sigma**2)))
+            else:
+                cdf.append(0)
+        return cdf
+
+
+    
+class Exponential(Distribution):
+    """
+    Class implementing the Exponential distribution with rate parameter 'lmbda' (>0).
+    This class is inheriting from the class 'Distribution'.
+    """
+    
+    def __init__(self, lmbda=1 , name=""):
+        """
+        Initilialization function.
+        """
+        assert(lmbda>0)
+        
+        # Type of distribution
+        self.type = 'Exponential'
+        self.support = 'R+'
+        
+        # parameters
+        self.lmbda = lmbda
+                
+        # moments
+        self.mean = 1/lmbda
+        self.variance = 1 / lmbda**2
+        self.std = np.sqrt(self.variance)
+        self.skewness = 2
+        self.kurtosis = 9
+        
+        # quantiles
+        self.median = np.log(2) / lmbda
+        
+        # others
+        self.mode = 0
+        self.entropy = 1 - np.log(lmbda)
+        
+        # name (or nickname)
+        self.name = name
+
+
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Exponential distribution.
+        """
+        pdf = []
+        for i in x:
+            if i>=0:
+                pdf.append(self.lmbda * np.exp(- self.lmbda * i))
+            else:
+                pdf.append(0)
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Exponential distribution.
+        """
+        cdf = []
+        for i in x:
+            if i>=0:
+                cdf.append(1 - np.exp(- self.lmbda * i))
+            else:
+                cdf.append(0)
+        return cdf
+    
+    
+    def quantile(self, p):
+        """
+        Method returning the quantile associated to the Exponential distribution.
+        """
+        assert(p>0 and p<1)
+        return - np.log(1 - p) / self.lmbda
+    
+    
     
     
     

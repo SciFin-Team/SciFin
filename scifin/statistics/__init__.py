@@ -5,7 +5,8 @@ __version__ = "0.0.3"
 The :mod:`scifin.statistics` module includes methods for statistics.
 """
 
-from .distributions import Distribution, Normal, Uniform, Weibull, Poisson, Binomial
+from .distributions  import Distribution, Normal, Uniform, Weibull, Rayleigh, Exponential, \
+                            Poisson, Binomial
 
 
 
