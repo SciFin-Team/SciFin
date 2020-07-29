@@ -636,7 +636,66 @@ class Levy(Distribution):
                 cdf.append(0)
         return cdf
 
+
     
+class Cauchy(Distribution):
+    """
+    Class implementing the Cauchy distribution with mode/median 'a' and scale parameter 'b' (>0).
+    This class is inheriting from the class 'Distribution'.
+    """
+    
+    def __init__(self, a=0, b=1 , name=""):
+        """
+        Initilialization function.
+        """
+        assert(b>0)
+        
+        # Type of distribution
+        self.type = 'Cauchy'
+        self.support = 'R'
+        
+        # parameters
+        self.a = a
+        self.b = b
+                
+        # moments
+        self.mean = None
+        self.variance = None
+        self.std = None
+        self.skewness = None
+        self.kurtosis = None
+        
+        # quantiles
+        self.median = a
+        
+        # others
+        self.mode = a
+        self.entropy = np.log(4*np.pi*b)
+        
+        # name (or nickname)
+        self.name = name
+
+
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Cauchy distribution.
+        """
+        z = (np.array(x) - self.a) / self.b
+        pdf = 1 / (np.pi * self.b) / (1 + z**2)
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Cauchy distribution.
+        """
+        z = (np.array(x) - self.a) / self.b
+        cdf = 0.5 + np.arctan(x) / np.pi
+        return cdf
+        
+        
+        
+        
     
 # DISCRETE DISTRIBUTIONS
     
