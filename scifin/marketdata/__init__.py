@@ -1,5 +1,5 @@
 # __init__.py
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 """
 The :mod:`scifin.marketdata` module includes methods for market data gathering.
