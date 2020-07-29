@@ -437,7 +437,7 @@ class Exponential(Distribution):
     
 class Gumbel(Distribution):
     """
-    Class implementing the Gumbel distribution with mode 'mu' and parameter 'beta'.
+    Class implementing the Gumbel distribution with mode 'mu' and parameter 'beta' (>0).
     This class is inheriting from the class 'Distribution'.
     """
     
@@ -498,8 +498,80 @@ class Gumbel(Distribution):
         assert(p>0 and p<1)
         return self.mu - self.beta * np.log(-np.log(p))
 
+
+    
+    
+class Laplace(Distribution):
+    """
+    Class implementing the Laplace distribution with mean 'mu' and scale parameter 'b' (>0).
+    This class is inheriting from the class 'Distribution'.
+    """
+    
+    def __init__(self, mu=0, b=1 , name=""):
+        """
+        Initilialization function.
+        """
+        assert(b>0)
         
+        # Type of distribution
+        self.type = 'Laplace'
+        self.support = 'R'
         
+        # parameters
+        self.mu = mu
+        self.b = b
+                
+        # moments
+        self.mean = mu
+        self.variance = 2 * b**2
+        self.std = np.sqrt(self.variance)
+        self.skewness = 0
+        self.kurtosis = 6
+        
+        # quantiles
+        self.median = mu
+        
+        # others
+        self.mode = mu
+        self.entropy = np.log(2 * b * np.e)
+        
+        # name (or nickname)
+        self.name = name
+
+
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Laplace distribution.
+        """
+        pdf = np.exp(-np.abs(np.array(x)-self.mu)/self.b) / (2*self.b)
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Laplace distribution.
+        """
+        cdf = []
+        for i in x:
+            if i <= self.mu:
+                cdf.append(0.5 * np.exp((i-self.mu)/self.b))
+            else:
+                cdf.append(1 - 0.5 * np.exp(-(i-self.mu)/self.b))
+        return cdf
+    
+    
+    def quantile(self, p):
+        """
+        Method returning the quantile associated to the Laplace distribution.
+        """
+        assert(p>0 and p<1)
+        if p <= 1/2:
+            return self.mu + self.b * np.log(2*p)
+        else:
+            return self.mu - self.b * np.log(2-2*p)
+    
+    
+    
     
     
 # DISCRETE DISTRIBUTIONS
