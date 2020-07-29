@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.special import erf, erfinv, gamma
+from scipy.special import erf, erfinv, gamma, zeta
 
 
 
@@ -435,7 +435,71 @@ class Exponential(Distribution):
     
     
     
+class Gumbel(Distribution):
+    """
+    Class implementing the Gumbel distribution with mode 'mu' and parameter 'beta'.
+    This class is inheriting from the class 'Distribution'.
+    """
     
+    def __init__(self, mu=0, beta=1 , name=""):
+        """
+        Initilialization function.
+        """
+        assert(beta>0)
+        
+        # Type of distribution
+        self.type = 'Gumbel'
+        self.support = 'R'
+        
+        # parameters
+        self.mu = mu
+        self.beta = beta
+                
+        # moments
+        self.mean = mu + beta * np.euler_gamma
+        self.variance = np.pi**2 * beta**2 / 6
+        self.std = np.sqrt(self.variance)
+        self.skewness = 12 * np.sqrt(6) * zeta(3) / np.power(np.pi, 3)
+        self.kurtosis = 3 + 12/5
+        
+        # quantiles
+        self.median = mu - beta * np.log(np.log(2))
+        
+        # others
+        self.mode = mu
+        self.entropy = np.log(beta) + np.euler_gamma + 1
+        
+        # name (or nickname)
+        self.name = name
+
+        
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Gumbel distribution.
+        """
+        z = (np.array(x) - self.mu) / self.beta
+        pdf = np.exp(-z-np.exp(-z)) / self.beta
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Gumbel distribution.
+        """
+        z = (np.array(x) - self.mu) / self.beta
+        cdf = np.exp(-np.exp(-z))
+        return cdf
+    
+    
+    def quantile(self, p):
+        """
+        Method returning the quantile associated to the Gumbel distribution.
+        """
+        assert(p>0 and p<1)
+        return self.mu - self.beta * np.log(-np.log(p))
+
+        
+        
     
     
 # DISCRETE DISTRIBUTIONS
