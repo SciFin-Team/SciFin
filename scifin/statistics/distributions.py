@@ -573,6 +573,70 @@ class Laplace(Distribution):
     
     
     
+class Levy(Distribution):
+    """
+    Class implementing the Lévy distribution with location parameter 'mu' and scale parameter 'c' (>0).
+    This class is inheriting from the class 'Distribution'.
+    """
+    
+    def __init__(self, mu=0, c=1, name=""):
+        """
+        Initilialization function.
+        """
+        assert(c>0)
+        
+        # Type of distribution
+        self.type = 'Lévy'
+        self.support = '[mu, Infinity)'
+        
+        # parameters
+        self.mu = mu
+        self.c = c
+                
+        # moments
+        self.mean = 'Infinity'
+        self.variance = 'Infinity'
+        self.std = 'Infinity'
+        self.skewness = None
+        self.kurtosis = None
+        
+        # quantiles
+        self.median = mu + (c/2) * (erfinv(1/2))**2
+        
+        # others
+        self.mode = mu + c/3
+        self.entropy = (1 + 3 * np.euler_gamma + np.log(16*np.pi*c**2))
+        
+        # name (or nickname)
+        self.name = name
+
+        
+    def pdf(self, x):
+        """
+        Method implementing the Probability Density Function (PDF) for the Lévy distribution.
+        """
+        pdf = []
+        for i in x:
+            if i > self.mu:
+                pdf.append(np.sqrt(self.c/(2*np.pi)) * np.exp(-self.c/(2*(i-self.mu))) / np.power(i-self.mu,3/2))
+            else:
+                pdf.append(0)
+        return pdf
+
+    
+    def cdf(self, x):
+        """
+        Method implementing the Cumulative Distribution Function (CDF) for the Lévy distribution.
+        """
+        cdf = []
+        for i in x:
+            if i > self.mu:
+                cdf.append( 1 - erf(np.sqrt( self.c/(2*(i-self.mu)) )) )
+            else:
+                cdf.append(0)
+        return cdf
+
+    
     
 # DISCRETE DISTRIBUTIONS
     
