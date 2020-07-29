@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="./docs/logos/logo_scifin_github.jpg" width=600 title="hover text">
+  <img src="./docs/logos/logo_scifin_github.jpg" width=500 title="hover text">
 </p>
 
 
