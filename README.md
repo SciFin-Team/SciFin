@@ -1,3 +1,6 @@
+.. image:: docs/logos/logo_scifin_github.jpg
+
+
 # SciFin
 
 SciFin is a python package for Science and Finance.
