@@ -1,4 +1,8 @@
-.. image:: docs/logos/logo_scifin_github.jpg
+
+<p align="center">
+  <img src="./docs/logos/logo_scifin_github.jpg" title="hover text">
+</p>
+
 
 
 # SciFin
