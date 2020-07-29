@@ -10,7 +10,7 @@ from scipy.special import erf, erfinv, gamma
 
 
 
-class distribution:
+class Distribution:
     """
     General class for a distribution.
     """
@@ -35,62 +35,15 @@ class distribution:
         
         # others
         self.mode = None
-        self.MAD = None
+        self.MAD = None # MAD = Mean Absolute Deviation
         
         # name (or nickname)
         self.name = name
     
     
-    # Set functions
-    def set_moments(self, mean, variance, skewness, kurtosis):
-        """
-        Sets the most commonly used moments.
-        """
-        self.mean = mean
-        self.variance = variance
-        self.std = np.sqrt(variance)
-        self.skewness = skewness
-        self.kurtosis = kurtosis
-        
-    def set_median(self, median):
-        """
-        Sets the most commonly used quantiles.
-        """
-        self.median = median
-        
-    def set_mode(self, mode):
-        """
-        Sets the mode.
-        """
-        self.mode = mode
-        
-    def set_MAD(self, MAD):
-        """
-        Sets the Mean Absolute Deviation (MAD)
-        """
-        self.MAD = MAD
-        
-    def set_entropy(self, entropy):
-        """
-        Sets the entropy of the distribution.
-        """
-        self.entropy = entropy
-        
-    def set_name(self, name):
-        """
-        Sets the name (or nickname).
-        """
-        self.name = name
-        
+    # Member functions
     
-    # Get functions
-    def get_name(self):
-        """
-        Class method that returns the name given to the distribution.
-        """
-        return self.name
-        
-    def get_info(self):
+    def info(self):
         """
         Prints the most relevant information about the distribution.
         """
@@ -109,10 +62,10 @@ class distribution:
         
 # CONTINUOUS DISTRIBUTIONS
         
-class Normal(distribution):
+class Normal(Distribution):
     """
     Class implementing the normal distribution of mean 'mu' and standard deviation 'sigma'.
-    This class is inheriting from the class 'distribution'.
+    This class is inheriting from the class 'Distribution'.
     """
     
     def __init__(self, mu=0., sigma=1., name=""):
@@ -130,31 +83,37 @@ class Normal(distribution):
         self.sigma = sigma
         
         # moments
-        self.set_moments(mean = mu, variance = sigma*sigma, skewness = 0., kurtosis = 3.)
+        self.mean = mu
+        self.variance = sigma*sigma
+        self.std = np.sqrt(self.variance)
+        self.skewness = 0.
+        self.kurtosis = 3.
         
         # quantiles
-        self.set_median(median = mu)
+        self.median = mu
         
         # others
-        self.set_mode(mode = mu)
-        self.set_MAD(MAD = sigma*np.sqrt(2/np.pi))
-        self.set_entropy(entropy = (1/2) * np.log(2*np.pi*np.e*sigma*sigma))
+        self.mode = mu
+        self.MAD = sigma*np.sqrt(2/np.pi)
+        self.entropy = (1/2) * np.log(2*np.pi*np.e*sigma*sigma)
         
         # name (or nickname)
-        self.set_name(name)
+        self.name = name
         
         
-    def PDF(self, x):
+    def pdf(self, x):
         """
         Method implementing the Probability Density Function (PDF) for the Normal distribution.
         """
-        return np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
+        pdf = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
+        return pdf
 
-    def CDF(self, x):
+    def cdf(self, x):
         """
         Method implementing the Cumulative Distribution Function (CDF) for the Normal distribution.
         """
-        return [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
+        cdf = [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
+        return cdf
     
     def quantile(self, p):
         """
@@ -165,10 +124,10 @@ class Normal(distribution):
     
 
 
-class Uniform(distribution):
+class Uniform(Distribution):
     """
     Class implementing the uniform distribution taking a non-zero value between values 'a' and 'b>a'.
-    This class is inheriting from the class 'distribution'.
+    This class is inheriting from the class 'Distribution'.
     """
     
     def __init__(self, a=0., b=1., name=""):
@@ -186,20 +145,24 @@ class Uniform(distribution):
         self.b = b
                 
         # moments
-        self.set_moments(mean = (a+b)/2, variance = (b-a)**2 / 12, skewness = 0, kurtosis = 3. - 6./5)
+        self.mean = (a+b)/2
+        self.variance = (b-a)**2 / 12
+        self.std = np.sqrt(self.variance)
+        self.skewness = 0
+        self.kurtosis = 3. - 6./5
         
         # quantiles
-        self.set_median(median = (a+b)/2)
+        self.median = (a+b)/2
         
         # others
-        self.set_mode(mode = 'Any value between a and b.')
-        self.set_entropy(entropy = np.log(b-a))
+        self.mode = 'Any value between a and b.'
+        self.entropy = np.log(b-a)
         
         # name (or nickname)
-        self.set_name(name)
+        self.name = name
         
 
-    def PDF(self, x):
+    def pdf(self, x):
         """
         Method implementing the Probability Density Function (PDF) for the uniform distribution.
         """
@@ -212,7 +175,7 @@ class Uniform(distribution):
         return pdf
     
     
-    def CDF(self, x):
+    def cdf(self, x):
         """
         Method implementing the Cumulative Distribution Function (CDF) for the uniform distribution.
         """
@@ -228,10 +191,10 @@ class Uniform(distribution):
     
 
     
-class Weibull(distribution):
+class Weibull(Distribution):
     """
     Class implementing the Weibull distribution with shape parameter 'k' (>0) and scale parameter 'lmbda' (>0).
-    This class is inheriting from the class 'distribution'.
+    This class is inheriting from the class 'Distribution'.
     """
     
     def __init__(self, k=1, lmbda=1, name=""):
@@ -250,20 +213,21 @@ class Weibull(distribution):
         self.lmbda = lmbda
                 
         # moments
-        self.set_moments(mean     = lmbda * gamma(1 + 1/k),
-                         variance = lmbda**2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))**2),
-                         skewness = self.skewness_Weibull(k, lmbda),
-                         kurtosis = self.kurtosis_Weibull(k, lmbda))
+        self.mean = lmbda * gamma(1 + 1/k)
+        self.variance = lmbda**2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))**2)
+        self.std = np.sqrt(self.variance)
+        self.skewness = self.skewness_Weibull(k, lmbda)
+        self.kurtosis = self.kurtosis_Weibull(k, lmbda)
         
         # quantiles
-        self.set_median(median = lmbda * np.power(np.log(2), 1/k))
+        self.median = lmbda * np.power(np.log(2), 1/k)
         
         # others
-        self.set_mode(mode = self.mode_Weibull(k, lmbda))
-        self.set_entropy(entropy = np.euler_gamma * (1-1/k) + np.log(lmbda/k) + 1)
+        self.mode = self.mode_Weibull(k, lmbda)
+        self.entropy = np.euler_gamma * (1-1/k) + np.log(lmbda/k) + 1
         
         # name (or nickname)
-        self.set_name(name)
+        self.name = name
         
         
     def skewness_Weibull(self, k, lmbda):
@@ -279,6 +243,7 @@ class Weibull(distribution):
         skew = (G3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
         return skew
         
+        
     def kurtosis_Weibull(self, k, lmbda):
         """
         Function computing the kurtosis of the Weibull distribution.
@@ -293,6 +258,7 @@ class Weibull(distribution):
         kurt = (G4 * lmbda**4 - 4 * self.skewness_Weibull(k,lmbda) * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
         return kurt
         
+        
     def mode_Weibull(self, k, lmbda):
         """
         Function computing the mode of the Weibull distribution.
@@ -303,9 +269,9 @@ class Weibull(distribution):
             return 0
         
         
-    def PDF(self, x):
+    def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the ... distribution.
+        Method implementing the Probability Density Function (PDF) for the Weibull distribution.
         """
         pdf = []
         for i in x:
@@ -316,9 +282,9 @@ class Weibull(distribution):
         return pdf
 
     
-    def CDF(self, x):
+    def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the ... distribution.
+        Method implementing the Cumulative Distribution Function (CDF) for the Weibull distribution.
         """
         cdf = []
         for i in x:
@@ -330,19 +296,17 @@ class Weibull(distribution):
     
     
     
-    
-    
-    
+
     
     
     
     
 # DISCRETE DISTRIBUTIONS
     
-class Poisson(distribution):
+class Poisson(Distribution):
     """
     Class implementing the Poisson distribution with expected rate of event occurence 'lambda'.
-    This class is inheriting from the class 'distribution'.
+    This class is inheriting from the class 'Distribution'.
     
     Note: We use a value k_max to set the limit of summation for the entropy calculation.
     """
@@ -363,18 +327,22 @@ class Poisson(distribution):
         self.lmbda = lmbda
         
         # moments
-        self.set_moments(mean = lmbda, variance = lmbda, skewness = 1./np.sqrt(lmbda), kurtosis = 3. + 1./np.sqrt(lmbda))
+        self.mean = lmbda
+        self.variance = lmbda
+        self.std = np.sqrt(self.variance)
+        self.skewness = 1./np.sqrt(lmbda)
+        self.kurtosis = 3. + 1./np.sqrt(lmbda)
         
         # quantiles
-        self.set_median(median = np.floor(lmbda + 1/3 - 0.02/lmbda))
+        self.median = np.floor(lmbda + 1/3 - 0.02/lmbda)
         
         # others
         self.k_max = k_max
-        self.set_mode(mode = np.floor(lmbda))
-        self.set_entropy(entropy = self.entropy_Poisson(lmbda))
+        self.mode = np.floor(lmbda)
+        self.entropy = self.entropy_Poisson(lmbda)
         
         # name (or nickname)
-        self.set_name(name)
+        self.name = name
     
     
     def entropy_Poisson(self, lmbda):
@@ -392,7 +360,7 @@ class Poisson(distribution):
         return lmbda * (1-np.log(lmbda)) + np.exp(-lmbda) * tmp_sum
         
         
-    def PMF(self, klist):
+    def pmf(self, klist):
         """
         Method implementing the Probability Mass Function (PMF) for the Poisson distribution.
         """
@@ -404,7 +372,7 @@ class Poisson(distribution):
         return pmf
 
     
-    def CDF(self, klist):
+    def cdf(self, klist):
         """
         Method implementing the Cumulative Distribution Function (CDF) for the Poisson distribution.
         """
@@ -444,9 +412,9 @@ class Poisson(distribution):
     
     
     
-class Binomial(distribution):
+class Binomial(Distribution):
     """
-    Class implementing the binomial distribution of "successes" having probability of success 'p' in a sequence of 'n' independent experiments (number of trials). I also applies to drawing an element with probability p in a population of n elements, with replacement after draw. This class is inheriting from the class 'distribution'.
+    Class implementing the binomial distribution of "successes" having probability of success 'p' in a sequence of 'n' independent experiments (number of trials). I also applies to drawing an element with probability p in a population of n elements, with replacement after draw. This class is inheriting from the class 'Distribution'.
     
     Note: Default value for n is taken to be 1, hence corresponding to the Bernoulli distribution.
     Note 2: Computation of entropy is only an approximation valid at order O(1/n).
@@ -469,17 +437,21 @@ class Binomial(distribution):
         self.n = n
         self.p = p
         self.q = 1 - p
-        self.set_moments(mean = n*p, variance = n*p*(1-p), skewness = ((1-p)-p)/np.sqrt(n*p*(1-p)), kurtosis = 3. + (1-6*p*(1-p))/(n*p*(1-p)))
+        self.mean = n*p
+        self.variance = n*p*(1-p)
+        self.std = np.sqrt(self.variance)
+        self.skewness = ((1-p)-p)/np.sqrt(n*p*(1-p))
+        self.kurtosis = 3. + (1-6*p*(1-p))/(n*p*(1-p))
         
         # quantiles
-        self.set_median(median = self.median_Binomial(n, p))
+        self.median = self.median_Binomial(n, p)
         
         # others
-        self.set_mode(mode = self.mode_Binomial(n, p))
-        self.set_entropy(entropy = (1/2) * np.log2(2 * np.pi * np.e * n*p*(1-p)))
+        self.mode = self.mode_Binomial(n, p)
+        self.entropy = (1/2) * np.log2(2 * np.pi * np.e * n*p*(1-p))
         
         # name (or nickname)
-        self.set_name(name)
+        self.name = name
         
 
     def mode_Binomial(self, n, p):
@@ -508,7 +480,7 @@ class Binomial(distribution):
             return None
         
     
-    def PMF(self, klist):
+    def pmf(self, klist):
         """
         Method implementing the Probability Mass Function (PMF) for the binomial distribution.
         """
@@ -520,7 +492,7 @@ class Binomial(distribution):
         return pmf
 
     
-    def CDF(self, klist):
+    def cdf(self, klist):
         """
         Method implementing the Cumulative Distribution Function (CDF) for the binomial distribution.
         """
