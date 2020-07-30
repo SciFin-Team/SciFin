@@ -1,5 +1,5 @@
 # __init__.py
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 
 """
 The :mod:`scifin.geneticalg` module includes methods for genetic algorithms.
