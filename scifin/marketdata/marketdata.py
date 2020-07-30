@@ -9,7 +9,7 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
-import bs4 as bs
+import bs4
 import pickle
 import requests
 import pandas_datareader as pdr
@@ -25,7 +25,7 @@ def scrape_sp500_tickers():
     
     # Getting the raw data
     resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-    soup = bs.BeautifulSoup(resp.text, 'lxml')
+    soup = bs4.BeautifulSoup(resp.text, 'lxml')
     table = soup.find('table', {'class': 'wikitable sortable'})
     
     # Saving tables
