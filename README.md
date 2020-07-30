@@ -33,7 +33,7 @@ Other topics will later follow.
 
 ## Installation
 
-Installing SciFin on Linux or Mac is very easy, you can simply run `pip install SciFin` on the Terminal command line.
+Installing SciFin on Linux or Mac is very easy, you can simply run `pip install SciFin` on the Terminal command line. You can also access the package on PyPI by clicking [--> Here <--](https://pypi.org/project/scifin/).
 
 If you encounter problems during installation or after and think you know how the problem can be improved, please share it with me.
 
