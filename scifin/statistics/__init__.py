@@ -6,8 +6,8 @@ __author__ = "Fabien Nugier"
 The :mod:`scifin.statistics` module includes methods for statistics.
 """
 
-from .distributions  import Distribution, Normal, Uniform, Weibull, Rayleigh, Exponential, Gumbel, \
-                            Laplace, Levy, Cauchy, \
+from .distributions  import Distribution, Normal, Uniform, Weibull, Rayleigh, \
+                            Exponential, Gumbel, Laplace, Levy, Cauchy, \
                             Poisson, Binomial
 
 

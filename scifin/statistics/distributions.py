@@ -6,7 +6,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
 from scipy.special import erf, erfinv, gamma, zeta
+
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
@@ -104,14 +106,17 @@ class Normal(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Normal distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Normal distribution.
         """
-        pdf = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
+        pdf = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) 
+              / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
         return pdf
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Normal distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Normal distribution.
         """
         cdf = [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
         return cdf
@@ -127,7 +132,8 @@ class Normal(Distribution):
 
 class Uniform(Distribution):
     """
-    Class implementing the uniform distribution taking a non-zero value between values 'a' and 'b>a'.
+    Class implementing the uniform distribution taking a non-zero value \
+    between values 'a' and 'b>a'.
     This class is inheriting from the class 'Distribution'.
     """
     
@@ -165,7 +171,8 @@ class Uniform(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the uniform distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the uniform distribution.
         """
         pdf = []
         for i in x:
@@ -175,10 +182,10 @@ class Uniform(Distribution):
                 pdf.append(0)
         return pdf
     
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the uniform distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the uniform distribution.
         """
         cdf = []
         for i in x:
@@ -191,12 +198,13 @@ class Uniform(Distribution):
         return cdf
     
 
-    
 class Weibull(Distribution):
     """
-    Class implementing the Weibull distribution with shape parameter 'k' (>0) and scale parameter 'lmbda' (>0). This class is inheriting from the class 'Distribution'.
+    Class implementing the Weibull distribution with shape parameter 'k' (>0) \
+    and scale parameter 'lmbda' (>0).
+    This class is inheriting from the class 'Distribution'.
     
-    Note: default value for 'k' is 1, making it equivalent to an Exponential distribution.
+    Note: default value for 'k' is 1, making it equal to an Exponential distribution.
     """
     
     def __init__(self, k=1, lmbda=1, name=""):
@@ -236,30 +244,29 @@ class Weibull(Distribution):
         """
         Function computing the skewness of the Weibull distribution.
         """
-        G1 = gamma(1 + 1/k)
-        G2 = gamma(1 + 2/k)
-        G3 = gamma(1 + 3/k)
-        mu = lmbda * G1
-        var = lmbda**2 * (G2 - G1**2)
+        g1 = gamma(1 + 1/k)
+        g2 = gamma(1 + 2/k)
+        g3 = gamma(1 + 3/k)
+        mu = lmbda * g1
+        var = lmbda**2 * (g2 - g1**2)
         sig = np.sqrt(var)
-        skew = (G3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
+        skew = (g3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
         return skew
-        
         
     def kurtosis_Weibull(self, k, lmbda):
         """
         Function computing the kurtosis of the Weibull distribution.
         """
-        G1 = gamma(1 + 1/k)
-        G2 = gamma(1 + 2/k)
-        G3 = gamma(1 + 3/k)
-        G4 = gamma(1 + 4/k)
-        mu = lmbda * G1
-        var = lmbda**2 * (G2 - G1**2)
+        g1 = gamma(1 + 1/k)
+        g2 = gamma(1 + 2/k)
+        g3 = gamma(1 + 3/k)
+        g4 = gamma(1 + 4/k)
+        mu = lmbda * g1
+        var = lmbda**2 * (g2 - g1**2)
         sig = np.sqrt(var)
-        kurt = (G4 * lmbda**4 - 4 * self.skewness_Weibull(k,lmbda) * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
+        kurt = (g4 * lmbda**4 - 4 * self.skewness_Weibull(k,lmbda) 
+                   * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
         return kurt
-        
         
     def mode_Weibull(self, k, lmbda):
         """
@@ -270,23 +277,24 @@ class Weibull(Distribution):
         else:
             return 0
         
-        
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Weibull distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Weibull distribution.
         """
         pdf = []
         for i in x:
             if i>=0:
-                pdf.append((self.k/self.lmbda) * np.power(i/self.lmbda,self.k-1) * np.exp(-np.power(i/self.lmbda,self.k)))
+                pdf.append((self.k/self.lmbda) * np.power(i/self.lmbda,self.k-1) 
+                                               * np.exp(-np.power(i/self.lmbda,self.k)))
             else:
                 pdf.append(0)
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Weibull distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Weibull distribution.
         """
         cdf = []
         for i in x:
@@ -295,11 +303,8 @@ class Weibull(Distribution):
             else:
                 cdf.append(0)
         return cdf
-    
-    
-    
-    
-    
+
+
 class Rayleigh(Distribution):
     """
     Class implementing the Rayleigh distribution with scale parameter 'sigma'.
@@ -339,7 +344,8 @@ class Rayleigh(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Rayleigh distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Rayleigh distribution.
         """
         pdf = []
         for i in x:
@@ -349,10 +355,10 @@ class Rayleigh(Distribution):
                 pdf.append(0)
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Rayleigh distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Rayleigh distribution.
         """
         cdf = []
         for i in x:
@@ -363,7 +369,6 @@ class Rayleigh(Distribution):
         return cdf
 
 
-    
 class Exponential(Distribution):
     """
     Class implementing the Exponential distribution with rate parameter 'lmbda' (>0).
@@ -403,7 +408,8 @@ class Exponential(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Exponential distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Exponential distribution.
         """
         pdf = []
         for i in x:
@@ -413,10 +419,10 @@ class Exponential(Distribution):
                 pdf.append(0)
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Exponential distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Exponential distribution.
         """
         cdf = []
         for i in x:
@@ -426,14 +432,12 @@ class Exponential(Distribution):
                 cdf.append(0)
         return cdf
     
-    
     def quantile(self, p):
         """
         Method returning the quantile associated to the Exponential distribution.
         """
         assert(p>0 and p<1)
         return - np.log(1 - p) / self.lmbda
-    
     
     
 class Gumbel(Distribution):
@@ -476,21 +480,21 @@ class Gumbel(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Gumbel distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Gumbel distribution.
         """
         z = (np.array(x) - self.mu) / self.beta
         pdf = np.exp(-z-np.exp(-z)) / self.beta
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Gumbel distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Gumbel distribution.
         """
         z = (np.array(x) - self.mu) / self.beta
         cdf = np.exp(-np.exp(-z))
         return cdf
-    
     
     def quantile(self, p):
         """
@@ -542,15 +546,16 @@ class Laplace(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Laplace distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Laplace distribution.
         """
         pdf = np.exp(-np.abs(np.array(x)-self.mu)/self.b) / (2*self.b)
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Laplace distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Laplace distribution.
         """
         cdf = []
         for i in x:
@@ -559,7 +564,6 @@ class Laplace(Distribution):
             else:
                 cdf.append(1 - 0.5 * np.exp(-(i-self.mu)/self.b))
         return cdf
-    
     
     def quantile(self, p):
         """
@@ -570,13 +574,12 @@ class Laplace(Distribution):
             return self.mu + self.b * np.log(2*p)
         else:
             return self.mu - self.b * np.log(2-2*p)
-    
-    
-    
-    
+
+
 class Levy(Distribution):
     """
-    Class implementing the Lévy distribution with location parameter 'mu' and scale parameter 'c' (>0).
+    Class implementing the Lévy distribution with location parameter 'mu' \
+    and scale parameter 'c' (>0).
     This class is inheriting from the class 'Distribution'.
     """
     
@@ -611,23 +614,27 @@ class Levy(Distribution):
         # name (or nickname)
         self.name = name
 
-        
+    
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Lévy distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Lévy distribution.
         """
         pdf = []
         for i in x:
             if i > self.mu:
-                pdf.append(np.sqrt(self.c/(2*np.pi)) * np.exp(-self.c/(2*(i-self.mu))) / np.power(i-self.mu,3/2))
+                pdf.append( np.sqrt(self.c/(2*np.pi)) 
+                               * np.exp( -self.c / (2*(i-self.mu)) )
+                               / np.power(i-self.mu,3/2)
+                          )
             else:
                 pdf.append(0)
         return pdf
 
-    
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Lévy distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Lévy distribution.
         """
         cdf = []
         for i in x:
@@ -638,10 +645,10 @@ class Levy(Distribution):
         return cdf
 
 
-    
 class Cauchy(Distribution):
     """
-    Class implementing the Cauchy distribution with mode/median 'a' and scale parameter 'b' (>0).
+    Class implementing the Cauchy distribution with mode/median 'a' \
+    and scale parameter 'b' (>0).
     This class is inheriting from the class 'Distribution'.
     """
     
@@ -679,7 +686,8 @@ class Cauchy(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) for the Cauchy distribution.
+        Method implementing the Probability Density Function (PDF) \
+        for the Cauchy distribution.
         """
         z = (np.array(x) - self.a) / self.b
         pdf = 1 / (np.pi * self.b) / (1 + z**2)
@@ -688,7 +696,8 @@ class Cauchy(Distribution):
     
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Cauchy distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Cauchy distribution.
         """
         z = (np.array(x) - self.a) / self.b
         cdf = 0.5 + np.arctan(x) / np.pi
@@ -702,10 +711,12 @@ class Cauchy(Distribution):
     
 class Poisson(Distribution):
     """
-    Class implementing the Poisson distribution with expected rate of event occurence 'lambda'.
+    Class implementing the Poisson distribution \
+    with expected rate of event occurence 'lambda'.
     This class is inheriting from the class 'Distribution'.
     
-    Note: We use a value k_max to set the limit of summation for the entropy calculation.
+    Note: We use a value k_max to set the limit of summation \
+    for the entropy calculation.
     """
     
     def __init__(self, lmbda=0., k_max=1000, name=""):
@@ -748,7 +759,8 @@ class Poisson(Distribution):
         """
         tmp_sum = 0.
         for k in range(self.k_max):
-            contrib = np.power(lmbda,k) * np.log(np.math.factorial(k)) / np.math.factorial(k)
+            contrib = np.power(lmbda,k) \
+                      * np.log(np.math.factorial(k)) / np.math.factorial(k)
             if contrib < 1.e-15:
                 tmp_sum += contrib
                 break
@@ -756,22 +768,23 @@ class Poisson(Distribution):
             print("Careful. Sum probably did not converge.")
         return lmbda * (1-np.log(lmbda)) + np.exp(-lmbda) * tmp_sum
         
-        
     def pmf(self, klist):
         """
-        Method implementing the Probability Mass Function (PMF) for the Poisson distribution.
+        Method implementing the Probability Mass Function (PMF) \
+        for the Poisson distribution.
         """
         assert(len(klist)>0)
         
         for x in klist:
             assert(isinstance(x,int))
-        pmf = [np.power(self.lmbda,x) * np.exp(-self.lmbda) / np.math.factorial(x) for x in klist]
+        pmf = [ np.power(self.lmbda,x) * np.exp(-self.lmbda) 
+                                       / np.math.factorial(x) for x in klist]
         return pmf
 
-    
     def cdf(self, klist):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the Poisson distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the Poisson distribution.
         """
         # Checks
         assert(len(klist)>0)
@@ -797,24 +810,27 @@ class Poisson(Distribution):
                 t.append(tmp_sum)
         else:
             for i in range(N):
-                tmp_sum = [np.power(self.lmbda,i) / np.math.factorial(i) for i in range(np.floor(k_range[i]))].sum()
+                tmp_sum = [ np.power(self.lmbda,i) / np.math.factorial(i) 
+                            for i in range(np.floor(k_range[i])) ].sum()
                 t.append(tmp_sum)
         
         # Completing the calculation
         return np.exp(-self.lmbda) * np.array(t)
     
-    
-    
-    
-    
-    
-    
+
 class Binomial(Distribution):
     """
-    Class implementing the binomial distribution of "successes" having probability of success 'p' in a sequence of 'n' independent experiments (number of trials). I also applies to drawing an element with probability p in a population of n elements, with replacement after draw. This class is inheriting from the class 'Distribution'.
+    Class implementing the binomial distribution of "successes" having \
+    probability of success 'p' in a sequence of 'n' independent \
+    experiments (number of trials).
+    I also applies to drawing an element with probability p in \
+    a population of n elements, with replacement after draw.
+    This class is inheriting from the class 'Distribution'.
     
-    Note: Default value for n is taken to be 1, hence corresponding to the Bernoulli distribution.
-    Note 2: Computation of entropy is only an approximation valid at order O(1/n).
+    Note: Default value for n is taken to be 1, \
+    hence corresponding to the Bernoulli distribution.
+    Note 2: Computation of entropy is only an approximation \
+    valid at order O(1/n).
     """
     
     def __init__(self, n=1, p=0.5, name=""):
@@ -850,7 +866,6 @@ class Binomial(Distribution):
         # name (or nickname)
         self.name = name
         
-
     def mode_Binomial(self, n, p):
         """
         Computes the mode of the Binomial distribution.
@@ -864,7 +879,6 @@ class Binomial(Distribution):
         elif test_value == n+1:
             return n
 
-        
     def median_Binomial(self, n, p):
         """
         Partially computes the median of the Binomial distribution.
@@ -873,25 +887,30 @@ class Binomial(Distribution):
         if test_value==int(test_value):
             return test_value
         else:
-            print("Median has a value in interval [", np.floor(test_value), ",", np.ceil(test_value), "].")
+            print("Median has a value in interval [", np.floor(test_value), ",",
+                  np.ceil(test_value), "].")
             return None
         
     
     def pmf(self, klist):
         """
-        Method implementing the Probability Mass Function (PMF) for the binomial distribution.
+        Method implementing the Probability Mass Function (PMF) \
+        for the binomial distribution.
         """
         assert(len(klist)>0)
         for x in klist:
             assert(isinstance(x,int))
             assert(x>=0 and x<=self.n)
-        pmf = [np.math.factorial(self.n) / (np.math.factorial(x) * np.math.factorial(self.n-x)) * np.power(self.p,x) * np.power(1-self.p,self.n-x) for x in klist]
+        pmf = [ np.math.factorial(self.n)
+                / (np.math.factorial(x) * np.math.factorial(self.n-x)) 
+                * np.power(self.p,x) * np.power(1-self.p,self.n-x) 
+                for x in klist ]
         return pmf
-
     
     def cdf(self, klist):
         """
-        Method implementing the Cumulative Distribution Function (CDF) for the binomial distribution.
+        Method implementing the Cumulative Distribution Function (CDF) \
+        for the binomial distribution.
         """
         # Checks
         assert(len(klist)>0)
@@ -913,19 +932,20 @@ class Binomial(Distribution):
             tmp_sum = 1.
             t.append(tmp_sum)
             for i in range(1,N,1):
-                tmp_sum += np.math.factorial(self.n) / (np.math.factorial(i) * np.math.factorial(self.n-i)) * np.power(self.p,i) * np.power(1-self.p,self.n-i)
+                tmp_sum += np.math.factorial(self.n) \
+                           / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
+                           * np.power(self.p,i) * np.power(1-self.p,self.n-i)
                 t.append(tmp_sum)
         else:
             for i in range(N):
-                tmp_sum = [np.math.factorial(self.n) / (np.math.factorial(i) * np.math.factorial(self.n-i)) * np.power(self.p,i) * np.power(1-self.p,self.n-i) for i in range(np.floor(k_range[i]))].sum()
+                tmp_sum = [ np.math.factorial(self.n) 
+                            / (np.math.factorial(i) * np.math.factorial(self.n-i)) 
+                            * np.power(self.p,i) * np.power(1-self.p,self.n-i) 
+                            for i in range(np.floor(k_range[i])) ].sum()
                 t.append(tmp_sum)
         
         # Completing the calculation
         return np.array(t)
     
     
-    
-    
-    
-    
-    
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
