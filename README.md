@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="./docs/logos/logo_scifin_github.jpg" width=300 title="hover text">
+  <img src="https://github.com/SciFin-Team/SciFin/blob/master/docs/logos/logo_scifin_github.jpg" width=400 title="hover text">
 </p>
 
 
