@@ -37,7 +37,6 @@ class timeseries:
         self.nvalues = df.shape[0]
         self.name = name
     
-    
     def __specify_data(self, start, end):
         """
         Private method returning the appropriate data according to user's specifying \
@@ -54,18 +53,14 @@ class timeseries:
             data = self.data[start:end]
         return data
     
-    
     def __start_end_names(self, start, end):
-        if start==None:
-            s = str(self.start)[:10]
-        else:
-            s = start
-        if end==None:
-            e = str(self.end)[:10]
-        else:
-            e = end
+        """
+        Method recasting the time series dates to 10 characters strings \
+        if the date hasn't been re-specified (i.e. value is 'None').
+        """
+        s = str(self.start)[:10] if (start==None) else start
+        e = str(self.end)[:10] if (end==None) else end
         return s,e
-    
     
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
@@ -78,8 +73,12 @@ class timeseries:
         - figsize: size of the figure as tuple of 2 integers.
         - dpi: dots-per-inch definition of the figure.
         """
+        
+        # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
         plt.plot(self.data.index, self.data.values, color='k')
+        
+        # Make it cute
         title = "Time series " + self.name + " from " + str(self.start)[:10] + " to " + str(self.end)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
@@ -93,9 +92,11 @@ class timeseries:
         # Preparing data frame
         data = self.__specify_data(start, end)
             
-        # Plotting its distribution of values
+        # Plotting distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
         data.hist(bins=bins, color='k', grid=False)
+        
+        # Make it cute        
         s,e = self.__start_end_names(start, end)
         title = "Distribution of values between " + s + " and " + e
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
@@ -104,8 +105,7 @@ class timeseries:
         
     def is_sampling_uniform(self):
         """
-        Function that tests if the sampling of a time series is uniform or not.
-
+        Function that tests if the sampling of a time series is uniform or not. \
         Returns a boolean value True, when the sampling is uniform, False otherwise.
         """
         # Preparing data
@@ -246,12 +246,13 @@ class timeseries:
         """
         Method that returns the percent change of the series.
         """
+        
         # Preparing data frame
         data = self.__specify_data(start, end)
         new_data = data.pct_change()
         new_ts = timeseries(new_data)
-        return new_ts
         
+        return new_ts
     
     
     ### AUTOCORRELATION COMPUTATION ###
@@ -306,7 +307,6 @@ class timeseries:
         plt.show()
     
     
-    
     ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
     
     def trim(self, new_start, new_end):
@@ -343,7 +343,6 @@ class timeseries:
         new_df = factor1 * self.data + factor2 * other_timeseries.data
         new_ts = timeseries(new_df)
         return new_ts
-    
     
     
     ### FITTING METHODS ###
@@ -427,9 +426,9 @@ class timeseries:
         # Building the time series
         new_df = pd.DataFrame(index=new_index, data=new_values)
         new_ts = timeseries(new_df)
+        
         return new_ts
         
-    
     
     def decompose(self, polyn_order=None, start=None, end=None, extract_seasonality=False, period=None):
         """
@@ -527,7 +526,6 @@ class timeseries:
             else:
                 return [lin_trend_ts, rest_ts]
 
-        
     
     def convolve(self, func, x_min, x_max, n_points, normalize=False):
         """
