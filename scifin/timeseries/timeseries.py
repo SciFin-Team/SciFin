@@ -8,12 +8,16 @@ from datetime import datetime
 import scipy.stats as stats
 
 from pandas.plotting import lag_plot
+
 from statsmodels.tsa.stattools import acf, pacf
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
+from sklearn.gaussian_process import GaussianProcessRegressor, kernels
+
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
@@ -345,6 +349,40 @@ class timeseries:
         return new_ts
     
     
+    def convolve(self, func, x_min, x_max, n_points, normalize=False):
+        """
+        Method that performs a convolution of the time series with a function 'func'. \
+        The 'normalize' option allows to renormalize 'func' such that the sum of its  \
+        values is one.
+        
+        Arguments:
+        - self: refering to the timeseries itself.
+        - func: the function we want to employ for convolution.
+        - x_min: the minimal value to consider for 'func'.
+        - x_max: the maximal value to consider for 'func'.
+        - n_points: the number of points to consider in the function.
+        - normalize: the option to impose the sum of func values to be 1.
+        """
+        
+        # Getting the time series values
+        ts = self.data.values
+
+        # Getting the convolving function values
+        X = np.linspace(x_min, x_max, n_points)
+        func_vals = []
+        for x in X:
+            func_vals.append(func(x))
+        if normalize==True:
+            sum_vals = np.array(func_vals).sum()
+            func_vals /= sum_vals
+        
+        # Generating convolved values
+        convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
+        convolved_ts = timeseries(pd.DataFrame(index=self.data.index, data=convolved_vals))
+        
+        return convolved_ts
+    
+    
     ### FITTING METHODS ###
     
     def rolling_avg(self, pts=1):
@@ -527,45 +565,73 @@ class timeseries:
                 return [lin_trend_ts, rest_ts]
 
     
-    def convolve(self, func, x_min, x_max, n_points, normalize=False):
+
+    def gaussian_process(self, rbf_scale, rbf_scale_bounds, noise, noise_bounds,
+                         alpha=1e-10, plotting=False, figsize=(12,5), dpi=100):
         """
-        Method that performs a convolution of the time series with a function 'func'. \
-        The 'normalize' option allows to renormalize 'func' such that the sum of its  \
-        values is one.
+        Method that employs Gaussian Process Regression (GPR) from scikit-learn \
+        to fit a time series. It returns 3 time series for the mean and the envelope
+        +sigma and -sigma of standard deviation.
         
         Arguments:
-        - self: refering to the timeseries itself.
-        - func: the function we want to employ for convolution.
-        - x_min: the minimal value to consider for 'func'.
-        - x_max: the maximal value to consider for 'func'.
-        - n_points: the number of points to consider in the function.
-        - normalize: the option to impose the sum of func values to be 1.
+        - rbf_scale: length scale for the RBF kernel.
+        - rbf_scale_bounds: length scale bounds for the RBF kernel.
+        - noise: noise level for the white noise kernel.
+        - noise_bounds: noise level bounds for the white noise kernel.
+        - alpha: noise added to the diagonal of the kernel matrix during fitting.
+        - plotting: option to plot the result of the GPR.
+        - figsize: size of the figure as tuple of 2 integers.
+        - dpi: dots-per-inch definition of the figure.
         """
+
+        # Shaping the data
+        X = np.array([float(datetime.timestamp(x)) for x in self.data.index])[:, np.newaxis]
+        y = self.data.values.flatten()
+
+        # Setting the kernel
+        initial_kernel = 1 * kernels.RBF(length_scale=rbf_scale, length_scale_bounds=rbf_scale_bounds) \
+                         + kernels.WhiteKernel(noise_level=noise, noise_level_bounds=noise_bounds)
+
+        # Doing regression
+        gpr = GaussianProcessRegressor(kernel=initial_kernel,
+                                       alpha=alpha,
+                                       optimizer='fmin_l_bfgs_b',
+                                       n_restarts_optimizer=1,
+                                       random_state=0)
+        gpr = gpr.fit(X,y)
+        print("The GPR score is: ", gpr.score(X,y))
         
-        # Getting the time series values
-        ts = self.data.values
-
-        # Getting the convolving function values
-        X = np.linspace(x_min, x_max, n_points)
-        func_vals = []
-        for x in X:
-            func_vals.append(func(x))
-        if normalize==True:
-            sum_vals = np.array(func_vals).sum()
-            func_vals /= sum_vals
+        # Creating fitting time series
+        N = len(y)
+        X_ = np.linspace(min(X)[0], max(X)[0], N)
+        # Mean fit
+        y_mean, y_cov = gpr.predict(X_[:,np.newaxis], return_cov=True)
+        ts_mean = timeseries(pd.DataFrame(index=self.data.index, data=y_mean), name='Mean from GPR')
+        # Mean - (1-sigma)
+        y_std_m = y_mean - np.sqrt(np.diag(y_cov))
+        ts_std_m = timeseries(pd.DataFrame(index=self.data.index, data=y_std_m), name='Mean - 1-sigma from GPR')
+        # Mean + (1-sigma)
+        y_std_p = y_mean + np.sqrt(np.diag(y_cov))
+        ts_std_p = timeseries(pd.DataFrame(index=self.data.index, data=y_std_p), name='Mean + 1-sigma from GPR')
         
-        # Generating convolved values
-        convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
-        convolved_ts = timeseries(pd.DataFrame(index=self.data.index, data=convolved_vals))
         
-        return convolved_ts
-    
-    
+        # Plotting the result
+        if plotting==True:
+            plt.figure(figsize=figsize, dpi=dpi)
+            plt.plot(self.data.index, y_mean, color='k', lw=3)
+            plt.plot(self.data.index, y_std_m, color='k')
+            plt.plot(self.data.index, y_std_p, color='k')
+            plt.fill_between(self.data.index, y_std_m, y_std_p, alpha=0.5, color='gray')
+            plt.plot(self.data.index, self.data.values, color='r')
+            title = "Gaussian Process Regression: \n Time series " \
+                    + " from " + str(self.start)[:10] + " to " + str(self.end)[:10]
+            plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+            plt.show()
+        
+        # Returning the time series
+        return [ts_mean, ts_std_m, ts_std_p]
 
-    
 
-
-    
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
     
