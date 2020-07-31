@@ -10,6 +10,7 @@ from datetime import datetime
 
 from . import timeseries
 
+
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
@@ -18,15 +19,18 @@ from . import timeseries
 # These models describe the evolution of time series.
 
 
-def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
     """
-    Function generating a time series from the Auto-Regressive (AR) model of an arbitrary order P.
-    The model is of the form: x_t = cst + coeffs[0] * x_{t-1} + ... + coeffs[P-1] * x_{t-P} + a_t
+    Function generating a time series from the Auto-Regressive (AR) model of arbitrary order P.
+    The model is of the form:
+    x_t = cst + coeffs[0] * x_{t-1} + ... + coeffs[P-1] * x_{t-P} + a_t
     where a_t is the white noise with standard deviation sigma.
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
     
     Note: noise is Gaussian here.
     """
+    
+    # Checks
     assert(len(coeffs)==order)
     assert(len(start_values)==order)
     P = len(start_values)
@@ -49,22 +53,26 @@ def AutoRegressive(start_date, end_date, frequency, start_values, cst, order, co
     
     # Computing theoretical expectation value
     E = cst / (1 - sum(coeffs))
-    print("Under stationarity assumption, the expected value for this AR(" + str(P) + ") model is: " + str(E) + "\n")
+    print("Under stationarity assumption, the expected value for this AR("
+          + str(P) + ") model is: " + str(E) + "\n")
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs =  timeseries(df)
     return rs
-    
 
 
-def RandomWalk(start_date, end_date, frequency, start_value, sigma):
+def random_walk(start_date, end_date, frequency, start_value, sigma):
     """
-    Function generating a time series from the Random Walk process, i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
-    The model is of the form: x_t = x_{t-1} + a_t where a_t is the white noise with standard deviation sigma.
+    Function generating a time series from the Random Walk process,
+    i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
+    The model is of the form:
+    x_t = x_{t-1} + a_t
+    where a_t is the white noise with standard deviation sigma.
     
     Note: noise is Gaussian here.
     """
+    
     # Generating index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
@@ -81,17 +89,21 @@ def RandomWalk(start_date, end_date, frequency, start_value, sigma):
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs =  timeseries(df)
+    
     return rs
-    
 
-    
-def DriftRandomWalk(start_date, end_date, frequency, start_value, drift, sigma):
+
+def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma):
     """
-    Function generating a time series from the Random Walk with Drift process, i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
-    The model is of the form: x_t = drift + x_{t-1} + a_t where a_t is the white noise with standard deviation sigma.
+    Function generating a time series from the Random Walk with Drift process,
+    i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
+    The model is of the form:
+    x_t = drift + x_{t-1} + a_t
+    where a_t is the white noise with standard deviation sigma.
     
     Note: noise is Gaussian here.
     """
+    
     # Generating index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
@@ -108,14 +120,15 @@ def DriftRandomWalk(start_date, end_date, frequency, start_value, drift, sigma):
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs =  timeseries(df)
+    
     return rs
-    
-    
 
-def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
+
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
     """
-    Function generating a time series from the Moving Average (MA) model of an arbitrary order Q.
-    The model is of the form: x_t = cst + a_t + coeffs[0] * a_{t-1} + ... + coeffs[Q-1] * a_{t-Q}
+    Function generating a time series from the Moving Average (MA) model of arbitrary order Q.
+    The model is of the form:
+    x_t = cst + a_t + coeffs[0] * a_{t-1} + ... + coeffs[Q-1] * a_{t-Q}
     where {a_t} is the white noise series with standard deviation sigma.
     We don't need to impose any initial values for {x_t} are imposed directly from {a_t}.
     
@@ -124,6 +137,8 @@ def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
     
     Note: noise is Gaussian here.
     """
+    
+    # Checks
     assert(len(coeffs)==order)
     Q = order
     
@@ -154,19 +169,26 @@ def MovingAverage(start_date, end_date, frequency, cst, order, coeffs, sigma):
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs =  timeseries(df)
+    
     return rs
 
 
 
-def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
+def ARMA(start_date, end_date, frequency, start_values,
+         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
     """
-    Function generating a time series from the Auto-Regressive Moving Average (ARMA) model of orders (P,Q).
-    The model is of the form: x_t = cst + Sum_{i=0}^{P-1} ARcoeffs[i] * a_{t-i-1} + a_t + Sum_{j=0}^{Q-1} MAcoeffs[j] * a_{t-j-1}
+    Function generating a time series from the Auto-Regressive Moving Average (ARMA) \
+    model of orders (P,Q).
+    The model is of the form:
+    x_t = cst + Sum_{i=0}^{P-1} ARcoeffs[i] * a_{t-i-1}
+        + a_t + Sum_{j=0}^{Q-1} MAcoeffs[j] * a_{t-j-1}
     where {a_t} is the white noise series with standard deviation sigma.
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
     
     Note: noise is Gaussian here.
     """
+    
+    # Checks
     assert(len(ARcoeffs)==ARorder)
     assert(len(MAcoeffs)==MAorder)
     assert(len(start_values)==ARorder)
@@ -197,21 +219,31 @@ def ARMA(start_date, end_date, frequency, start_values, cst, ARorder, ARcoeffs, 
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs =  timeseries(df)
+    
     return rs
 
 
 
 def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma):
     """
-    Function generating a time series from the Random Coefficient Auto-Regressive (RCA) model of order M.
-    The model is of the form: x_t = cst + Sum_{m=0}^{M-1} (ARcoeffs[m] + coeffs[m]) * x_{t-m-1} + a_t.
-    Here {a_t} is a Gaussian white noise with standard deviation sigma and coeffs_t are randomly generated from the covariance matrix cov_matrix.
+    Function generating a time series from the Random Coefficient Auto-Regressive (RCA) \
+    model of order M.
+    The model is of the form:
+    x_t = cst + Sum_{m=0}^{M-1} (ARcoeffs[m] + coeffs[m]) * x_{t-m-1} + a_t.
+    Here {a_t} is a Gaussian white noise with standard deviation sigma \
+    and coeffs_t are randomly generated from the covariance matrix cov_matrix.
     In addition, we have some imposed coefficients of the Auto-Regressive type in ARcoeffs.
     
-    Note: we assume coeffs_t follow a multivariate Gaussian distribution. Also cov_matrix should be a non-negative definite matrix.
-    Note: here we do not have an argument called start_value, compared to randomseries.AutoRegressive(). This choice is made as there are already random coefficients
-    involved, here there is no real use in imposing the first values of the time series other than just ARcoeffs and the generated coeffs.
+    Note: we assume coeffs_t follow a multivariate Gaussian distribution.
+    Also cov_matrix should be a non-negative definite matrix.
+    
+    Note: here we do not have an argument called start_value, \
+    compared to randomseries.auto_regressive().
+    This choice is made as there are already random coefficients involved, \
+    here there is no real use in imposing the first values of the time series \
+    other than just ARcoeffs and the generated coeffs.
     """
+    
     # Checks
     assert(len(ARcoeffs)==order)
     assert(len(cov_matrix)==order and len(cov_matrix[0])==order)
@@ -240,10 +272,8 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs =  timeseries(df)
+    
     return rs
-
-
-
 
 
 
@@ -253,13 +283,18 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     """
-    Function generating a volatility series from the Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
-    The model is of the form: a_t = sig_t * eps_t
+    Function generating a volatility series from the \
+    Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
+    The model is of the form:
+    a_t = sig_t * eps_t
     with sig_t^2 = cst + coeffs[0] * a_{t-1}^2 + ... + coeffs[M-1] * a_{t-M}^2.
-    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
-    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite with positive variance.
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, \
+    i.e. a white noise with unit variance.
+    The coefficients cst and coeffs[i] are assumed to be positive \
+    and must be such that a_t is finite with positive variance.
     """
-    # Conditions
+    
+    # Checks
     assert(len(coeffs)==order)
     # Non-negativity
     if(cst<=0):
@@ -271,7 +306,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
         assert(x>=0)
     # Sum less than unity
     if(sum(coeffs)>=1):
-        print("Sum of coefficients must be less than one in order to have positive variance.")
+        print("Sum of coefficients must be < 1 in order to have positive variance.")
     assert(sum(coeffs)<1)
     M = order
     
@@ -293,9 +328,12 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
         a[t] = sig * eps[t]
     
     # Computing theoretical values
-    print("The expected value for this ARCH(" + str(M) + ") model is 0, like any other ARCH model, and the estimated value is : " + str(np.mean(a)))
+    print("The expected value for this ARCH(" + str(M) \
+          + ") model is 0, like any other ARCH model, and the estimated value is : " \
+          + str(np.mean(a)))
     V = cst / (1 - sum(coeffs))
-    print("The theoretical standard deviation value for this ARCH(" + str(M) + ") model is: " + str(V))
+    print("The theoretical standard deviation value for this ARCH(" + str(M) \
+          + ") model is: " + str(V))
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
@@ -306,13 +344,19 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
 
 def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig):
     """
-    Function generating a volatility series from the Generalized ARCH (GARCH) model of order M.
-    The model is of the form: a_t = sig_t * eps_t
-    with sig_t^2 = cst + Sum_{i=0}^{M-1} coeffs_a[i] * a_{t-i-1}^2 + Sum_{j=0}^{S-1} coeffs_sig[j] * sig_{t-j-1}^2.
-    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, i.e. a white noise with unit variance.
-    The coefficients cst and coeffs[i] are assumed to be positive and must be such that a_t is finite with positive variance.
+    Function generating a volatility series from the \
+    Generalized ARCH (GARCH) model of order M.
+    The model is of the form:
+    a_t = sig_t * eps_t
+    with sig_t^2 = cst + Sum_{i=0}^{M-1} coeffs_a[i] * a_{t-i-1}^2 
+                       + Sum_{j=0}^{S-1} coeffs_sig[j] * sig_{t-j-1}^2.
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, \
+    i.e. a white noise with unit variance.
+    The coefficients cst and coeffs[i] are assumed to be positive \
+    and must be such that a_t is finite with positive variance.
     """
-    # Conditions
+    
+    # Checks
     assert(len(coeffs_a)==order_a)
     assert(len(coeffs_sig)==order_sig)
     # Non-negativity
@@ -353,22 +397,30 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
 
     # Computing theoretical values
     V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
-    print("The theoretical standard deviation for this GARCH(" + str(M) + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+    print("The theoretical standard deviation for this GARCH(" + str(M) \
+          + "," + str(S) + ") model is: " + str(np.sqrt(V)))
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs =  timeseries(df)
+    
     return rs
 
 
 
 def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
     """
-    Function generating a volatility series from the Conditional Heterescedastic ARMA (CHARMA) model of order M.
-    The model is of the form: a_t = Sum_{m=0}^{M-1} coeffs[m] * a_{t-m-1} + eta_t.
-    Here {eta_t} is a Gaussian white noise with standard deviation sigma and coeffs_t are generated from the covariance matrix cov_matrix.
-    Note: we assume coeffs_t follow a multivariate Gaussian distribution. Also cov_matrix should be a non-negative definite matrix.
+    Function generating a volatility series from the \
+    Conditional Heterescedastic ARMA (CHARMA) model of order M.
+    The model is of the form:
+    a_t = Sum_{m=0}^{M-1} coeffs[m] * a_{t-m-1} + eta_t.
+    Here {eta_t} is a Gaussian white noise with standard deviation sigma \
+    and coeffs_t are generated from the covariance matrix cov_matrix.
+    
+    Note: we assume coeffs_t follow a multivariate Gaussian distribution.
+    Also cov_matrix should be a non-negative definite matrix.
     """
+    
     # Checks
     assert(len(cov_matrix)==order and len(cov_matrix[0])==order)
     for row in cov_matrix:
@@ -400,3 +452,4 @@ def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
 
     
 
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#

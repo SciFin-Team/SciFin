@@ -7,6 +7,6 @@ The :mod:`scifin.timeseries` module includes methods for time series analysis.
 """
 
 from .timeseries import timeseries, multi_plot
-from .randomseries import AutoRegressive, RandomWalk, DriftRandomWalk, MovingAverage, ARMA, RCA, \
-                          ARCH, GARCH, CHARMA
+from .randomseries import auto_regressive, random_walk, drift_random_walk, moving_average, \
+                          ARMA, RCA, ARCH, GARCH, CHARMA
 
