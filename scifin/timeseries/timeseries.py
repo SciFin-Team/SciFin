@@ -24,9 +24,9 @@ from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
-# CLASS timeseries
+# CLASS TimeSeries
 
-class timeseries:
+class TimeSeries:
     """
     Class defining a time series and its methods.
     """
@@ -37,6 +37,7 @@ class timeseries:
         """
         # Making sure it is a single column data frame
         assert(df.shape[1]==1)
+        
         # Extract values
         self.data = df
         self.start = df.index[0]
@@ -134,7 +135,7 @@ class timeseries:
         Function returning the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
-            print("Error: the timeseries is not uniformly sampled.")
+            print("Error: the time series is not uniformly sampled.")
         else:
             idx1 = self.data.index[1]
             idx0 = self.data.index[0]
@@ -263,7 +264,7 @@ class timeseries:
         """
         data = self.__specify_data(start, end)
         new_data = data.pct_change()
-        new_ts = timeseries(new_data)
+        new_ts = TimeSeries(new_data)
         return new_ts
     
     
@@ -336,7 +337,7 @@ class timeseries:
         and send back a new time series.
         """
         new_df = self.data[new_start:new_end]
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         return new_ts
     
     
@@ -345,7 +346,7 @@ class timeseries:
         Method that adds a constant to the time series.
         """
         new_df = self.data + cst
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         return new_ts
     
     
@@ -354,17 +355,17 @@ class timeseries:
         Method that multiplies the time series by a constant.
         """
         new_df = self.data * cst
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         return new_ts
     
     
-    def linear_combination(self, other_timeseries, factor1=1, factor2=1):
+    def linear_combination(self, OtherTimeSeries, factor1=1, factor2=1):
         """
-        Method that adds a timeseries to the current one according to linear combination:
-        factor1 * current_ts + factor2 * other_timeseries.
+        Method that adds a time series to the current one according to linear combination:
+        factor1 * current_ts + factor2 * OtherTimeSeries.
         """
-        new_df = factor1 * self.data + factor2 * other_timeseries.data
-        new_ts = timeseries(new_df)
+        new_df = factor1 * self.data + factor2 * OtherTimeSeries.data
+        new_ts = TimeSeries(new_df)
         return new_ts
     
     
@@ -375,7 +376,7 @@ class timeseries:
         values is one.
         
         Arguments:
-        - self: refering to the timeseries itself.
+        - self: refering to the time series itself.
         - func: the function we want to employ for convolution.
         - x_min: the minimal value to consider for 'func'.
         - x_max: the maximal value to consider for 'func'.
@@ -397,7 +398,7 @@ class timeseries:
         
         # Generating convolved values
         convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
-        convolved_ts = timeseries(pd.DataFrame(index=self.data.index, data=convolved_vals))
+        convolved_ts = TimeSeries(pd.DataFrame(index=self.data.index, data=convolved_vals))
         
         return convolved_ts
     
@@ -410,7 +411,7 @@ class timeseries:
         """
         new_values = [self.data[x-pts+1:x].mean() for x in range(pts-1, self.nvalues, 1)]
         new_df = pd.DataFrame(index=self.data.index[pts-1:self.nvalues], data=new_values)
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         return new_ts
     
     
@@ -427,7 +428,7 @@ class timeseries:
         yfit = [model(x) for x in new_index]
         assert(len(data.index)==len(yfit))
         new_df = pd.DataFrame(index=data.index, data=yfit)
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         return new_ts
 
     
@@ -483,7 +484,7 @@ class timeseries:
 
         # Building the time series
         new_df = pd.DataFrame(index=new_index, data=new_values)
-        new_ts = timeseries(new_df)
+        new_ts = TimeSeries(new_df)
         
         return new_ts
         
@@ -514,7 +515,7 @@ class timeseries:
         # Extract the linear trend
         lin_trend_y = model.predict(X)
         lin_trend_df = pd.DataFrame(index=data.index, data=lin_trend_y)
-        lin_trend_ts = timeseries(lin_trend_df)
+        lin_trend_ts = TimeSeries(lin_trend_df)
         
         # Remove the linear trend to the initial time series
         nonlin_y = y - lin_trend_y
@@ -525,7 +526,7 @@ class timeseries:
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
             polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
-            polyn_comp_ts = timeseries(polyn_comp_df)
+            polyn_comp_ts = TimeSeries(polyn_comp_df)
         
         # Generating the resting part time series
         if polyn_order != None:
@@ -533,7 +534,7 @@ class timeseries:
         else:
             rest_y = nonlin_y
         rest_df = pd.DataFrame(index=data.index, data=rest_y)
-        rest_ts = timeseries(rest_df)
+        rest_ts = TimeSeries(rest_df)
         
         # Extracting seasonality
         if extract_seasonality==True:
@@ -568,12 +569,12 @@ class timeseries:
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
             seasonal_df = pd.DataFrame(index=data.index, data=seasonal_y)
-            seasonal_ts = timeseries(seasonal_df)
+            seasonal_ts = TimeSeries(seasonal_df)
 
             # Building the residue time series
             residue_y = rest_y - seasonal_y
             residue_df = pd.DataFrame(index=data.index, data=residue_y)
-            residue_ts = timeseries(residue_df)
+            residue_ts = TimeSeries(residue_df)
         
         # Return results
         if polyn_order != None:
@@ -632,13 +633,13 @@ class timeseries:
         # Mean fit
         y_mean, y_cov = gpr.predict(X_[:,np.newaxis], return_cov=True)
         idx = self.data.index
-        ts_mean = timeseries(pd.DataFrame(index=idx, data=y_mean), name='Mean from GPR')
+        ts_mean = TimeSeries(pd.DataFrame(index=idx, data=y_mean), name='Mean from GPR')
         # Mean - (1-sigma)
         y_std_m = y_mean - np.sqrt(np.diag(y_cov))
-        ts_std_m = timeseries(pd.DataFrame(index=idx, data=y_std_m), name='Mean-sigma from GPR')
+        ts_std_m = TimeSeries(pd.DataFrame(index=idx, data=y_std_m), name='Mean-sigma from GPR')
         # Mean + (1-sigma)
         y_std_p = y_mean + np.sqrt(np.diag(y_cov))
-        ts_std_p = timeseries(pd.DataFrame(index=idx, data=y_std_p), name='Mean+sigma from GPR')
+        ts_std_p = TimeSeries(pd.DataFrame(index=idx, data=y_std_p), name='Mean+sigma from GPR')
         
         
         # Plotting the result
@@ -662,21 +663,21 @@ class timeseries:
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
     
     
-def multi_plot(timeseries, figsize=(12,5), dpi=100):
+def multi_plot(TimeSeries, figsize=(12,5), dpi=100):
     """
     Function that plots multiple time series together.
     """
     
     plt.figure(figsize=figsize, dpi=dpi)
-    min_date = timeseries[0].data.index[0]
-    max_date = timeseries[0].data.index[-1]
+    min_date = TimeSeries[0].data.index[0]
+    max_date = TimeSeries[0].data.index[-1]
     
-    for i in range(len(timeseries)):
-        if timeseries[i].data.index[0] < min_date:
-            min_date = timeseries[i].data.index[0]
-        if timeseries[i].data.index[-1] > max_date:
-            max_date = timeseries[i].data.index[-1]
-        plt.plot(timeseries[i].data.index, timeseries[i].data.values)
+    for i in range(len(TimeSeries)):
+        if TimeSeries[i].data.index[0] < min_date:
+            min_date = TimeSeries[i].data.index[0]
+        if TimeSeries[i].data.index[-1] > max_date:
+            max_date = TimeSeries[i].data.index[-1]
+        plt.plot(TimeSeries[i].data.index, TimeSeries[i].data.values)
         
     title = "Multiplot of time series from " + str(min_date)[:10] \
             + " to " + str(max_date)[:10]
