@@ -1,5 +1,6 @@
 # __init__.py
 __version__ = "0.0.8"
+__author__ = "Fabien Nugier"
 
 """
 The :mod:`scifin.marketdata` module includes methods for market data gathering.

@@ -4,7 +4,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
 from datetime import datetime
+
 import scipy.stats as stats
 
 from pandas.plotting import lag_plot
@@ -23,6 +25,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 
 
 # CLASS timeseries
+
 class timeseries:
     """
     Class defining a time series and its methods.
@@ -83,7 +86,8 @@ class timeseries:
         plt.plot(self.data.index, self.data.values, color='k')
         
         # Make it cute
-        title = "Time series " + self.name + " from " + str(self.start)[:10] + " to " + str(self.end)[:10]
+        title = "Time series " + self.name + " from " + str(self.start)[:10] \
+                + " to " + str(self.end)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
     
@@ -127,13 +131,15 @@ class timeseries:
     
     def get_sampling_interval(self):
         """
-        Function that returns the sampling interval for a uniformly-sampled time series.
+        Function returning the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
             print("Error: the timeseries is not uniformly sampled.")
         else:
-            interval = datetime.timestamp(self.data.index[1]) - datetime.timestamp(self.data.index[0])
-            return interval
+            idx1 = self.data.index[1]
+            idx0 = self.data.index[0]
+            intv = datetime.timestamp(idx1) - datetime.timestamp(idx0)
+            return intv
         
 
     def lag_plot(self, lag=1, figsize=(5,5), dpi=100, alpha=0.5):
@@ -158,8 +164,8 @@ class timeseries:
         
     def lag_plots(self, nlags=5, figsize=(10,10), dpi=100, alpha=0.5):
         """
-        Function that returns a number of scatter plots x_t v.s. x_{t-l} where l is the lag value taken from [0,...,nlags].
-        We require nlags > 1.
+        Function that returns a number of scatter plots x_t v.s. x_{t-l} \
+        where l is the lag value taken from [0,...,nlags]. We require nlags > 1.
         """
         # Check
         try:
@@ -175,7 +181,8 @@ class timeseries:
             nrows = nlags//ncols + 1
         
         # Doing the plots
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True, figsize=figsize, dpi=dpi)
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True,
+                                 figsize=figsize, dpi=dpi)
         for i, ax in enumerate(axes.flatten()[:nlags]):
             lag_plot(self.data, lag=i+1, ax=ax, c='black', alpha=alpha)
             ax.set_xlabel("x(t)")
@@ -194,7 +201,8 @@ class timeseries:
     
     def hist_avg(self, start=None, end=None):
         """
-        Method that returns the historical average of the time series between two dates (default is the whole series).
+        Method returning the historical average of the time series \
+        between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         avg = data.values.mean()
@@ -203,7 +211,8 @@ class timeseries:
     
     def hist_std(self, start=None, end=None):
         """
-        Method that returns the historical standard deviation of the time series between two dates (default is the whole series).
+        Method returning the historical standard deviation of the time series \
+        between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         std = data.values.std()
@@ -212,7 +221,8 @@ class timeseries:
     
     def hist_skew(self, start=None, end=None):
         """
-        Method that returns the historical skew of the time series between two dates (default is the whole series).
+        Method returning the historical skew of the time series \
+        between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         skew = stats.skew(data.values)[0]
@@ -221,7 +231,8 @@ class timeseries:
     
     def hist_kurtosis(self, start=None, end=None):
         """
-        Method that returns the historical (Fisher) kurtosis of the time series between two dates (default is the whole series).
+        Method returning the historical (Fisher) kurtosis of the time series \
+        between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
         kurt = stats.kurtosis(data.values)[0]
@@ -230,7 +241,7 @@ class timeseries:
     
     def min(self, start=None, end=None):
         """
-        Method that returns the minimum of the series.
+        Method returning the minimum of the series.
         """
         data = self.__specify_data(start, end)
         ts_min = data.values.min()
@@ -239,7 +250,7 @@ class timeseries:
     
     def max(self, start=None, end=None):
         """
-        Method that returns the maximum of the series.
+        Method returning the maximum of the series.
         """
         data = self.__specify_data(start, end)
         ts_max = data.values.max()
@@ -248,14 +259,11 @@ class timeseries:
     
     def percent_change(self, start=None, end=None):
         """
-        Method that returns the percent change of the series.
+        Method returning the percent change of the series.
         """
-        
-        # Preparing data frame
         data = self.__specify_data(start, end)
         new_data = data.pct_change()
         new_ts = timeseries(new_data)
-        
         return new_ts
     
     
@@ -264,7 +272,12 @@ class timeseries:
     def autocorrelation(self, lag=1, start=None, end=None):
         """
         Method returning the autocorrelation of the time series for a specified lag.
-        We use the function $\rho_l = \frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])} where $x_t$ is the time series at time t. Cov denotes the covariance and Var the variance. We also use the properties $\rho_0 = 1$ and $\rho_{-l} = \rho_l$ (choosing LaTeX notations here).
+        We use the function:
+        $\rho_l = \frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])}
+        where $x_t$ is the time series at time t.
+        Cov denotes the covariance and Var the variance.
+        We also use the properties $\rho_0 = 1$ and $\rho_{-l} = \rho_l$
+        (choosing LaTeX notations here).
         """
         l = abs(lag)
         # Trivial case
@@ -282,9 +295,11 @@ class timeseries:
         return Numerator / Denominator
     
     
-    def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None, figsize=(8,4), dpi=100):
+    def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None,
+                             figsize=(8,4), dpi=100):
         """
-        Method making use of the autocorrelation method in order to return a plot of the autocorrelation againts the lag values.
+        Method making use of the autocorrelation method in order to return \
+        a plot of the autocorrelation againts the lag values.
         """
         
         assert(lag_max>lag_min)
@@ -295,14 +310,16 @@ class timeseries:
         plt.figure(figsize=figsize, dpi=dpi)
         plt.bar(x_range, ac, color='k')
         s,e = self.__start_end_names(start, end)
-        title = "Autocorrelation from " + s + " to " + e + " for lags = [" + str(lag_min) + "," + str(lag_max) + "]"
+        title = "Autocorrelation from " + s + " to " + e + " for lags = [" \
+                + str(lag_min) + "," + str(lag_max) + "]"
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
         plt.show()
         
     
-    def ACF_PACF(self, lag_max=25, figsize=(12,3), dpi=100):
+    def acf_pacf(self, lag_max=25, figsize=(12,3), dpi=100):
         """
-        Returns a plot of the AutoCorrelation Function (ACF) and Partial AutoCorrelation Function (PACF) from statsmodels.
+        Returns a plot of the AutoCorrelation Function (ACF) \
+        and Partial AutoCorrelation Function (PACF) from statsmodels.
         """
         # Plotting
         fig, axes = plt.subplots(1,2, figsize=figsize, dpi=dpi)
@@ -315,7 +332,8 @@ class timeseries:
     
     def trim(self, new_start, new_end):
         """
-        Method that trims the time series to the desired dates and send back a new time series.
+        Method that trims the time series to the desired dates \
+        and send back a new time series.
         """
         new_df = self.data[new_start:new_end]
         new_ts = timeseries(new_df)
@@ -342,7 +360,8 @@ class timeseries:
     
     def linear_combination(self, other_timeseries, factor1=1, factor2=1):
         """
-        Method that adds a timeseries to the current one according to linear combination: factor1 * current_ts + factor2 * other_timeseries.
+        Method that adds a timeseries to the current one according to linear combination:
+        factor1 * current_ts + factor2 * other_timeseries.
         """
         new_df = factor1 * self.data + factor2 * other_timeseries.data
         new_ts = timeseries(new_df)
@@ -414,11 +433,12 @@ class timeseries:
     
     def sample_uniformly(self):
         """
-        Method that returns a new time series for which the sampling is uniform.
+        Method returning a new time series for which the sampling is uniform.
         """
         # Check actually we need to do something
         if self.is_sampling_uniform() == True:
-            print("Time series already has a uniform sampling. Returning the same time series.")
+            print("Time series already has a uniform sampling. \
+                  Returning the same time series.")
             return self
         
         # Preparing the new index
@@ -468,9 +488,11 @@ class timeseries:
         return new_ts
         
     
-    def decompose(self, polyn_order=None, start=None, end=None, extract_seasonality=False, period=None):
+    def decompose(self, polyn_order=None, start=None, end=None, 
+                  extract_seasonality=False, period=None):
         """
-        Method that performs a decomposition of the time series and returns the different components.
+        Method that performs a decomposition of the time series \
+        and returns the different components.
         """
         # Check
         if polyn_order != None:
@@ -519,7 +541,8 @@ class timeseries:
             try:
                 assert(period)
             except AssertionError:
-                raise AssertionError("Period must be specified for extrac_seasonality=True mode.")
+                raise AssertionError("Period must be specified for \
+                                        extrac_seasonality=True mode.")
             P = period
 
             # Cutting the series into seasonality-period chunks
@@ -589,8 +612,10 @@ class timeseries:
         y = self.data.values.flatten()
 
         # Setting the kernel
-        initial_kernel = 1 * kernels.RBF(length_scale=rbf_scale, length_scale_bounds=rbf_scale_bounds) \
-                         + kernels.WhiteKernel(noise_level=noise, noise_level_bounds=noise_bounds)
+        initial_kernel = 1 * kernels.RBF(length_scale=rbf_scale,
+                                         length_scale_bounds=rbf_scale_bounds) \
+                         + kernels.WhiteKernel(noise_level=noise,
+                                               noise_level_bounds=noise_bounds)
 
         # Doing regression
         gpr = GaussianProcessRegressor(kernel=initial_kernel,
@@ -606,13 +631,14 @@ class timeseries:
         X_ = np.linspace(min(X)[0], max(X)[0], N)
         # Mean fit
         y_mean, y_cov = gpr.predict(X_[:,np.newaxis], return_cov=True)
-        ts_mean = timeseries(pd.DataFrame(index=self.data.index, data=y_mean), name='Mean from GPR')
+        idx = self.data.index
+        ts_mean = timeseries(pd.DataFrame(index=idx, data=y_mean), name='Mean from GPR')
         # Mean - (1-sigma)
         y_std_m = y_mean - np.sqrt(np.diag(y_cov))
-        ts_std_m = timeseries(pd.DataFrame(index=self.data.index, data=y_std_m), name='Mean - 1-sigma from GPR')
+        ts_std_m = timeseries(pd.DataFrame(index=idx, data=y_std_m), name='Mean-sigma from GPR')
         # Mean + (1-sigma)
         y_std_p = y_mean + np.sqrt(np.diag(y_cov))
-        ts_std_p = timeseries(pd.DataFrame(index=self.data.index, data=y_std_p), name='Mean + 1-sigma from GPR')
+        ts_std_p = timeseries(pd.DataFrame(index=idx, data=y_std_p), name='Mean+sigma from GPR')
         
         
         # Plotting the result
