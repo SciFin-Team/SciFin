@@ -529,9 +529,46 @@ class timeseries:
 
         
     
+    def convolve(self, func, x_min, x_max, n_points, normalize=False):
+        """
+        Method that performs a convolution of the time series with a function 'func'. \
+        The 'normalize' option allows to renormalize 'func' such that the sum of its  \
+        values is one.
+        
+        Arguments:
+        - self: refering to the timeseries itself.
+        - func: the function we want to employ for convolution.
+        - x_min: the minimal value to consider for 'func'.
+        - x_max: the maximal value to consider for 'func'.
+        - n_points: the number of points to consider in the function.
+        - normalize: the option to impose the sum of func values to be 1.
+        """
+        
+        # Getting the time series values
+        ts = self.data.values
+
+        # Getting the convolving function values
+        X = np.linspace(x_min, x_max, n_points)
+        func_vals = []
+        for x in X:
+            func_vals.append(func(x))
+        if normalize==True:
+            sum_vals = np.array(func_vals).sum()
+            func_vals /= sum_vals
+        
+        # Generating convolved values
+        convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
+        convolved_ts = timeseries(pd.DataFrame(index=self.data.index, data=convolved_vals))
+        
+        return convolved_ts
+    
+    
+
     
 
 
+    
+    
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
     
     
@@ -543,15 +580,19 @@ def multi_plot(timeseries, figsize=(12,5), dpi=100):
     plt.figure(figsize=figsize, dpi=dpi)
     min_date = timeseries[0].data.index[0]
     max_date = timeseries[0].data.index[-1]
+    
     for i in range(len(timeseries)):
         if timeseries[i].data.index[0] < min_date:
             min_date = timeseries[i].data.index[0]
         if timeseries[i].data.index[-1] > max_date:
             max_date = timeseries[i].data.index[-1]
         plt.plot(timeseries[i].data.index, timeseries[i].data.values)
-    title = "Multiplot of time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
+        
+    title = "Multiplot of time series from " + str(min_date)[:10] \
+            + " to " + str(max_date)[:10]
     plt.gca().set(title=title, xlabel="Date", ylabel="Value")
     plt.show()
         
         
         
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
