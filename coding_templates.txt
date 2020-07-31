@@ -1,0 +1,25 @@
+
+For functions:
+--------------
+
+def ...(...):
+    """
+    ... description ...
+    
+    Arguments:
+    - ...
+    - ...
+    """
+    
+    # Checks
+    assert(...)
+    
+    ... rest of the code ...
+    
+    
+    
+
+    
+    
+    
+    
