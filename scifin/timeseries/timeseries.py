@@ -15,6 +15,8 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
 
 # CLASS timeseries
 class timeseries:
@@ -24,7 +26,7 @@ class timeseries:
     
     def __init__(self, df, name=""):
         """
-        Initializer. Function that receives a data frame as an argument and initialize the time series class.
+        Function receiving a data frame as an argument and initializing the time series.
         """
         # Making sure it is a single column data frame
         assert(df.shape[1]==1)
@@ -38,7 +40,8 @@ class timeseries:
     
     def __specify_data(self, start, end):
         """
-        Private method that returns the appropriate data according to user's specifying or not the start and end dates.
+        Private method returning the appropriate data according to user's specifying \
+        or not the desired start and end dates.
         """
         # Preparing data frame
         if start==None and end==None:

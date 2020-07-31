@@ -9,13 +9,15 @@ from datetime import timedelta
 import random as random
 import matplotlib.pyplot as plt
 
-import bs4
+import beautifulsoup4 as bs4
 import pickle
 import requests
 import pandas_datareader as pdr
 from IPython.display import display, clear_output
 
 from .. import timeseries
+
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
 def scrape_sp500_tickers():

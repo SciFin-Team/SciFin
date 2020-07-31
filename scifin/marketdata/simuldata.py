@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 from . import marketdata
 
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
 
 def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
     """
