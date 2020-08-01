@@ -14,23 +14,28 @@ from . import marketdata
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
+# GENERAL FUNCTIONS RELATED TO MARKET
+
 def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
     """
-    Method that creates a market from a Geometric Brownian process for each stock of the form:
+    Method that creates a market from a Geometric Brownian process \
+    for each stock of the form:
     r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
-    where r_t is the return series, my is a drift (annualized), sigma is the volatility (annualised)
+    where r_t is the return series, mu is a drift (annualized),
+    sigma is the volatility (annualised).
     """
     
     dt = 1/steps_per_year
     n_steps = int(n_years * steps_per_year) + 1
     
     # Computing r_t + 1
-    rets_plus_1 = np.random.normal(loc=(1+drift)**dt, scale=(sigma*np.sqrt(dt)), size=(n_steps, n_scenarios))
+    rets_plus_1 = np.random.normal(loc=(1+drift)**dt,
+                                   scale=(sigma*np.sqrt(dt)),
+                                   size=(n_steps, n_scenarios))
     rets_plus_1[0] = 1
     ret_val = r_ini * pd.DataFrame(rets_plus_1).cumprod()
     
     return ret_val
-
 
 
 def set_market_names(data, date, date_type="end", interval_type='D'):
@@ -38,15 +43,17 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     Function that sets the column and row names of the market dataframe.
     
     Arguments:
-    - data: dataframe on which we want to apply the function
-    - date: a specific date
-    - date_type: "end" for date specifying the end date of the data, "start" for the start date
-    - interval_type: specifies what jumps correspond to ('D' for days, 'M' for months, 'Y' for years)
+    - data: dataframe on which we want to apply the function.
+    - date: a specific date.
+    - date_type: "end" for date specifying the data end date, "start" for the start date.
+    - interval_type: specifies nature of the jump between two dates
+    ('D' for days, 'M' for months, 'Y' for years).
     
     Note: the two ways ("end" and "start") of specifying the dates are approximative.
           The uncertainty on the dates are of the order of the interval type.
     """
     
+    # Initializations
     Nticks = data.shape[0]
     Nassets = data.shape[1]
     
@@ -70,24 +77,28 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
             date_series = date + pd.to_timedelta(np.arange(Nticks) * 365, unit='D')
     elif date_type == "end":
         if interval_type == 'D':
-            date_series = date - timedelta(days=Nticks) + pd.to_timedelta(np.arange(Nticks), unit='D')
+            date_series = date - timedelta(days=Nticks) \
+                               + pd.to_timedelta(np.arange(Nticks), unit='D')
         elif interval_type == 'M':
-            date_series = date - timedelta(days=int(Nticks * (365./12.))) + pd.to_timedelta(np.arange(Nticks) * int(365./12.), unit='D')
+            date_series = date - timedelta(days=int(Nticks * (365./12.))) \
+                               + pd.to_timedelta(np.arange(Nticks) * int(365./12.), unit='D')
         elif interval_type == 'Y':
-            date_series = date - timedelta(days=int(Nticks * 365)) + pd.to_timedelta(np.arange(Nticks) * 365, unit='D') 
+            date_series = date - timedelta(days=int(Nticks * 365)) \
+                               + pd.to_timedelta(np.arange(Nticks) * 365, unit='D') 
     else:
         ValueError("date_type choice is not recognized.")
         
     # Affecting the value to the rows names
     data.index = date_series.to_period(interval_type)
-    return
-
+    
+    pass
 
 
 def is_index_valid(market):
     """
     Checks if the market has a correct index, meaning no date value is repeated.
     """
+    
     index = market.index.tolist()
     market_set = set(index)
     
@@ -110,14 +121,14 @@ def create_market_shares(market, mean=100000, stdv=10000):
     # number of shares we want
     Nassets = market.shape[1]
     
-    market_shares = pd.Series([int(np.random.normal(loc=mean, scale=stdv, size=1)) for _ in range(Nassets)])
+    market_shares = pd.Series( [int(np.random.normal(loc=mean, scale=stdv, size=1)) 
+                                for _ in range(Nassets)] )
     market_shares.index = market.columns
     
     if market_shares.min() < 0:
         raise Exception("A negative market share was generated, please launch again.")
     
     return market_shares
-
 
 
 def plot_market_components(market, dims=(10,5), legend=True):
@@ -140,16 +151,8 @@ def plot_market_components(market, dims=(10,5), legend=True):
     if legend:
         axis.legend(loc='upper left')
 
+    pass
 
-
-        
-        
-        
-        
-        
-        
-        
-        
         
 
 # FUNCTIONS USED WITH GENETIC ALGORITHM
@@ -159,12 +162,12 @@ def propagate_investments(investment, market, name_indiv="Portfolio"):
     Function that propagates the initial investments into a portfolio over time.
     
     Argument:
-    - individual: that's a list of Nassets elements that represent our initial investment.
+    - individual: a list of Nassets elements that represent our initial investment.
     - market: the market (set of assets) on which the investments are applied.
     - name_indiv: name of the individual portfolio.
     """
     
-    # Check
+    # Checks
     first_row = market.iloc[0]
     is_uniform = True
     first_value = first_row[0]
@@ -172,6 +175,7 @@ def propagate_investments(investment, market, name_indiv="Portfolio"):
         if x != first_value:
             raise Error("First row of market must be uniform in value.")
     
+    # Initializations
     Nassets = len(investment)
     
     # Propagating investments
@@ -179,17 +183,18 @@ def propagate_investments(investment, market, name_indiv="Portfolio"):
     
     # Summing contributions
     portfolio_total = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
+    
     return portfolio_total
-
 
 
 def evaluation_dates(market, Ndates=10, interval_type='M'):
     """
-    Function producing a number of equally spaced dates at which the portfolios will be evaluated.
+    Function producing a number of equally spaced dates \
+    at which the portfolios will be evaluated.
     
     Arguments:
-    - market: the dataframe representing the market (assets values over time)
-    - Ndates: the number of dates
+    - market: the dataframe representing the market (assets values over time).
+    - Ndates: the number of dates.
     """
     
     # Initialization
@@ -208,7 +213,6 @@ def evaluation_dates(market, Ndates=10, interval_type='M'):
     return special_dates
 
 
-
 def find_tick_before_eval(market_dates, date):
     """
     Function returning the tick before the evaluation date.
@@ -225,18 +229,19 @@ def find_tick_before_eval(market_dates, date):
     raise Exception("Apparently no date was found.")
     
     
-
 def limited_propagation(population, market, start, end):
     """
-    Function that propagates the initial investments into a portfolio over time, like `propagate_investments`, but only for a limited period of time.
-    Also, the function is extended from the case of one individual portfolio to a dataframe of them.
+    Function that propagates the initial investments into a portfolio over time, \
+    like `propagate_investments`, but only for a limited period of time.
+    Also, the function is extended from the case of one individual portfolio \
+    to a dataframe of them.
     
     Argument:
-    - individual: that's a list of Nassets elements that represent our initial investment
-    - market: the market (set of assets) on which the investments are applied
-    - start: starting date or period
-    - end: ending date or period
-    - name_indiv: name of the individual portfolio
+    - individual: list of Nassets elements that represent our initial investment.
+    - market: the market (set of assets) on which the investments are applied.
+    - start: starting date or period.
+    - end: ending date or period.
+    - name_indiv: name of the individual portfolio.
     """
     
     # Initialization
@@ -249,11 +254,11 @@ def limited_propagation(population, market, start, end):
         portfolio_name = population.index[x]
         # Computing (price of asset) x (asset allocation)
         # portfolio = market[start:end] / 100 * population.iloc[x]
-        portfolio = market[start:end] * population.iloc[x][:Nassets] * ( Nassets / population.iloc[x][:Nassets].sum())
+        portfolio = market[start:end] * population.iloc[x][:Nassets] \
+                                      * ( Nassets / population.iloc[x][:Nassets].sum())
         list_portfolios[portfolio_name] = portfolio.sum(axis=1)
 
     return pd.DataFrame(list_portfolios)
-
 
 
 def portfolio_vol(weights, cov_matrix):
@@ -261,17 +266,20 @@ def portfolio_vol(weights, cov_matrix):
     Function returning the volatility of a portfolio from a covariance matrix and weights.
     weights are a numpy array or N x 1 matrix and covmat is an N x N matrix.
     """
-    vol = (weights.T @ cov_matrix @ weights)**0.5
-    return vol
+    return (weights.T @ cov_matrix @ weights)**0.5
 
 
-
-def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb=0.5, fitness_method="Max Return and Vol"):
+def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date,
+                        lamb=0.5, fitness_method="Max Return and Vol"):
     """
-    Function that simply collects the last value in time of each portfolio and consider it as the fitness measure.
+    Function that simply collects the last value in time of each portfolio \
+    and consider it as the fitness measure.
     
-    Note: - population has rows which are the names of the portfolio, and columns which are the assets.
-          - propagation has rows which are the time stamps, and columns which are the names of the portfolios.
+    Notes:
+    - population has rows which are the names of the portfolio, \
+    and columns which are the assets.
+    - propagation has rows which are the time stamps, \
+    and columns which are the names of the portfolios.
     """
         
     # Method of max return
@@ -281,10 +289,12 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         
     # Method combining max return and average volatility
     elif fitness_method == "Max Return and Vol":
-        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
+        # Computing fitness from returns,
+        # taking the last row value of each columns (i.e. each portfolio)
         fitness_from_return = [propagation[x][-1] for x in propagation.columns]
 
-        # Defining the market correlation over a period of time (here it does not really matter which one)
+        # Defining the market correlation over a period of time
+        # (here it does not really matter which one)
         covmat = market.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
@@ -301,15 +311,19 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         normalized_fitness_from_vol = fitness_from_vol / sum(fitness_from_vol)
 
         # Combining the 2 fitnesses
-        fitness_value = [lamb * normalized_fitness_from_return[x] + (1-lamb) / normalized_fitness_from_vol[x]  for x in range(len(fitness_from_return))]
-    
+        fitness_value = [ lamb * normalized_fitness_from_return[x] 
+                          + (1-lamb) / normalized_fitness_from_vol[x]  
+                          for x in range(len(fitness_from_return)) ]
     
     # Method combining average return and average volatility
     elif fitness_method == "Avg Return and Vol":
-        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [propagation[x].pct_change()[1:].mean() for x in propagation.columns]
+        # Computing fitness from returns,
+        # taking the last row value of each columns (i.e. each portfolio)
+        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
+                                for x in propagation.columns ]
 
-        # Defining the market correlation over a period of time (here it does not really matter which one)
+        # Defining the market correlation over a period of time
+        # (here it does not really matter which one)
         covmat = market.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
@@ -322,15 +336,21 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
             fitness_from_vol.append(portfolio_vol(weights, covmat))
 
         # Combining the 2 fitnesses
-        fitness_value = [lamb * fitness_from_return[x] + (1-lamb) / fitness_from_vol[x]  for x in range(len(fitness_from_return))]
+        fitness_value = [ lamb * fitness_from_return[x]
+                               + (1-lamb) / fitness_from_vol[x] 
+                          for x in range(len(fitness_from_return)) ]
     
     
-    # Method based on the Sharpe Ratio - We assume the risk-free rate is 0% to avoid introducing an arbitrary value here.
+    # Method based on the Sharpe Ratio
+    # We assume the risk-free rate is 0% to avoid introducing an arbitrary value here.
     elif fitness_method == "Sharpe Ratio":
-        # Computing fitness from returns, taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [propagation[x].pct_change()[1:].mean() for x in propagation.columns]
+        # Computing fitness from returns,
+        # taking the last row value of each columns (i.e. each portfolio)
+        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
+                                for x in propagation.columns ]
 
-        # Defining the market correlation over a period of time (here it does not really matter which one)
+        # Defining the market correlation over a period of time
+        # (here it does not really matter which one)
         covmat = market.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
@@ -350,16 +370,17 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
     else:
         raise Exception("Specified fitness method does not seem to exist.")
     
-    
     return fitness_value
 
 
 
+# VISUALIZATION METHODS
 
-
-def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,5), xlim=None, ylim=None):
+def visualize_portfolios_1(market, list_individuals, evaluation_dates,
+                           dims=(10,5), xlim=None, ylim=None):
     """
-    Function that allows a quick visualization of market, some sparse individuals, and the evaluation dates
+    Function that allows a quick visualization of market, \
+    some sparse individuals, and the evaluation dates
     """
     
     # Computing the EW portfolio
@@ -380,13 +401,15 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates, dims=(10,
     axis.set_xlim(xlim)
     axis.set_ylim(ylim)
     
-    return
+    pass
 
 
-
-def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates, dims=(10,5), xlim=None, ylim=None, savefile=False, namefile="Result.png"):
+def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates,
+                           dims=(10,5), xlim=None, ylim=None, savefile=False,
+                           namefile="Result.png"):
     """
-    Function that allows a quick visualization of market, some sparse individuals, and the evaluation dates
+    Function that allows a quick visualization of market, \
+    some sparse individuals, and the evaluation dates
     """
     
     # Initialization
@@ -397,7 +420,9 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     market_CW = marketdata.market_CWindex(market, marketcap)
 
     # Plotting market
-    market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis, legend=False)
+    market_EW.plot(figsize=dims, color='black',
+                   linestyle='--', linewidth=1,
+                   ax=axis, legend=False)
     
     # Plotting evaluation dates
     for ed in evaluation_dates:
@@ -428,12 +453,13 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
         plt.savefig('./' + namefile)
 
 
-        
-        
-def show_allocation_distrib(step, save_gens, save_eval_dates, Nbins=50, savefile=False, namefile="Allocation_Distribution.png"):
+def show_allocation_distrib(step, save_gens, save_eval_dates, Nbins=50,
+                            savefile=False, namefile="Allocation_Distribution.png"):
     """
-    Plots the distribution of a generation (including elites and individuals) for a certain step of the loop that ran in Genetic_Portfolio_Routine.
-    Since there are different individuals, we sum over these elements for each asset, and we divide by the number of individuals.
+    Plots the distribution of a generation (including elites and individuals) \
+    for a certain step of the loop that ran in Genetic_Portfolio_Routine.
+    Since there are different individuals, we sum over these elements for each asset, \
+    and we divide by the number of individuals.
     """
     
     # Initialization
@@ -447,24 +473,26 @@ def show_allocation_distrib(step, save_gens, save_eval_dates, Nbins=50, savefile
 
     # Plotting
     plt.hist(x=tmp, bins=Nbins, range=[xmin,xmax])
-    plt.title("Histogram of allocations - " + save_eval_dates[step].to_timestamp().strftime("%Y-%m-%d"))
+    plt.title("Histogram of allocations - "
+              + save_eval_dates[step].to_timestamp().strftime("%Y-%m-%d"))
     
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
 
+    pass
 
 
-
-
-
-
-def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_quantities.png"):
+def config_4n(n1, n2, n3, n4, market, VIX,
+              savefile=False, namefile="VIX_derived_quantities.png"):
     """
-    Function that plots the evaluation dates, ndays, mutation rate and fitness lambda from the VIX and 4 structure numbers.
-    It also mimicks the general loop, so that we can see how dates are evaluated and how quantities are computed.
+    Function that plots the evaluation dates, ndays, mutation rate \
+    and fitness lambda from the VIX and 4 structure numbers.
+    It also mimicks the general loop, so that we can see how dates are evaluated \
+    and how quantities are computed.
     """
 
+    # Initializations
     market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
     
     save_eval_dates = []
@@ -475,7 +503,6 @@ def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_qu
     loop = 0
     eval_date = market.index[0]
     next_eval_date = market.index[10]
-
 
     while next_eval_date < market.index[-1]:
 
@@ -497,13 +524,17 @@ def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_qu
             next_eval_date = market.index[current_date_index + ndays]
         else:
             next_eval_date = market.index[-1]
-
+        
+        # Getting the VIX
+        VIX_tmp = VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]
+        
         # Computing the mutation rate
-        ng_mutation_rate = (1 + (VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]/10).astype('int')) * (market.shape[1] / n3) # Big change here!
+        ng_mutation_rate = (1 + (VIX_tmp/10).astype('int')) * (market.shape[1] / n3)
         save_mutation_rate.append(ng_mutation_rate)
         
         # Computing the fitness lambda
-        fitness_lambda = 1 - VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")] / (VIX[:eval_date.to_timestamp().strftime("%Y-%m-%d")].max() * n4)
+        VIX_past_max = VIX[:eval_date.to_timestamp().strftime("%Y-%m-%d")].max()
+        fitness_lambda = 1 - VIX_tmp / (VIX_past_max * n4)
         save_fitness_lambda.append(100 * fitness_lambda)
         
         # Loop counter update
@@ -511,9 +542,17 @@ def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_qu
         
         
     # Converting the mutation rate into a dataFrame
-    df_mutation_rate = pd.DataFrame(data=save_mutation_rate, index=save_eval_dates, columns=["Mutation Rate"])
-    df_ndays = pd.DataFrame(data=save_ndays, index=save_eval_dates, columns=["ndays"])
-    df_fitness_lambda = pd.DataFrame(data=save_fitness_lambda, index=save_eval_dates, columns=["100 x Fitness lambda"])
+    df_mutation_rate = pd.DataFrame(data=save_mutation_rate,
+                                    index=save_eval_dates,
+                                    columns=["Mutation Rate"])
+    
+    df_ndays = pd.DataFrame(data=save_ndays,
+                            index=save_eval_dates,
+                            columns=["ndays"])
+    
+    df_fitness_lambda = pd.DataFrame(data=save_fitness_lambda,
+                                     index=save_eval_dates,
+                                     columns=["100 x Fitness lambda"])
 
     # PLOTTING EVALUATION DATES / MUTATION RATES
     fig, axis = plt.subplots(nrows=1, ncols=1)
@@ -529,25 +568,20 @@ def config_4n(n1,n2,n3,n4, market, VIX, savefile=False, namefile="VIX_derived_qu
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
-        
-        
-        
-        
-def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates, savefile=False, namefile="ResultDifference.png"):
+
+
+def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
+                         savefile=False, namefile="ResultDifference.png"):
     """
-    Computes and plot the difference between the portfolios of the genetic algorithm and the Cap-Weighted Portfolio.
+    Computes and plots the difference between the portfolios of the genetic algorithm \
+    and the Cap-Weighted Portfolio.
     """
     
-    # Computing values - Old way (very slow)
-    # Diff_GenPort_CW = save_propags.copy()
-    # for i in range(Diff_GenPort_CW.shape[0]):
-    #     market = market_CW.values[i][0]
-    #     for j in range(Diff_GenPort_CW.shape[1]):
-    #         Diff_GenPort_CW.iloc[i][j] = (Diff_GenPort_CW.iloc[i][j] - market) / market * 100
-    
-    # Computing values - New way (much much faster !)
+    # Computing values
     diff_array = (save_propags.to_numpy() - market_CW.to_numpy()) / market_CW.to_numpy() * 100
-    Diff_GenPort_CW = pd.DataFrame(diff_array, columns = save_propags.columns, index=save_propags.index)
+    Diff_GenPort_CW = pd.DataFrame(data = diff_array,
+                                   columns = save_propags.columns,
+                                   index=save_propags.index)
 
     # Plotting
     fig, axis = plt.subplots(nrows=1, ncols=1)
@@ -563,16 +597,18 @@ def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates, savefile=Fal
     plt.xlabel("Time")
     plt.ylabel("Difference in %")
     
-    
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
     
-    return
+    pass
 
 
-
-def plot_asset_evol(n, save_eval_dates, save_gens, savefile=False, namefile="asset_evol.png"):
+def plot_asset_evol(n, save_eval_dates, save_gens,
+                    savefile=False, namefile="asset_evol.png"):
+    """
+    Function plotting the evolution of asset allocations over time.
+    """
 
     # Forming the set of portfolio names
     set_indices = []
@@ -597,6 +633,9 @@ def plot_asset_evol(n, save_eval_dates, save_gens, savefile=False, namefile="ass
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
+
+    pass
+
+
         
-        
-        
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#

@@ -99,7 +99,7 @@ def convert_multicol_df_tolist(df, start_date, end_date):
     shared_index = df.index
     for c in df.columns:
         tmp_df = pd.DataFrame(data=df[start_date:end_date][c], index=shared_index)
-        list_ts.append(timeseries.timeseries(tmp_df, name=c))
+        list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
     
     return list_ts
 
