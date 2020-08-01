@@ -18,18 +18,27 @@ from .. import marketdata
 def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     """
     Function that creates an individual from random values that we call genes.
-    These genes can represent the investment into a market or any other value in a pool of possible values.
+    These genes can represent the investment into a market \
+    or any other value in a pool of possible values.
     
     Arguments:
-    - number_of_genes: it is the number of genes (but it can also be the number of assets in the market).
-    - upper_limit: that's the maximum value taken by the genes (or amount we invest), before normalization.
-    - lower_limit: that's the minimum value taken by the genes (or amount we invest), before normalization.
-    - sum_target: that's the sum value of the genes (or the total investment that will be reached), after normalization.
+    - number_of_genes: it is the number of genes \
+    (but it can also be the number of assets in the market).
+    - upper_limit: that's the maximum value taken by the genes \
+    (or amount we invest), before normalization.
+    - lower_limit: that's the minimum value taken by the genes \
+    (or amount we invest), before normalization.
+    - sum_target: that's the sum value of the genes \
+    (or the total investment that will be reached), after normalization.
     
-    Note: this function has a little bug that turns out funny. If the sum of all the values is negative, then the normalization will reverse the sign,
-    and we will end up having a portfolio which has flipped signes, hence specified long positions become short, and conversely. So I just put a small test.
+    Note: this function has a little bug that turns out funny. \
+    If the sum of all the values is negative, then the normalization will reverse the sign,
+    and we will end up having a portfolio which has flipped signes, \
+    hence specified long positions become short, and conversely. \
+    So I just put a small test.
     """
-    individual = [random.random() * (upper_limit-lower_limit) + lower_limit for x in range(number_of_genes)]
+    individual = [ random.random() * (upper_limit-lower_limit) 
+                   + lower_limit for x in range(number_of_genes) ]
     normalization = sum(individual) / sum_target
     if normalization < 0:
         raise Exception("Shorting too many assets. Not allowed for now.")
@@ -39,7 +48,8 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
 
 
 
-def population(number_of_individuals, number_of_genes, upper_limit, lower_limit, sum_target, birth_date, name_indiv="Indiv Portfolio"):
+def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
+               sum_target, birth_date, name_indiv="Indiv Portfolio"):
     """
     Function that creates a population of individuals from the function `individual`.
     
@@ -69,9 +79,11 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
 
 
 
-def get_generation(population, market, current_eval_date, next_eval_date, lamb=0.5, fitness_method="Max Return and Vol", return_propag=False, date_format="%Y-%m"):
+def get_generation(population, market, current_eval_date, next_eval_date,
+                   lamb=0.5, fitness_method="Max Return and Vol",
+                   return_propag=False, date_format="%Y-%m"):
     """
-    Takes a population, propagate its elements to the next evaluation event, and compute their fitness
+    Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
     
     Arguments:
     - population: the population to evolve
@@ -727,25 +739,6 @@ def sum_top_fitness(generation, num_elements=4):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
