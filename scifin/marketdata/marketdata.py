@@ -44,12 +44,13 @@ def scrape_sp500_tickers():
     return tickers
 
 
-
 def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     """
-    Function which extracts values associated to a feature for a list of assets between 2 dates, using Yahoo Finance data.
+    Function which extracts values associated to a feature for a list of assets \
+    between 2 dates, using Yahoo Finance data.
     
-    The choices for the feature provided by Yahoo Finance are: 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    The choices for the feature provided by Yahoo Finance are:
+    'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
     
     Returns a list of timeseries all having the same index and distinctive names.
     """
@@ -59,7 +60,8 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     try:
         assert(feature in available_features)
     except AssertionError:
-        raise(AssertionError("Feature must be one of the following: 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
+        raise(AssertionError("Feature must be one of the following: \
+        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
     
     # Sort list
     listassets = np.sort(list_assets)
@@ -86,11 +88,12 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     return assets
 
 
-
 def convert_multicol_df_tolist(df, start_date, end_date):
     """
-    Converts the multi-columns data frame obtained from get_assets_from_yahoo() into a list of timeseries.
+    Converts the multi-columns data frame obtained from get_assets_from_yahoo() \
+    into a list of timeseries.
     """
+    
     # Forming a list of timeseries
     list_ts = []
     shared_index = df.index
@@ -108,6 +111,7 @@ def get_marketcap_today(market):
     """
     marketcap_today = pdr.data.get_quote_yahoo(market.columns)['marketCap']
     marketcap = pd.Series(data=marketcap_today, index=marketcap_today.index)
+    
     return marketcap
 
 
@@ -122,15 +126,17 @@ def market_EWindex(market):
     M_t = \sum_i w_i m_{ti} = \sum_i m_{ti}
     """
     
-    market_index = pd.DataFrame(market.sum(axis=1), columns=["Market EW Index"])
-    return market_index
+    return pd.DataFrame(market.sum(axis=1), columns=["Market EW Index"])
 
 
 def market_CWindex(market, marketcap):
     """
-    Function that returns the cap-weighted portfolio associated with the assets of a market.
+    Function that returns the cap-weighted portfolio associated \
+    with the assets of a market.
+    
     We compute the total return at time t, called R_t as:
     R_t = \sum_{i=1}^N v_i^t r_i^t / (\sum_{j=1}^N v_j^t)
+    
     And since we only have data of the v_j's today we compute it is:
     R_t = \sum_{i=1}^N v_i^today r_i^t / (\sum_{j=1}^N v_j^today)
     
@@ -148,12 +154,13 @@ def market_CWindex(market, marketcap):
     
     # Computing weighted returns
     M = Nassets * (market * marketcap / marketcap.sum()).sum(axis=1)
-    market_index = pd.DataFrame(data=M, index=market.index, columns=["Market CW Index (Cap from last day)"])
+    market_index = pd.DataFrame(data=M, index=market.index,
+                                columns=["Market CW Index (Cap from last day)"])
     
     return market_index
 
 
 
-
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
