@@ -2,13 +2,35 @@
 For functions:
 --------------
 
-def ...(...):
+def ...(arg1, arg2=1):
     """
-    ... description ...
+    Direct description of the function...
     
-    Arguments:
-    - ...
-    - ...
+    Parameters
+    ----------
+    arg1 : string
+      Description of arg1...
+    arg2 : int, optional
+      Description of arg2...
+      Default=1.
+    
+    Returns
+    -------
+    int
+      Description of return value...
+    
+    Raises
+    ------
+      ValueError: description of error types...
+    
+    Notes
+    -----
+     See https://...
+     ...
+    
+    Examples
+    --------
+      Description of usage examples...
     """
     
     # Checks
@@ -19,6 +41,9 @@ def ...(...):
         
     ... rest of the code ...
     
+    
+    return ...
+    or pass
     
     
 
