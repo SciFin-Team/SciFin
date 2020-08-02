@@ -372,7 +372,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=Non
     
     # Creating offsprings - Method 3
     if method == 'Multi Points':
-        if (Npoints == None) or (Npoints == 0):
+        if (Npoints is None) or (Npoints == 0):
             raise Exception("Npoints must be specified.")
         if Npoints%1!=0:
             raise Exception("Npoints must be integer.")

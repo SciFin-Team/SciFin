@@ -51,13 +51,13 @@ class TimeSeries:
         or not the desired start and end dates.
         """
         # Preparing data frame
-        if start==None and end==None:
+        if (start is None) and (end is None):
             data = self.data
-        elif start==None and end!=None:
+        elif (start is None) and (end is not None):
             data = self.data[:end]
-        elif start!=None and end==None:
+        elif (start is not None) and (end is None):
             data = self.data[start:]
-        elif start!=None and end!=None:
+        elif (start is not None) and (end is not None):
             data = self.data[start:end]
         return data
     
@@ -66,8 +66,8 @@ class TimeSeries:
         Method recasting the time series dates to 10 characters strings \
         if the date hasn't been re-specified (i.e. value is 'None').
         """
-        s = str(self.start)[:10] if (start==None) else start
-        e = str(self.end)[:10] if (end==None) else end
+        s = str(self.start)[:10] if (start is None) else start
+        e = str(self.end)[:10] if (end is None) else end
         return s,e
     
     
@@ -496,7 +496,7 @@ class TimeSeries:
         and returns the different components.
         """
         # Check
-        if polyn_order != None:
+        if polyn_order is not None:
             try:
                 assert(polyn_order>1)
             except AssertionError:
@@ -521,7 +521,7 @@ class TimeSeries:
         nonlin_y = y - lin_trend_y
         
         # Remove a polynomial component of a certain order
-        if polyn_order != None:
+        if polyn_order is not None:
             polyn_model = make_pipeline(PolynomialFeatures(polyn_order), Ridge())
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
@@ -529,7 +529,7 @@ class TimeSeries:
             polyn_comp_ts = TimeSeries(polyn_comp_df)
         
         # Generating the resting part time series
-        if polyn_order != None:
+        if polyn_order is not None:
             rest_y = nonlin_y - polyn_component_y
         else:
             rest_y = nonlin_y
@@ -577,7 +577,7 @@ class TimeSeries:
             residue_ts = TimeSeries(residue_df)
         
         # Return results
-        if polyn_order != None:
+        if polyn_order is not None:
             if extract_seasonality==True:
                 return [lin_trend_ts, polyn_comp_ts, seasonal_ts, residue_ts]
             else:
