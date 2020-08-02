@@ -1,6 +1,6 @@
 
-For functions:
---------------
+For functions not in a class (Semi-completed):
+----------------------------------------------
 
 def ...(arg1, arg2=1):
     """
@@ -47,6 +47,49 @@ def ...(arg1, arg2=1):
     
     
 
+For functions not in a class (Empty):
+-------------------------------------
+
+def ...(...):
+    """
+    ...
+    
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    ...
+      ...
+    
+    Raises
+    ------
+      ...
+    
+    Notes
+    -----
+     ...
+    
+    Examples
+    --------
+      ...
+    """
+    
+    # Checks
+    assert(...)
+    
+    # Initializations
+    ...
+    
+    return ...
+    
+    
+
+    
+    
+    
     
     
     

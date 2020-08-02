@@ -21,13 +21,51 @@ from . import TimeSeries
 
 def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
     """
-    Function generating a time series from the Auto-Regressive (AR) model of arbitrary order P.
+    Description
+    -----------
+    Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
+    
     The model is of the form:
     x_t = cst + coeffs[0] * x_{t-1} + ... + coeffs[P-1] * x_{t-P} + a_t
     where a_t is the white noise with standard deviation sigma.
+    
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
     
-    Note: noise is Gaussian here.
+    Parameters
+    ----------
+    start_date : string, datetime
+      Starting date of the time series.
+    end_date : string, datetime
+      Ending date of the time series.
+    frequency : string
+      Indicates the frequency of data (e.g. 'D' for days, 'M' for months, etc.).
+    start_values : list
+      Initial values of the process (P of them).
+    cst : float
+      Constant value of the process.
+    order : int
+      Order of the process (i.e. value of P).
+    coeffs : list
+      Coefficients of the process.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the Auto-Regressive process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
