@@ -33,12 +33,12 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     
     Parameters
     ----------
-    start_date : string, datetime
+    start_date : str or datetime
       Starting date of the time series.
-    end_date : string, datetime
+    end_date : str or datetime
       Ending date of the time series.
-    frequency : string
-      Indicates the frequency of data (e.g. 'D' for days, 'M' for months, etc.).
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
     start_values : list
       Initial values of the process (P of them).
     cst : float
@@ -62,6 +62,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     Notes
     -----
      White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
     
     Examples
     --------
@@ -103,13 +105,44 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
 
 def random_walk(start_date, end_date, frequency, start_value, sigma):
     """
-    Function generating a time series from the Random Walk process,
+    Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
+    
     The model is of the form:
     x_t = x_{t-1} + a_t
     where a_t is the white noise with standard deviation sigma.
     
-    Note: noise is Gaussian here.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    start_value : float
+      Initial value of the process.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the Random Walk process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Generating index
@@ -134,13 +167,46 @@ def random_walk(start_date, end_date, frequency, start_value, sigma):
 
 def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma):
     """
-    Function generating a time series from the Random Walk with Drift process,
+    Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
+    
     The model is of the form:
     x_t = drift + x_{t-1} + a_t
     where a_t is the white noise with standard deviation sigma.
     
-    Note: noise is Gaussian here.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    start_value : float
+      Initial value of the process.
+    drift : float
+      Value of the drift.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the Random Walk process with drift.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Generating index
@@ -165,16 +231,54 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
 
 def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
     """
-    Function generating a time series from the Moving Average (MA) model of arbitrary order Q.
+    Generates a time series from the Moving Average (MA) model of arbitrary order Q.
+    
     The model is of the form:
     x_t = cst + a_t + coeffs[0] * a_{t-1} + ... + coeffs[Q-1] * a_{t-Q}
     where {a_t} is the white noise series with standard deviation sigma.
-    We don't need to impose any initial values for {x_t} are imposed directly from {a_t}.
+
+    We don't need to impose any initial values for {x_t}, they are imposed directly from {a_t}.
     
-    Clarification: We thus assume {x_0 = cst + a_0 ; x_1 = cst + a_1 + coeffs[0] * a_0 ;
-    x_2 = cst + a_2 + coeffs[0] * a_1 + coeffs[1] * a_0} ; ...
+    To be clear, the initial steps of the process are:
+    x_0 = cst + a_0
+    x_1 = cst + a_1 + coeffs[0] * a_0
+    x_2 = cst + a_2 + coeffs[0] * a_1 + coeffs[1] * a_0
     
-    Note: noise is Gaussian here.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    cst : float
+      Constant value of the process.
+    order : int
+      Order of the process (i.e. value of Q).
+    coeffs : list
+      List of coefficients.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the Moving Average process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
@@ -216,15 +320,57 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
 def ARMA(start_date, end_date, frequency, start_values,
          cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
     """
-    Function generating a time series from the Auto-Regressive Moving Average (ARMA) \
+    Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
+    
     The model is of the form:
     x_t = cst + Sum_{i=0}^{P-1} ARcoeffs[i] * a_{t-i-1}
         + a_t + Sum_{j=0}^{Q-1} MAcoeffs[j] * a_{t-j-1}
     where {a_t} is the white noise series with standard deviation sigma.
+    
     Initial values for {x_0, ..., x_P} are imposed from the values in start_values.
     
-    Note: noise is Gaussian here.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    start_values : list
+      Initial values of the process (P of them).
+    cst : float
+      Constant value of the process.
+    ARorder : int
+      Order of the AR part of the process (i.e. value of P).
+    ARcoeffs : list
+      List of coefficients for the AR part of the process.
+    MAorder : int
+      Order of the MA part of the process (i.e. value of Q).
+    MAcoeffs : list
+      List of coefficients for the MA part of the process.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the ARMA process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
@@ -265,22 +411,62 @@ def ARMA(start_date, end_date, frequency, start_values,
 
 def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma):
     """
-    Function generating a time series from the Random Coefficient Auto-Regressive (RCA) \
+    Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
+    
     The model is of the form:
     x_t = cst + Sum_{m=0}^{M-1} (ARcoeffs[m] + coeffs[m]) * x_{t-m-1} + a_t.
-    Here {a_t} is a Gaussian white noise with standard deviation sigma \
+    
+    Here {a_t} is a Gaussian white noise with standard deviation sigma
     and coeffs_t are randomly generated from the covariance matrix cov_matrix.
+    
     In addition, we have some imposed coefficients of the Auto-Regressive type in ARcoeffs.
     
-    Note: we assume coeffs_t follow a multivariate Gaussian distribution.
-    Also cov_matrix should be a non-negative definite matrix.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    cst : float
+      Constant value of the process.
+    order : int
+      Order of the process (i.e. value of M).
+    ARcoeffs : list
+      List of coefficients for the AR part of the process.
+    cov_matrix: list of lists
+      Covariance matrix for the random part of the process.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
     
-    Note: here we do not have an argument called start_value, \
-    compared to randomseries.auto_regressive().
-    This choice is made as there are already random coefficients involved, \
-    here there is no real use in imposing the first values of the time series \
-    other than just ARcoeffs and the generated coeffs.
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the RCA process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     We assume coeffs_t follow a multivariate Gaussian distribution.
+     Also cov_matrix should be a non-negative definite matrix.
+     
+     Here we do not have an argument called start_value,
+     compared with randomseries.auto_regressive().
+     This choice is made as there are already random coefficients involved.
+     There is no real use in imposing the first values of the time series
+     other than just ARcoeffs and the generated coeffs.
+     
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
@@ -322,15 +508,51 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     """
-    Function generating a volatility series from the \
+    Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
+    
     The model is of the form:
     a_t = sig_t * eps_t
     with sig_t^2 = cst + coeffs[0] * a_{t-1}^2 + ... + coeffs[M-1] * a_{t-M}^2.
-    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, \
+    
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance,
     i.e. a white noise with unit variance.
-    The coefficients cst and coeffs[i] are assumed to be positive \
+    
+    The coefficients cst and coeffs[i] are assumed to be positive
     and must be such that a_t is finite with positive variance.
+    
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    cst : float
+      Constant value of the process.
+    order : int
+      Order of the process (i.e. value of M).
+    coeffs : list
+      List of coefficients of the process.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the ARCH process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+      For offset aliases available see:
+      https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
@@ -381,19 +603,58 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     return rs
 
 
-
 def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig):
     """
-    Function generating a volatility series from the \
+    Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
+    
     The model is of the form:
     a_t = sig_t * eps_t
     with sig_t^2 = cst + Sum_{i=0}^{M-1} coeffs_a[i] * a_{t-i-1}^2 
                        + Sum_{j=0}^{S-1} coeffs_sig[j] * sig_{t-j-1}^2.
-    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance, \
+                       
+    Here {eps_t} is a sequence of idd random variables with mean zero and unit variance,
     i.e. a white noise with unit variance.
-    The coefficients cst and coeffs[i] are assumed to be positive \
+    
+    The coefficients cst and coeffs[i] are assumed to be positive
     and must be such that a_t is finite with positive variance.
+    
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    cst : float
+      Constant value of the process.
+    order_a : int
+      Order of the a_t part of the process (i.e. value of M).
+    coeffs_a : list
+      List of coefficients of the a_t part of the process.
+    order_sig : int
+      Order of the sig_t part of the process (i.e. value of S).
+    coeffs_sig : list
+      List of coefficients of the sig_t part of the process.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the GARCH process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+      For offset aliases available see:
+      https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
@@ -447,18 +708,54 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     return rs
 
 
-
 def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
     """
-    Function generating a volatility series from the \
+    Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
+    
     The model is of the form:
     a_t = Sum_{m=0}^{M-1} coeffs[m] * a_{t-m-1} + eta_t.
-    Here {eta_t} is a Gaussian white noise with standard deviation sigma \
+    
+    Here {eta_t} is a Gaussian white noise with standard deviation sigma
     and coeffs_t are generated from the covariance matrix cov_matrix.
     
-    Note: we assume coeffs_t follow a multivariate Gaussian distribution.
-    Also cov_matrix should be a non-negative definite matrix.
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    order : int
+      Order of the process (i.e. value of M).
+    cov_matrix: list of lists
+      Covariance matrix for the random part of the process.
+    sigma : float
+      Standard deviation of the Gaussian white noise.
+    
+    Returns
+    -------
+    TimeSeries
+      The time series resulting from the CHARMA process.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+      White noise is Gaussian here.
+      
+      We assume coeffs_t follow a multivariate Gaussian distribution.
+      Also cov_matrix should be a non-negative definite matrix.
+    
+      For offset aliases available see:
+      https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Checks
