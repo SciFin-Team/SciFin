@@ -31,19 +31,33 @@ class TimeSeries:
     Class defining a time series and its methods.
     """
     
-    def __init__(self, df, name=""):
+    def __init__(self, df=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
-        # Making sure it is a single column data frame
-        assert(df.shape[1]==1)
-        
-        # Extract values
-        self.data = df
-        self.start = df.index[0]
-        self.end = df.index[-1]
-        self.nvalues = df.shape[0]
-        self.name = name
+
+        if (df is None) or (df.empty == True):
+            
+            self.data = pd.DataFrame(index=None, data=None)
+            self.start = None
+            self.end = None
+            self.nvalues = 0
+            self.name = 'Empty TimeSeries'
+
+        else:
+            
+            # Making sure the dataframe is just
+            # an index + 1 value column
+            assert(df.shape[1]==1)
+            
+            # Extract values
+            self.data = df
+            self.start = df.index[0]
+            self.end = df.index[-1]
+            self.nvalues = df.shape[0]
+            self.name = name
+
+            
     
     def __specify_data(self, start, end):
         """
