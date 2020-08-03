@@ -33,7 +33,7 @@ class TimeSeries:
     
     def __init__(self, df, name=""):
         """
-        Function receiving a data frame as an argument and initializing the time series.
+        Receives a data frame as an argument and initializes the time series.
         """
         # Making sure it is a single column data frame
         assert(df.shape[1]==1)
@@ -47,7 +47,7 @@ class TimeSeries:
     
     def __specify_data(self, start, end):
         """
-        Private method returning the appropriate data according to user's specifying \
+        Returns the appropriate data according to user's specifying
         or not the desired start and end dates.
         """
         # Preparing data frame
@@ -63,7 +63,7 @@ class TimeSeries:
     
     def __start_end_names(self, start, end):
         """
-        Method recasting the time series dates to 10 characters strings \
+        Recasts the time series dates to 10 characters strings
         if the date hasn't been re-specified (i.e. value is 'None').
         """
         s = str(self.start)[:10] if (start is None) else start
@@ -75,7 +75,7 @@ class TimeSeries:
     
     def simple_plot(self, figsize=(12,5), dpi=100):
         """
-        Simple method to plot the time series.
+        Plots the time series in a simple way.
 
         Arguments:
         - figsize: size of the figure as tuple of 2 integers.
@@ -95,7 +95,7 @@ class TimeSeries:
     
     def distribution(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
         """
-        Method that plots the distribution of values between two dates.
+        Plots the distribution of values between two dates.
         """
         
         # Preparing data frame
@@ -114,8 +114,8 @@ class TimeSeries:
         
     def is_sampling_uniform(self):
         """
-        Function that tests if the sampling of a time series is uniform or not. \
-        Returns a boolean value True, when the sampling is uniform, False otherwise.
+        Tests if the sampling of a time series is uniform or not.
+        Returns a boolean value True when the sampling is uniform, False otherwise.
         """
         # Preparing data
         sampling = [datetime.timestamp(x) for x in self.data.index]
@@ -132,7 +132,7 @@ class TimeSeries:
     
     def get_sampling_interval(self):
         """
-        Function returning the sampling interval for a uniformly-sampled time series.
+        Returns the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
             print("Error: the time series is not uniformly sampled.")
@@ -145,7 +145,7 @@ class TimeSeries:
 
     def lag_plot(self, lag=1, figsize=(5,5), dpi=100, alpha=0.5):
         """
-        Function that returns the scatter plot x_t v.s. x_{t-l}.
+        Returns the scatter plot x_t v.s. x_{t-l}.
         """
         # Check
         try:
@@ -165,8 +165,9 @@ class TimeSeries:
         
     def lag_plots(self, nlags=5, figsize=(10,10), dpi=100, alpha=0.5):
         """
-        Function that returns a number of scatter plots x_t v.s. x_{t-l} \
-        where l is the lag value taken from [0,...,nlags]. We require nlags > 1.
+        Returns a number of scatter plots x_t v.s. x_{t-l}
+        where l is the lag value taken from [0,...,nlags].
+        We require nlags > 1.
         """
         # Check
         try:
@@ -195,14 +196,13 @@ class TimeSeries:
         plt.show()
         
         
-        
     
     
     ### SIMPLE DATA EXTRACTION ON THE TIME SERIES ###
     
     def hist_avg(self, start=None, end=None):
         """
-        Method returning the historical average of the time series \
+        Returns the historical average of the time series
         between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
@@ -212,7 +212,7 @@ class TimeSeries:
     
     def hist_std(self, start=None, end=None):
         """
-        Method returning the historical standard deviation of the time series \
+        Returns the historical standard deviation of the time series
         between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
@@ -222,7 +222,7 @@ class TimeSeries:
     
     def hist_skew(self, start=None, end=None):
         """
-        Method returning the historical skew of the time series \
+        Returns the historical skew of the time series
         between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
@@ -232,7 +232,7 @@ class TimeSeries:
     
     def hist_kurtosis(self, start=None, end=None):
         """
-        Method returning the historical (Fisher) kurtosis of the time series \
+        Returns the historical (Fisher) kurtosis of the time series
         between two dates (default is the whole series).
         """
         data = self.__specify_data(start, end)
@@ -242,7 +242,7 @@ class TimeSeries:
     
     def min(self, start=None, end=None):
         """
-        Method returning the minimum of the series.
+        Returns the minimum of the series.
         """
         data = self.__specify_data(start, end)
         ts_min = data.values.min()
@@ -251,7 +251,7 @@ class TimeSeries:
     
     def max(self, start=None, end=None):
         """
-        Method returning the maximum of the series.
+        Returns the maximum of the series.
         """
         data = self.__specify_data(start, end)
         ts_max = data.values.max()
@@ -260,7 +260,7 @@ class TimeSeries:
     
     def percent_change(self, start=None, end=None):
         """
-        Method returning the percent change of the series.
+        Returns the percent change of the series.
         """
         data = self.__specify_data(start, end)
         new_data = data.pct_change()
@@ -272,14 +272,18 @@ class TimeSeries:
     
     def autocorrelation(self, lag=1, start=None, end=None):
         """
-        Method returning the autocorrelation of the time series for a specified lag.
+        Returns the autocorrelation of the time series for a specified lag.
+        
         We use the function:
-        $\rho_l = \frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])}
+        $rho_l = frac{Cov(x_t, x_{t-l})}{\sqrt(Var[x_t] Var[x_{t-l}])}
         where $x_t$ is the time series at time t.
+        
         Cov denotes the covariance and Var the variance.
-        We also use the properties $\rho_0 = 1$ and $\rho_{-l} = \rho_l$
-        (choosing LaTeX notations here).
+        
+        We also use the properties $rho_0 = 1$ and $rho_{-l} = rho_l$
+        (using LaTeX notations here).
         """
+        
         l = abs(lag)
         # Trivial case
         if l==0:
@@ -293,14 +297,15 @@ class TimeSeries:
         shifted_data = data.shift(l)
         Numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
         Denominator = data.std() * shifted_data.std()
+        
         return Numerator / Denominator
     
     
     def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None,
                              figsize=(8,4), dpi=100):
         """
-        Method making use of the autocorrelation method in order to return \
-        a plot of the autocorrelation againts the lag values.
+        Uses autocorrelation method in order to return a plot
+        of the autocorrelation againts the lag values.
         """
         
         assert(lag_max>lag_min)
@@ -319,7 +324,7 @@ class TimeSeries:
     
     def acf_pacf(self, lag_max=25, figsize=(12,3), dpi=100):
         """
-        Returns a plot of the AutoCorrelation Function (ACF) \
+        Returns a plot of the AutoCorrelation Function (ACF)
         and Partial AutoCorrelation Function (PACF) from statsmodels.
         """
         # Plotting
@@ -333,7 +338,7 @@ class TimeSeries:
     
     def trim(self, new_start, new_end):
         """
-        Method that trims the time series to the desired dates \
+        Method that trims the time series to the desired dates
         and send back a new time series.
         """
         new_df = self.data[new_start:new_end]
@@ -361,7 +366,8 @@ class TimeSeries:
     
     def linear_combination(self, OtherTimeSeries, factor1=1, factor2=1):
         """
-        Method that adds a time series to the current one according to linear combination:
+        Method that adds a time series to the current one
+        according to linear combination:
         factor1 * current_ts + factor2 * OtherTimeSeries.
         """
         new_df = factor1 * self.data + factor2 * OtherTimeSeries.data
@@ -371,9 +377,9 @@ class TimeSeries:
     
     def convolve(self, func, x_min, x_max, n_points, normalize=False):
         """
-        Method that performs a convolution of the time series with a function 'func'. \
-        The 'normalize' option allows to renormalize 'func' such that the sum of its  \
-        values is one.
+        Performs a convolution of the time series with a function 'func'.
+        The 'normalize' option allows to renormalize 'func' such that
+        the sum of its values is one.
         
         Arguments:
         - self: refering to the time series itself.
@@ -407,7 +413,7 @@ class TimeSeries:
     
     def rolling_avg(self, pts=1):
         """
-        Method that transforms the time series into a rolling window average time series.
+        Transforms the time series into a rolling window average time series.
         """
         new_values = [self.data[x-pts+1:x].mean() for x in range(pts-1, self.nvalues, 1)]
         new_df = pd.DataFrame(index=self.data.index[pts-1:self.nvalues], data=new_values)
@@ -417,7 +423,7 @@ class TimeSeries:
     
     def polyfit(self, order=1, start=None, end=None):
         """
-        Method that provides a polynomial fit of the time series.
+        Provides a polynomial fit of the time series.
         """
         data = self.__specify_data(start, end)
         new_index = [datetime.timestamp(x) for x in data.index]
@@ -434,9 +440,10 @@ class TimeSeries:
     
     def sample_uniformly(self):
         """
-        Method returning a new time series for which the sampling is uniform.
+        Returns a new time series for which the sampling is uniform.
         """
-        # Check actually we need to do something
+        
+        # Check if actually we need to do something
         if self.is_sampling_uniform() == True:
             print("Time series already has a uniform sampling. \
                   Returning the same time series.")
@@ -492,7 +499,7 @@ class TimeSeries:
     def decompose(self, polyn_order=None, start=None, end=None, 
                   extract_seasonality=False, period=None):
         """
-        Method that performs a decomposition of the time series \
+        Performs a decomposition of the time series
         and returns the different components.
         """
         # Check
@@ -593,7 +600,7 @@ class TimeSeries:
     def gaussian_process(self, rbf_scale, rbf_scale_bounds, noise, noise_bounds,
                          alpha=1e-10, plotting=False, figsize=(12,5), dpi=100):
         """
-        Method that employs Gaussian Process Regression (GPR) from scikit-learn \
+        Method that employs Gaussian Process Regression (GPR) from scikit-learn
         to fit a time series. It returns 3 time series for the mean and the envelope
         +sigma and -sigma of standard deviation.
         
@@ -640,7 +647,6 @@ class TimeSeries:
         # Mean + (1-sigma)
         y_std_p = y_mean + np.sqrt(np.diag(y_cov))
         ts_std_p = TimeSeries(pd.DataFrame(index=idx, data=y_std_p), name='Mean+sigma from GPR')
-        
         
         # Plotting the result
         if plotting==True:
