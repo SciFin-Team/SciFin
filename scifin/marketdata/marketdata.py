@@ -27,7 +27,8 @@ def get_sp500_tickers():
     
     # Getting the raw data
     try:
-        tickers = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",header=0)[0]['Symbol'].tolist()
+        tickers = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+                               header=0)[0]['Symbol'].tolist()
     except AccessError:
         raise AccessError("Could not access the page or extract data.")
 
