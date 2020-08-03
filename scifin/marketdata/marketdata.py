@@ -4,44 +4,35 @@
 
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from datetime import timedelta
-import random as random
 import matplotlib.pyplot as plt
 
-import bs4
-import pickle
-import requests
+import random as random
+from datetime import datetime
+from datetime import timedelta
+
 import pandas_datareader as pdr
+
 from IPython.display import display, clear_output
 
 from .. import timeseries
 
+
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
-def scrape_sp500_tickers():
+def get_sp500_tickers():
     """
-    Function that scrapes the SP500 from Wikipedia, using Beautiful Soup package.
+    Function that gets the SP500 tickers from Wikipedia.
     """
     
     # Getting the raw data
-    resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-    soup = bs4.BeautifulSoup(resp.text, 'lxml')
-    table = soup.find('table', {'class': 'wikitable sortable'})
-    
-    # Saving tables
-    tickers = []
-    
-    # Looping through
-    for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[0].text
-        tickers.append(ticker[:-1])
-        
-    with open("sp500tickers.pickle","wb") as f:
-        pickle.dump(tickers,f)
-        
+    try:
+        tickers = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",header=0)[0]['Symbol'].tolist()
+    except AccessError:
+        raise AccessError("Could not access the page or extract data.")
+
     return tickers
+
 
 
 def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
