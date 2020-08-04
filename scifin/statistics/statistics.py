@@ -2,10 +2,18 @@
 
 # This module is for simple statistics.
 
-# Packages
+# Standard library imports
+# /
+
+# Third party imports
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+# Local application imports
+# /
+
+
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 

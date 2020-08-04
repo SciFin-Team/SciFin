@@ -2,12 +2,15 @@
 
 # This module is for functions generating random time series.
 
-# Packages
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+# Standard library imports
 from datetime import datetime
 
+# Third party imports
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Local application imports
 from . import TimeSeries
 
 

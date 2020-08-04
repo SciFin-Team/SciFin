@@ -1,24 +1,25 @@
 # Created on 2020/7/15
 
-# Packages
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+# This module is for the class TimeSeries and related functions.
 
+# Standard library imports
 from datetime import datetime
 
+# Third party imports
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import scipy.stats as stats
-
-from pandas.plotting import lag_plot
-
-from statsmodels.tsa.stattools import acf, pacf
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
+from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Local application imports
+# /
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -169,7 +170,7 @@ class TimeSeries:
         
         # Doing the plot
         fig = plt.figure(figsize=figsize, dpi=dpi)
-        lag_plot(self.data, lag=lag, c='black', alpha=alpha)
+        pd.plotting.lag_plot(self.data, lag=lag, c='black', alpha=alpha)
         
         # Setting title
         title = "Lag plot of time series " + self.name
@@ -200,7 +201,7 @@ class TimeSeries:
         fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True,
                                  figsize=figsize, dpi=dpi)
         for i, ax in enumerate(axes.flatten()[:nlags]):
-            lag_plot(self.data, lag=i+1, ax=ax, c='black', alpha=alpha)
+            pd.plotting.lag_plot(self.data, lag=i+1, ax=ax, c='black', alpha=alpha)
             ax.set_xlabel("x(t)")
             ax.set_ylabel("x(t+"+str(i+1)+")")
         

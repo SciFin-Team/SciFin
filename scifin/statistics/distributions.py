@@ -2,12 +2,17 @@
 
 # This module is for probability distributions.
 
-# Packages
+# Standard libray imports
+# /
+
+# Third party imports
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from scipy.special import erf, erfinv, gamma, zeta
+
+# Local application imports
+# /
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

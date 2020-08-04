@@ -2,18 +2,19 @@
 
 # This module is for importing, transforming and visualizing market data.
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-import random as random
+# Standard library imports
 from datetime import datetime
 from datetime import timedelta
+import random as random
 
+# Third party imports
+from IPython.display import display, clear_output
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pandas_datareader as pdr
 
-from IPython.display import display, clear_output
-
+# Local application imports
 from .. import timeseries
 
 

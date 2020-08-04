@@ -3,10 +3,17 @@
 # This module is for Fourier transform implementations.
 
 
-# Packages
+# Standard library imports
+from datetime import datetime
+
+# Third party imports
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime
+
+# Local application imports
+# /
+
+
 
 

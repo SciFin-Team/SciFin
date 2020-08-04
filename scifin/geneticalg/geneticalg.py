@@ -2,13 +2,17 @@
 
 # This module is for importing, transforming and visualizing market data.
 
-import numpy as np
-import pandas as pd
+# Standard library imports
 from datetime import datetime
 from datetime import timedelta
 import random as random
-import matplotlib.pyplot as plt
 
+# Third party imports
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Local application imports
 from .. import marketdata
 
 
