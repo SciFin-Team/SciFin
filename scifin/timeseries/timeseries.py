@@ -126,6 +126,35 @@ class TimeSeries:
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
         plt.show()
         
+
+    def plot_series_distrib(self, start=None, end=None, bins=20, figsize=(10,4), dpi=100):
+        """
+        Plots the time series and its associated distribution of values between two dates.
+        """
+
+        # Preparing data frame
+        data = self.__specify_data(start, end)
+        s,e = self.__start_end_names(start, end)
+        
+        # Plotting
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        gs = fig.add_gridspec(1, 4)
+        
+        # Plot 1 - Time Series simple plot
+        f_ax1 = fig.add_subplot(gs[:, 0:3])
+        f_ax1.plot(data.index, data.values, color='k')
+        title1 = "Time series " + self.name + " from " + s + " to " + e
+        plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
+        
+        # Plot 2 - distribution of values
+        f_ax2 = fig.add_subplot(gs[:, 3:])
+        data.hist(bins=bins, color='k', grid=False, ax=f_ax2, xrot=90, orientation="horizontal")
+        plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
+        title2 = "Distribution"
+        plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
+        
+        return None
+        
         
     def is_sampling_uniform(self):
         """
