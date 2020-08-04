@@ -80,7 +80,10 @@ class Normal(Distribution):
         """
         Initilialization function.
         """
-        assert(sigma>0)
+        try:
+            assert(sigma>0)
+        except AssertionError:
+            raise AssertionError('Value of sigma must be non-zero and positive.')
 
         # Type of distribution
         self.type = 'Normal'
