@@ -42,7 +42,7 @@ If you encounter problems during installation or after and think you know how th
 
 If you have comments or suggestions, you can reach Fabien Nugier. Thank you very much in advance for your feedback.
 
-The package written tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/). If you find any part of the code unclear, please let me know.
+The package written tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/). If you find any part of the code unclear, please let me know. As for docstrings, the format we try to follow here is given by the [numpy doc style](https://numpydoc.readthedocs.io/en/latest/format.html).
 
 If you wish to contribute, please contact me through GitHub. I strongly advise to have a fair knowledge of Python and recommand the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) which is a mine of information.
 
