@@ -106,6 +106,8 @@ class TimeSeries:
                 + " to " + str(self.end)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="Value")
         plt.show()
+        
+        return None
     
     
     def distribution(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
@@ -126,6 +128,29 @@ class TimeSeries:
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
         plt.show()
         
+        return None
+        
+        
+    def density(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
+        """
+        Plots the density of values between two dates.
+        """
+        
+        # Preparing data frame
+        data = self.__specify_data(start, end)
+        s,e = self.__start_end_names(start, end)
+        
+        # Plotting distribution of values
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        data.plot.density(color='k', ax=ax, legend=False)
+        
+        # Make it cute
+        title = "Density plot of values between " + s + " and " + e
+        plt.gca().set(title=title, xlabel="Value", ylabel="Density")
+        plt.show()
+        
+        return None
+    
 
     def plot_series_distrib(self, start=None, end=None, bins=20, figsize=(10,4), dpi=100):
         """
@@ -148,7 +173,7 @@ class TimeSeries:
         
         # Plot 2 - distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
-        data.hist(bins=bins, color='k', grid=False, ax=f_ax2, xrot=90, orientation="horizontal")
+        data.hist(bins=bins, color='k', grid=False, ax=f_ax2, orientation="horizontal")
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
         title2 = "Distribution"
         plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
