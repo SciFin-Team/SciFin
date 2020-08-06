@@ -16,15 +16,54 @@ from . import marketdata
 
 # GENERAL FUNCTIONS RELATED TO MARKET
 
-def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_year=12, n_scenarios=1000):
+def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
+                  steps_per_year=12, n_scenarios=1000):
     """
-    Method that creates a market from a Geometric Brownian process \
-    for each stock of the form:
+    Creates a market from a Geometric Brownian process for each stock.
+    The model is of the form:
     r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
     where r_t is the return series, mu is a drift (annualized),
     sigma is the volatility (annualised).
+    
+    Parameters
+    ----------
+    r_ini : float
+      Initial value of the stock.
+    drift : float
+      Value of the drift.
+    sigma : float
+      Volatility of the process.
+    n_years : int
+      Number of years to generate.
+    step_per_year : int
+      Number of steps per year.
+    n_scenarios : int
+      Number of scenarios.
+    
+    Returns
+    -------
+    DataFrame
+      Data frame of returns for the market.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+      None
+    
+    Examples
+    --------
+      None
     """
     
+    # Checks
+    assert(isinstance(n_years, int))
+    assert(isinstance(steps_per_year, int))
+    assert(isinstance(n_scenarios, int))
+    
+    # Initialization
     dt = 1/steps_per_year
     n_steps = int(n_years * steps_per_year) + 1
     
@@ -33,24 +72,52 @@ def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10, steps_per_yea
                                    scale=(sigma*np.sqrt(dt)),
                                    size=(n_steps, n_scenarios))
     rets_plus_1[0] = 1
-    ret_val = r_ini * pd.DataFrame(rets_plus_1).cumprod()
+    market_returns = r_ini * pd.DataFrame(rets_plus_1).cumprod()
     
-    return ret_val
+    return market_returns
 
 
 def set_market_names(data, date, date_type="end", interval_type='D'):
     """
-    Function that sets the column and row names of the market dataframe.
+    Sets the column and row names of the market dataframe.
     
     Arguments:
-    - data: dataframe on which we want to apply the function.
-    - date: a specific date.
-    - date_type: "end" for date specifying the data end date, "start" for the start date.
-    - interval_type: specifies nature of the jump between two dates
-    ('D' for days, 'M' for months, 'Y' for years).
+    - 
+    - 
     
-    Note: the two ways ("end" and "start") of specifying the dates are approximative.
-          The uncertainty on the dates are of the order of the interval type.
+    Note: 
+          
+    Parameters
+    ----------
+    data : DataFrame
+      Dataframe on which we want to apply the function.
+    date : str
+      A specific date.
+    date_type : str
+      Value "end" for 'date' specifying the data end date, "start" for the start date.
+    interval_type : str or DateOffset
+      Specifies nature of the jump between two dates ('D' for days, 'M' for months, 'Y' for years).
+    
+    Returns
+    -------
+    None
+      None
+    
+    Raises
+    ------
+      ValueError if the choice for 'date_type' is neither "start" or "end".
+    
+    Notes
+    -----
+     The two ways ("end" and "start") of specifying the dates are approximative.
+     Uncertainty on the dates are of the order of the interval type.
+     
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
     """
     
     # Initializations
@@ -67,7 +134,8 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     except:
         ValueError("Current date format does not seem right.")
         
-    # Generate the dates, either from end date or start date
+    # Generate the dates
+    # either from end date
     if date_type == "start":
         if interval_type == 'D':
             date_series = date + pd.to_timedelta(np.arange(Nticks), unit='D')
@@ -75,6 +143,7 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
             date_series = date + pd.to_timedelta(np.arange(Nticks) * 12, unit='D')
         elif interval_type == 'Y':
             date_series = date + pd.to_timedelta(np.arange(Nticks) * 365, unit='D')
+    # or from the start date
     elif date_type == "end":
         if interval_type == 'D':
             date_series = date - timedelta(days=Nticks) \
@@ -91,7 +160,7 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     # Affecting the value to the rows names
     data.index = date_series.to_period(interval_type)
     
-    pass
+    return None
 
 
 def is_index_valid(market):
