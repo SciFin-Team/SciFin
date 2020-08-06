@@ -24,72 +24,19 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
+# CLASS Series
 
-def specify_data(Series, start, end):
+class Series:
     """
-    Returns the appropriate data according to user's specifying
-    or not the desired start and end dates.
-    """
-    
-    # Preparing data frame
-    if (start is None) and (end is None):
-        data = Series.data
-        
-    elif (start is None) and (end is not None):
-        data = Series.data[:end]
-        
-    elif (start is not None) and (end is None):
-        data = Series.data[start:]
-        
-    elif (start is not None) and (end is not None):
-        data = Series.data[start:end]
-
-    return data
-
-
-def is_sampling_uniform(Series):
-    """
-    Tests if the sampling of a time series is uniform or not.
-    Returns a boolean value True when the sampling is uniform, False otherwise.
-    """
-    # Preparing data
-    sampling = [datetime.timestamp(x) for x in Series.data.index]
-    assert(len(sampling)==Series.nvalues)
-    intervals = [sampling[x] - sampling[x-1] for x in range(1,Series.nvalues,1)]
-
-    # Testing
-    prev = intervals[0]
-    for i in range(1,len(intervals),1):
-        if intervals[i] - prev > 1.e-6:
-            return False
-    return True
-    
-
-def start_end_names(Series, start, end):
-    """
-    Recasts the time series dates to 10 characters strings
-    if the date hasn't been re-specified (i.e. value is 'None').
-    """
-    s = str(Series.start)[:10] if (start is None) else start
-    e = str(Series.end)[:10] if (end is None) else end
-
-    return s,e
-    
-
-    
-
-# CLASS TimeSeries
-
-class TimeSeries:
-    """
-    Class defining a time series and its methods.
+    Virtual class defining a Series and its methods.
+    This class serves as a parent class for TimeSeries and CatTimeSeries.
     """
     
     def __init__(self, df=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
-
+        
         if (df is None) or (df.empty == True):
             
             self.data = pd.DataFrame(index=None, data=None)
@@ -97,7 +44,7 @@ class TimeSeries:
             self.end = None
             self.nvalues = 0
             self.name = 'Empty TimeSeries'
-
+        
         else:
             
             # Making sure the dataframe is just
@@ -111,25 +58,80 @@ class TimeSeries:
             self.nvalues = df.shape[0]
             self.name = name
     
-    
-    def __specify_data(self, start, end):
+
+    def specify_data(self, start, end):
         """
         Returns the appropriate data according to user's specifying
         or not the desired start and end dates.
         """
-        
-        return specify_data(self, start, end)
+         
+        # Preparing data frame
+        if (start is None) and (end is None):
+            data = self.data
+
+        elif (start is None) and (end is not None):
+            data = self.data[:end]
+
+        elif (start is not None) and (end is None):
+            data = self.data[start:]
+
+        elif (start is not None) and (end is not None):
+            data = self.data[start:end]
+
+        return data
 
     
-    def __start_end_names(self, start, end):
+    def start_end_names(self, start, end):
         """
         Recasts the time series dates to 10 characters strings
         if the date hasn't been re-specified (i.e. value is 'None').
         """
         s = str(self.start)[:10] if (start is None) else start
         e = str(self.end)[:10] if (end is None) else end
-        
+
         return s,e
+    
+    
+    def is_sampling_uniform(self):
+        """
+        Tests if the sampling of a time series is uniform or not.
+        Returns a boolean value True when the sampling is uniform, False otherwise.
+        """
+        # Preparing data
+        sampling = [datetime.timestamp(x) for x in self.data.index]
+        assert(len(sampling)==self.nvalues)
+        intervals = [sampling[x] - sampling[x-1] for x in range(1,self.nvalues,1)]
+
+        # Testing
+        prev = intervals[0]
+        for i in range(1,len(intervals),1):
+            if intervals[i] - prev > 1.e-6:
+                return False
+        return True
+    
+
+    
+
+
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
+# CLASS TimeSeries
+
+class TimeSeries(Series):
+    """
+    Class defining a time series and its methods.
+    """
+    
+    def __init__(self, df=None, name=""):
+        """
+        Receives a data frame as an argument and initializes the time series.
+        """
+
+        super().__init__(df=df, name=name)
+        
+        # Add attributes initialization if needed
+    
+    
     
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
@@ -162,14 +164,14 @@ class TimeSeries:
         """
         
         # Preparing data frame
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
             
         # Plotting distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
         data.hist(bins=bins, color='k', grid=False)
         
         # Make it cute        
-        s,e = self.__start_end_names(start, end)
+        s,e = self.start_end_names(start, end)
         title = "Distribution of values between " + s + " and " + e
         plt.gca().set(title=title, xlabel="Value", ylabel="Hits")
         plt.show()
@@ -183,8 +185,8 @@ class TimeSeries:
         """
         
         # Preparing data frame
-        data = self.__specify_data(start, end)
-        s,e = self.__start_end_names(start, end)
+        data = self.specify_data(start, end)
+        s,e = self.start_end_names(start, end)
         
         # Plotting distribution of values
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -204,8 +206,8 @@ class TimeSeries:
         """
 
         # Preparing data frame
-        data = self.__specify_data(start, end)
-        s,e = self.__start_end_names(start, end)
+        data = self.specify_data(start, end)
+        s,e = self.start_end_names(start, end)
         
         # Plotting
         fig = plt.figure(figsize=figsize, dpi=dpi)
@@ -226,13 +228,6 @@ class TimeSeries:
         
         return None
         
-        
-    def is_sampling_uniform(self):
-        """
-        Tests if the sampling of a time series is uniform or not.
-        Returns a boolean value True when the sampling is uniform, False otherwise.
-        """
-        return is_sampling_uniform(self)
     
     
     def get_sampling_interval(self):
@@ -312,7 +307,7 @@ class TimeSeries:
         Returns the historical average of the time series
         between two dates (default is the whole series).
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         avg = data.values.mean()
         
         return avg
@@ -323,7 +318,7 @@ class TimeSeries:
         Returns the historical standard deviation of the time series
         between two dates (default is the whole series).
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         std = data.values.std()
         
         return std
@@ -334,7 +329,7 @@ class TimeSeries:
         Returns the historical skew of the time series
         between two dates (default is the whole series).
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         skew = stats.skew(data.values)[0]
         
         return skew
@@ -345,7 +340,7 @@ class TimeSeries:
         Returns the historical (Fisher) kurtosis of the time series
         between two dates (default is the whole series).
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         kurt = stats.kurtosis(data.values)[0]
         
         return kurt
@@ -355,7 +350,7 @@ class TimeSeries:
         """
         Returns the minimum of the series.
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         ts_min = data.values.min()
         
         return ts_min
@@ -365,7 +360,7 @@ class TimeSeries:
         """
         Returns the maximum of the series.
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         ts_max = data.values.max()
         
         return ts_max
@@ -375,7 +370,7 @@ class TimeSeries:
         """
         Returns the percent change of the series.
         """
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         new_data = data.pct_change()
         new_ts = TimeSeries(new_data)
         
@@ -404,7 +399,7 @@ class TimeSeries:
             return 1
         
         # Preparing data frame
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         
         # General case
         assert(l < data.shape[0])
@@ -429,7 +424,7 @@ class TimeSeries:
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
         plt.bar(x_range, ac, color='k')
-        s,e = self.__start_end_names(start, end)
+        s,e = self.start_end_names(start, end)
         title = "Autocorrelation from " + s + " to " + e + " for lags = [" \
                 + str(lag_min) + "," + str(lag_max) + "]"
         plt.gca().set(title=title, xlabel="Lag", ylabel="Autocorrelation Value")
@@ -550,7 +545,7 @@ class TimeSeries:
         """
         
         # Preparing data
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         new_index = [datetime.timestamp(x) for x in data.index]
         new_values = [data.values.tolist()[x][0] for x in range(len(data))]
         
@@ -640,7 +635,7 @@ class TimeSeries:
                 raise AssertionError("polyn_order must be equal or more than 2.")
         
         # Preparing data in the specified period
-        data = self.__specify_data(start, end)
+        data = self.specify_data(start, end)
         X = [datetime.timestamp(x) for x in data.index]
         X = np.reshape(X, (len(X), 1))
         y = [data.values.tolist()[x][0] for x in range(len(data))]
@@ -800,85 +795,8 @@ class TimeSeries:
 
 
     
-# CLASS CatTimeSeries
-
-class CatTimeSeries:
-    """
-    Class defining a categoric time series and its methods.
-    """
     
-    def __init__(self, df=None, name=""):
-        """
-        Receives a data frame as an argument and initializes the time series.
-        """
-        
-        if (df is None) or (df.empty == True):
-            
-            self.data = pd.DataFrame(index=None, data=None)
-            self.start = None
-            self.end = None
-            self.nvalues = 0
-            self.name = 'Empty TimeSeries'
-        
-        else:
-            
-            # Making sure the dataframe is just
-            # an index + 1 value column
-            assert(df.shape[1]==1)
-            
-            # Extract values
-            self.data = df
-            self.start = df.index[0]
-            self.end = df.index[-1]
-            self.nvalues = df.shape[0]
-            self.name = name
-    
-
-    def __specify_data(self, start, end):
-        """
-        Returns the appropriate data according to user's specifying
-        or not the desired start and end dates.
-        """
-        
-        return specify_data(self, start, end)
-
-    
-    def __start_end_names(self, start, end):
-        """
-        Recasts the time series dates to 10 characters strings
-        if the date hasn't been re-specified (i.e. value is 'None').
-        """
-        
-        return start_end_names(self, start, end)
-    
-    
-    
-    ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
-    
-    def simple_plot(self, figsize=(12,5), dpi=100):
-        """
-        Plots the time series in a simple way.
-
-        Arguments:
-        - figsize: size of the figure as tuple of 2 integers.
-        - dpi: dots-per-inch definition of the figure.
-        """
-        
-        # Plotting
-        plt.figure(figsize=figsize, dpi=dpi)
-        plt.plot(self.data.index, self.data.values, color='k')
-        
-        # Make it cute
-        title = "Time series " + self.name + " from " + str(self.start)[:10] \
-                + " to " + str(self.end)[:10]
-        plt.gca().set(title=title, xlabel="Date", ylabel="Value")
-        plt.show()
-        
-        return None
-    
-    
-    
-    
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
     
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
@@ -908,5 +826,26 @@ def multi_plot(TimeSeries, figsize=(12,5), dpi=100):
     return None
 
 
+
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
+
+# CLASS CatTimeSeries
+
+class CatTimeSeries(Series):
+    """
+    Class defining a categoric time series and its methods.
+    """
+    
+    def __init__(self, df=None, name=""):
+        """
+        Receives a data frame as an argument and initializes the time series.
+        """
+
+        super().__init__(df=df, name=name)
         
+        # Add attributes initialization if needed
+    
+
+    
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
