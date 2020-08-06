@@ -28,7 +28,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 class Series:
     """
-    Virtual class defining a Series and its methods.
+    Abstract class defining a Series and its methods.
     This class serves as a parent class for TimeSeries and CatTimeSeries.
     """
     
@@ -846,6 +846,71 @@ class CatTimeSeries(Series):
         
         # Add attributes initialization if needed
     
+    
 
+    def simple_plot(self, figsize=(12,5), dpi=100):
+        """
+        Plots the categorical time series in a simple way.
+        The number of categories is limited to 10 in order to easily handle colors.
+
+        Arguments:
+        - figsize: size of the figure as tuple of 2 integers.
+        - dpi: dots-per-inch definition of the figure.
+        """
+        
+        # Initializations
+        set_cats = sorted(list(set(self.data.values.flatten())))
+        n_cats = len(set_cats)
+        
+        try:
+            assert(n_cats<=10)
+        except ValueError:
+            raise ValueError("Number of categories too large for colors handling.")
+        
+        #X = [self.data.index[x] for x in range(self.nvalues)]
+        X = [datetime.timestamp(x) for x in self.data.index]
+        y = self.data.values.flatten()
+
+        # Preparing Colors
+        large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
+                             4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
+                             8: 'DarkTurquoise', 9:'DodgerBlue' }
+        restricted_keys = [int(x) for x in np.linspace(0,9,n_cats).tolist()]
+        restricted_colors = [large_color_dict[x] for x in restricted_keys]
+        keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
+        
+        # Making the restricted color dictionary
+        D = dict(zip(keys_to_cats, restricted_colors))
+        
+        # Initiate figure
+        #plt.figure(figsize=figsize, dpi=dpi)
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        
+        # Color block
+        left_X = X[0]
+        current_y = y[0]
+        for i in range(1,self.nvalues,1):
+            
+            # For any block
+            if y[i] != current_y:
+                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                [0,0], [1,1], color=D[current_y], alpha=0.5)
+                left_X = X[i]
+                current_y = y[i]
+
+            # For the last block
+            if i == self.nvalues-1:
+                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                [0,0], [1,1], color=D[current_y], alpha=0.5)
+        
+        # Make it cute
+        title = "Categorical Time series " + self.name + " from " + str(self.start)[:10] \
+                + " to " + str(self.end)[:10]
+        plt.gca().set(title=title, xlabel="Date", ylabel="")
+        plt.show()
+        
+        return None
+    
+    
     
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
