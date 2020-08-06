@@ -130,7 +130,7 @@ class TimeSeries(Series):
         super().__init__(df=df, name=name)
         
         # Add attributes initialization if needed
-    
+        self.type = 'TimeSeries'
     
     
     
@@ -802,22 +802,52 @@ class TimeSeries(Series):
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
     
     
-def multi_plot(TimeSeries, figsize=(12,5), dpi=100):
+def multi_plot(Series, figsize=(12,5), dpi=100):
     """
     Function that plots multiple time series together.
     """
+
+    # Initialization
+    N = len(Series)
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+    min_date, max_date = Series[0].data.index[0], Series[0].data.index[-1]
+    min_val, max_val = min(Series[0].data.values.flatten()), max(Series[0].data.values.flatten())
+
+    for i in range(1,N):
+        min_date = min(Series[i].data.index[0], min_date)
+        max_date = max(Series[i].data.index[-1], max_date)
+        if Series[i].type == 'TimeSeries':
+            min_val = min(min(Series[i].data.values.flatten()), min_val)
+            max_val = max(max(Series[i].data.values.flatten()), max_val)
+
     
-    plt.figure(figsize=figsize, dpi=dpi)
-    min_date = TimeSeries[0].data.index[0]
-    max_date = TimeSeries[0].data.index[-1]
-    
-    for i in range(len(TimeSeries)):
-        if TimeSeries[i].data.index[0] < min_date:
-            min_date = TimeSeries[i].data.index[0]
-        if TimeSeries[i].data.index[-1] > max_date:
-            max_date = TimeSeries[i].data.index[-1]
-        plt.plot(TimeSeries[i].data.index, TimeSeries[i].data.values)
+    # Loop through the series
+    for i in range(N):
+            
+        # If the series is a CatTimeSeries:
+        if Series[i].type == 'CatTimeSeries':
+            # Get values and adapted dictionary
+            X, y, D = Series[i].prepare_cat_plot()
+            # Color block
+            left_X = X[0]
+            current_y = y[0]
+            for i in range(1,len(X),1):
+                # For any block
+                if y[i] != current_y:
+                    ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                    [min_val, min_val], [max_val, max_val], color=D[current_y], alpha=0.5)
+                    left_X = X[i]
+                    current_y = y[i]
+                # For the last block
+                if i == len(X)-1:
+                    ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                    [min_val, min_val], [max_val, max_val], color=D[current_y], alpha=0.5)
+            
+        # If the series is a TimeSeries
+        elif Series[i].type == 'TimeSeries':
+            plt.plot(Series[i].data.index, Series[i].data.values)
         
+    # Make it cute
     title = "Multiplot of time series from " + str(min_date)[:10] \
             + " to " + str(max_date)[:10]
     plt.gca().set(title=title, xlabel="Date", ylabel="Value")
@@ -845,9 +875,42 @@ class CatTimeSeries(Series):
         super().__init__(df=df, name=name)
         
         # Add attributes initialization if needed
-    
+        self.type = 'CatTimeSeries'
     
 
+    
+    def prepare_cat_plot(self):
+        """
+        Returns an appropriate dictionary to plot values of a CatTimeSeries.
+        """
+        
+        # Initialization
+        set_cats = sorted(list(set(self.data.values.flatten())))
+        n_cats = len(set_cats)
+        
+        try:
+            assert(n_cats<=10)
+        except ValueError:
+            raise ValueError("Number of categories too large for colors handling.")
+        
+        X = [datetime.timestamp(x) for x in self.data.index]
+        y = self.data.values.flatten()
+            
+        # Preparing Colors
+        large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
+                             4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
+                             8: 'DarkTurquoise', 9:'DodgerBlue' }
+        restricted_keys = [int(x) for x in np.linspace(0,9,n_cats).tolist()]
+        restricted_colors = [large_color_dict[x] for x in restricted_keys]
+        keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
+
+        # Creating the restricted color dictionary
+        D = dict(zip(keys_to_cats, restricted_colors))
+        
+        return X, y, D
+    
+    
+    
     def simple_plot(self, figsize=(12,5), dpi=100):
         """
         Plots the categorical time series in a simple way.
@@ -858,29 +921,8 @@ class CatTimeSeries(Series):
         - dpi: dots-per-inch definition of the figure.
         """
         
-        # Initializations
-        set_cats = sorted(list(set(self.data.values.flatten())))
-        n_cats = len(set_cats)
-        
-        try:
-            assert(n_cats<=10)
-        except ValueError:
-            raise ValueError("Number of categories too large for colors handling.")
-        
-        #X = [self.data.index[x] for x in range(self.nvalues)]
-        X = [datetime.timestamp(x) for x in self.data.index]
-        y = self.data.values.flatten()
-
-        # Preparing Colors
-        large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
-                             4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
-                             8: 'DarkTurquoise', 9:'DodgerBlue' }
-        restricted_keys = [int(x) for x in np.linspace(0,9,n_cats).tolist()]
-        restricted_colors = [large_color_dict[x] for x in restricted_keys]
-        keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
-        
         # Making the restricted color dictionary
-        D = dict(zip(keys_to_cats, restricted_colors))
+        X, y, D = self.prepare_cat_plot()
         
         # Initiate figure
         #plt.figure(figsize=figsize, dpi=dpi)
