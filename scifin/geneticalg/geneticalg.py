@@ -21,31 +21,55 @@ from .. import marketdata
 
 def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     """
-    Function that creates an individual from random values that we call genes.
-    These genes can represent the investment into a market \
-    or any other value in a pool of possible values.
+    Creates an individual from random values called genes.    
     
-    Arguments:
-    - number_of_genes: it is the number of genes \
-    (but it can also be the number of assets in the market).
-    - upper_limit: that's the maximum value taken by the genes \
-    (or amount we invest), before normalization.
-    - lower_limit: that's the minimum value taken by the genes \
-    (or amount we invest), before normalization.
-    - sum_target: that's the sum value of the genes \
-    (or the total investment that will be reached), after normalization.
+    Parameters
+    ----------
+    number_of_genes : int
+      Number of genes making up the individual.
+    upper_limit : float
+      Maximum value taken by the genes, before normalization.
+    lower_limit : float
+      Minimum value taken by the genes, before normalization.
+    sum_target : float  
+      Target value for the sum of the genes after normalization.
     
-    Note: this function has a little bug that turns out funny. \
-    If the sum of all the values is negative, then the normalization will reverse the sign,
-    and we will end up having a portfolio which has flipped signes, \
-    hence specified long positions become short, and conversely. \
-    So I just put a small test.
+    Returns
+    -------
+    Numpy Array
+      Array containing the values of the genes making up the individual.
+      
+    Notes
+    -----
+      These genes can represent the investment into a market
+      or any other value in a pool of possible values.
+      If the gene value is positive, it corresponds to a long position,
+      if negative, it corresponds to a short position.
+      
+      In the case of a portfolio, number_of_genes can be the number of assets
+      to consider, upper_limit / lower_limit the respective maximum / minimum
+      asset allocations, and sum_target the total investment value after normalization.
+      
+      This function has a little bug that turns out to be funny.
+      If the sum of all the values is negative, then the normalization will
+      reverse the sign and we will end up having a genes which have flipped signs.
+      
+      For a portfolio application, this means long positions become short, and conversely.
+      To prevent this from happening, an exception is raised.
     """
+    
+    # Checks
+    assert(isinstance(number_of_genes, int))
+    
+    # Generating an individual and computing normalization
     individual = [ random.random() * (upper_limit-lower_limit) 
                    + lower_limit for x in range(number_of_genes) ]
     normalization = sum(individual) / sum_target
+    
+    # Check the normalization is positive
     if normalization < 0:
-        raise Exception("Shorting too many assets. Not allowed for now.")
+        raise Exception("Negative normalization not allowed.")
+        
     normalized_individual = np.array(individual) / normalization
     
     return normalized_individual
@@ -53,22 +77,41 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
 
 
 def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
-               sum_target, birth_date, name_indiv="Indiv Portfolio"):
+               sum_target, birth_date, name_indiv="Indiv"):
     """
-    Function that creates a population of individuals from the function `individual`.
+    Creates a population of individuals from the function `individual`.
     
-    Arguments:
-    number_of_individuals: the number of individuals we want in this creation of a population
-    number_of_genes: the number of genes each of these individuals have
-    upper_limit: the higher limit of genes, i.e. largest amount of long positions
-    lower_limit: the lowest limit of genes, i.e. the lowest amount we invest in a given asset. Value can be negative (short positions).
-    sum_target: the sum of all these positions.
-    birth_date: a date to specify at which time the individuals of that population were created.
-    name_indiv: the name we choose for the individuals.
+    Parameters
+    ----------
+    number_of_individuals : int
+      Number of individuals we want in this creation of a population.
+    number_of_genes : int
+      Number of genes each of these individuals have.
+    upper_limit : float
+      Maximum value taken by the genes, before normalization.
+    lower_limit : float
+      Minimum value taken by the genes, before normalization.
+    sum_target : float  
+      Target value for the sum of the genes after normalization.
+    birth_date : str
+      Date specifying the time individuals of that population were created.
+    name_indiv : str
+      Name we choose for the individuals of this population.
+      
+    Returns
+    -------
+    DataFrame
+      Pandas data frame containing the individuals of the populations as rows
+      and genes composing them as columns.
     """
+    
+    # Checks
+    assert(isinstance(number_of_individuals,int))
+    assert(isinstance(number_of_genes,int))
     
     # Building a data frame of individuals
-    pop = pd.DataFrame([individual(number_of_genes, upper_limit, lower_limit, sum_target) for _ in range(number_of_individuals)])
+    pop = pd.DataFrame([ individual(number_of_genes, upper_limit, lower_limit, sum_target)
+                         for _ in range(number_of_individuals) ])
     pop.columns = ["Asset " + str(i) for i in range(number_of_genes)]
     
     # Setting the birthdate

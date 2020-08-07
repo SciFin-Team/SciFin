@@ -115,7 +115,13 @@ def ...(...):
     
     
 
-    
+
+Good practice rules:
+--------------------
+
+- Avoid starting description of purpose with "Function that ..." or "Method that ...".
+- Avoid starting description of parameters with "The" or "A".
+
     
     
     
