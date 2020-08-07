@@ -104,11 +104,11 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     """
     
     # Initializations
-    Nticks = data.shape[0]
-    Nassets = data.shape[1]
+    n_ticks = data.shape[0]
+    n_assets = data.shape[1]
     
     # Setting the column names
-    data.columns = map(lambda x: "Asset " + str(x), range(Nassets))
+    data.columns = map(lambda x: "Asset " + str(x), range(n_assets))
     
     # Setting the row names
     # Quick check the current date has the right format:
@@ -120,23 +120,31 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     # Generate the dates
     # either from end date
     if date_type == "start":
+        
         if interval_type == 'D':
-            date_series = date + pd.to_timedelta(np.arange(Nticks), unit='D')
+            date_series = date + pd.to_timedelta(np.arange(n_ticks), unit='D')
+            
         elif interval_type == 'M':
-            date_series = date + pd.to_timedelta(np.arange(Nticks) * 12, unit='D')
+            date_series = date + pd.to_timedelta(np.arange(n_ticks) * 12, unit='D')
+            
         elif interval_type == 'Y':
-            date_series = date + pd.to_timedelta(np.arange(Nticks) * 365, unit='D')
+            date_series = date + pd.to_timedelta(np.arange(n_ticks) * 365, unit='D')
+            
     # or from the start date
     elif date_type == "end":
+        
         if interval_type == 'D':
-            date_series = date - timedelta(days=Nticks) \
-                               + pd.to_timedelta(np.arange(Nticks), unit='D')
+            date_series = date - timedelta(days=n_ticks) \
+                               + pd.to_timedelta(np.arange(n_ticks), unit='D')
+            
         elif interval_type == 'M':
-            date_series = date - timedelta(days=int(Nticks * (365./12.))) \
-                               + pd.to_timedelta(np.arange(Nticks) * int(365./12.), unit='D')
+            date_series = date - timedelta(days=int(n_ticks * (365./12.))) \
+                               + pd.to_timedelta(np.arange(n_ticks) * int(365./12.), unit='D')
+            
         elif interval_type == 'Y':
-            date_series = date - timedelta(days=int(Nticks * 365)) \
-                               + pd.to_timedelta(np.arange(Nticks) * 365, unit='D') 
+            date_series = date - timedelta(days=int(n_ticks * 365)) \
+                               + pd.to_timedelta(np.arange(n_ticks) * 365, unit='D')
+            
     else:
         ValueError("date_type choice is not recognized.")
         
@@ -191,10 +199,10 @@ def create_market_shares(market, mean=100000, stdv=10000):
     """
     
     # number of shares we want
-    Nassets = market.shape[1]
+    n_assets = market.shape[1]
     
     market_shares = pd.Series( [int(np.random.normal(loc=mean, scale=stdv, size=1)) 
-                                for _ in range(Nassets)] )
+                                for _ in range(n_assets)] )
     market_shares.index = market.columns
     
     if market_shares.min() < 0:
@@ -352,7 +360,7 @@ def find_tick_before_eval(environment_dates, eval_date):
       Environment date just before the evaluation date.
     """
     
-    # Check:
+    # Checks
     if (eval_date in environment_dates) == False:
         raise Exception("It appears that eval_date does not belong to the environment dates.")
     
@@ -363,33 +371,50 @@ def find_tick_before_eval(environment_dates, eval_date):
     raise Exception("No date was found.")
     
     
-def limited_propagation(population, market, start, end):
+def limited_propagation(population, environment, start, end):
     """
-    Function that propagates the initial investments into a portfolio over time, \
-    like `propagate_individual`, but only for a limited period of time.
-    Also, the function is extended from the case of one individual portfolio \
-    to a dataframe of them.
+    Propagates the population over time, like `propagate_individual`,
+    but only for a limited period of time and several individuals.
+
+    Parameters
+    ----------
+    population : DataFrame
+      Population made of different individuals.
+    environment : DataFrame
+      Represents the environment, i.e. the time evolution of gene values.
+    start : Period date
+      Starting date for the evolution.
+    end : Period date
+      Ending date of the evolution.
+      
+    Returns
+    -------
+    DataFrame
+      Pandas data frame containing the individuals of the populations as columns
+      and whose evolution is given along the time index.
     
-    Argument:
-    - individual: list of Nassets elements that represent our initial investment.
-    - market: the market (set of assets) on which the investments are applied.
-    - start: starting date or period.
-    - end: ending date or period.
-    - name_indiv: name of the individual portfolio.
+    Notes
+    -----
+      In the context of portfolios, an individual would be a portfolio of assets,
+      environment would be the market that leads the changes in asset values.
+      
+      To learn more about pandas .to_period() function, please refer to:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.dt.to_period.html
     """
     
     # Initialization
-    Nindiv = population.shape[0]
-    Nassets = market.shape[1]
+    n_indiv = population.shape[0]
+    n_genes = environment.shape[1]
     
-    # Propagating investments, we will do a list of dataframes
+    # Propagating individuals and adding them to a data frame
     list_portfolios = pd.DataFrame()
-    for x in range(Nindiv):
+    
+    for x in range(n_indiv):
         portfolio_name = population.index[x]
+        
         # Computing (price of asset) x (asset allocation)
-        # portfolio = market[start:end] / 100 * population.iloc[x]
-        portfolio = market[start:end] * population.iloc[x][:Nassets] \
-                                      * ( Nassets / population.iloc[x][:Nassets].sum())
+        portfolio = environment[start:end] * population.iloc[x][:n_genes] \
+                                           * ( n_genes / population.iloc[x][:n_genes].sum())
         list_portfolios[portfolio_name] = portfolio.sum(axis=1)
 
     return pd.DataFrame(list_portfolios)
@@ -397,23 +422,68 @@ def limited_propagation(population, market, start, end):
 
 def portfolio_vol(weights, cov_matrix):
     """
-    Function returning the volatility of a portfolio from a covariance matrix and weights.
-    weights are a numpy array or N x 1 matrix and covmat is an N x N matrix.
+    Returns the volatility of a portfolio from a covariance matrix and weights.
+    
+    Parameters
+    ----------
+    weights : Numpy Array
+      Array of size N or matrix of size N x 1.
+    cov_matrix : Numpy Array
+      Matrix of size N x N.
+      
+    Returns
+    -------
+    float
+      Volatility associated to the weights and covariance matrix.
     """
     return (weights.T @ cov_matrix @ weights)**0.5
 
 
-def fitness_calculation(population, propagation, market, current_eval_date, next_eval_date,
+def fitness_calculation(population, propagation, environment, current_eval_date, next_eval_date,
                         lamb=0.5, fitness_method="Max Return and Vol"):
     """
-    Function that simply collects the last value in time of each portfolio \
+    Simply collects the last value in time of each portfolio
     and consider it as the fitness measure.
     
-    Notes:
-    - population has rows which are the names of the portfolio, \
-    and columns which are the assets.
-    - propagation has rows which are the time stamps, \
-    and columns which are the names of the portfolios.
+    Parameters
+    ----------
+    population : DataFrame
+      Population to evolve.
+    propagation : DataFrame
+      Time evolution of individuals.
+    environment : DataFrame
+      Environment which serves as a basis for propagation.
+    current_eval_date : Period date
+      Present date on which we evaluate the individuals.
+    next_eval_date : Period date
+      Target date until which we want to make the portfolios evolve.
+    lamb : float in [0,1]
+      Parameter of the fitness calculation to decide between returns and volatility.
+    fitness_method : str
+      Name of the fitness method chosen among:
+      {"Max Return", "Max Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
+    
+    Returns
+    -------
+    List of floats
+      List of fitness values for each individual of the population.
+    
+    Raises
+    ------
+    Exception
+      In case the entered fitness_method name is not known.
+    
+    Notes
+    -----
+     Population has rows which are the names of the individuals (e.g. portfolios)
+     and columns which are the genes (e.g. assets).
+    
+     Propagation has rows which are the time stamps,
+     and columns which are the names of the individuals (e.g. portfolios).
+    
+    Examples
+    --------
+      None
     """
         
     # Method of max return
@@ -427,9 +497,9 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         # taking the last row value of each columns (i.e. each portfolio)
         fitness_from_return = [propagation[x][-1] for x in propagation.columns]
 
-        # Defining the market correlation over a period of time
+        # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = market.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
         pop = population.filter(regex="Asset")
@@ -449,6 +519,7 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
                           + (1-lamb) / normalized_fitness_from_vol[x]  
                           for x in range(len(fitness_from_return)) ]
     
+    
     # Method combining average return and average volatility
     elif fitness_method == "Avg Return and Vol":
         # Computing fitness from returns,
@@ -456,9 +527,9 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         fitness_from_return = [ propagation[x].pct_change()[1:].mean()
                                 for x in propagation.columns ]
 
-        # Defining the market correlation over a period of time
+        # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = market.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
         pop = population.filter(regex="Asset")
@@ -483,9 +554,9 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         fitness_from_return = [ propagation[x].pct_change()[1:].mean()
                                 for x in propagation.columns ]
 
-        # Defining the market correlation over a period of time
+        # Defining the environment correlation over a period of time
         # (here it does not really matter which one)
-        covmat = market.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
         pop = population.filter(regex="Asset")
@@ -502,7 +573,7 @@ def fitness_calculation(population, propagation, market, current_eval_date, next
         
     # Otherwise return Exception
     else:
-        raise Exception("Specified fitness method does not seem to exist.")
+        raise Exception("Specified fitness method does not exist.")
     
     return fitness_value
 

@@ -124,28 +124,63 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
     return pop
 
 
-
-
-def get_generation(population, market, current_eval_date, next_eval_date,
+def get_generation(population, environment, current_eval_date, next_eval_date,
                    lamb=0.5, fitness_method="Max Return and Vol",
                    return_propag=False, date_format="%Y-%m"):
     """
     Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
+    A generation is defined as a population with computed fitness and ranked by it.
     
-    Arguments:
-    - population: the population to evolve
-    - market: the market which serves as a basis for propagation
-    - current_eval_date: the present date on which we evaluate the portfolios
-    - next_eval_date: the target date until which we want to make the portfolios evolve
-    - return_propag: an option to return the propagations
-    - date_format: format of the dates in the data frames
+    Parameters
+    ----------
+    population : DataFrame
+      Population to evolve.
+    environment : DataFrame
+      Environment which serves as a basis for propagation.
+    current_eval_date : Period date
+      Present date on which we evaluate the individuals.
+    next_eval_date : Period date
+      Target date until which we want to make the portfolios evolve.
+    lamb : float
+      Parameter of the fitness calculation to decide between returns and volatility.
+    return_propag : bool
+      An option to return or not the propagations.
+    date_format : str
+      Format of the dates in the data frames.
     
-    Note: we define a generation as a population for which the fitness has been computed and who is sorted according to it.
+    Returns
+    -------
+    DataFrame
+      Pandas data frame represented the propagated population
+      with individuals as rows and {genes, birth date, fitness} as columns.
     
-    Note: - population has rows which are the names of the portfolio, and columns which are the assets.
-          - propagation has rows which are the time stamps, and columns which are the names of the portfolios.
+    Raises
+    ------
+    Exception
+      Imposes that individuals are born before the evaluation date.
+    Exception
+      Checks that the current evaluation date is before the next evaluation date.
+    
+    Notes
+    -----
+     We define a generation as a population for which the fitness
+     has been computed and who is sorted according to it.
+    
+     In the context of portfolios, a 'population' has rows which are the names
+     of the portfolio and columns which are the assets.
+     
+     The function can also return 'propagation' that has rows which are the time stamps
+     and columns which are the names of the portfolios.
+     
+     For date formats please refer to the following:
+     https://pandas.pydata.org/pandas-docs/version/0.23.4/generated/pandas.DatetimeIndex.strftime.html
+     
+    Examples
+    --------
+      None
     """
     
+    # Checks
     # Make sure all the individual portfolios were born before the current date:
     for birth_date in population['Born']:
         if birth_date >= next_eval_date:
@@ -154,29 +189,29 @@ def get_generation(population, market, current_eval_date, next_eval_date,
     if current_eval_date >= next_eval_date:
         raise Exception("Current date can't be after the evaluation date.")
     
-    # Getting the date just before the next evaluation date (at which reproduction will happen)
-    date_before_eval = marketdata.find_tick_before_eval(market.index, next_eval_date)
+    # Getting the date just before the next evaluation date
+    # (date at which reproduction will happen)
+    date_before_eval = marketdata.find_tick_before_eval(environment.index, next_eval_date)
     
     # Propagate individuals
-    propagation = marketdata.limited_propagation(population, market, current_eval_date, date_before_eval)
-    
+    propagation = marketdata.limited_propagation(population, environment,
+                                                 current_eval_date, date_before_eval)
+
     # Create the generation from the population copy
     try:
         generation = population.copy()
     except:
         print(population)
-    
-    # Remove any fitness column if it existed already (otherwise we will sum it/them after... potentially disrupting the fitness calculation)
-    # This is in case we use a generation (i.e. a population with computed fitness and ranked by it) as a population argument
-    # if len(generation.filter(regex='Fit').columns) != 0:
-    #     generation.drop(columns=generation.filter(regex='Fit').columns.tolist(), inplace=True)
-    # Not needed if we want to keep the fitness columns with dates, which sounds like a better solution for the moment
         
-    # Compute the fitness of individuals and sort them by fitness
+    # Compute the fitness of individuals
     fitness_name = "Fitness " + date_before_eval.strftime(date_format)
-    generation[fitness_name] = marketdata.fitness_calculation(population, propagation, market, current_eval_date, next_eval_date, lamb, fitness_method)
+    generation[fitness_name] = marketdata.fitness_calculation(population, propagation, environment,
+                                                              current_eval_date, next_eval_date,
+                                                              lamb, fitness_method)
+    # Sort individuals by fitness
     generation.sort_values(by=[fitness_name], ascending=False, inplace=True)
     
+    # Return generation (and eventually propagation)
     if return_propag == True:
         return generation, propagation
     else:
