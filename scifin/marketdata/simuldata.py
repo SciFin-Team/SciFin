@@ -584,8 +584,28 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
 def visualize_portfolios_1(market, list_individuals, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None):
     """
-    Function that allows a quick visualization of market, \
-    some sparse individuals, and the evaluation dates
+    Allows a quick visualization of the market,
+    some sparse individuals, and the evaluation dates.
+    
+    Parameters
+    ----------
+    market : DataFrame
+      Market from which we extract data about genes (i.e. assets)
+    list_individuals : DataFrame
+      Propagation of individuals over time.
+    evaluation_dates : List of Period dates
+      Dates at which we want to evaluate the individuals.
+    dims : (float, float)
+      (Optional) Dimensions of the plot.
+    xlim : (float, float)
+      (Optional) Range in x.
+    ylin : (float, float)
+      (Optional) Range in y.
+    
+    Returns
+    -------
+    None
+      None
     """
     
     # Computing the EW portfolio
@@ -606,15 +626,41 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     axis.set_xlim(xlim)
     axis.set_ylim(ylim)
     
-    pass
+    return None
 
 
 def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None, savefile=False,
                            namefile="Result.png"):
     """
-    Function that allows a quick visualization of market, \
-    some sparse individuals, and the evaluation dates
+    Allows a quick visualization of market,
+    some sparse individuals, and the evaluation dates.
+    
+    Parameters
+    ----------
+    market : DataFrame
+      Market from which we extract data about assets (i.e. genes).
+    marketcap : Panda.Series
+      Market capitalization of the assets.
+    list_individuals : DataFrame
+      Propagation of individuals over time.
+    evaluation_dates : List of Period dates
+      Dates at which we want to evaluate the individuals.
+    dims : (float, float)
+      (Optional) Dimensions of the plot.
+    xlim : (float, float)
+      (Optional) Range in x.
+    ylin : (float, float)
+      (Optional) Range in y.
+    savefile : bool
+      Option to save the plot.
+    namefile : str
+      Name of the file to save in.
+    
+    Returns
+    -------
+    None
+      None
     """
     
     # Initialization
@@ -656,36 +702,63 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
+        
+    return None
 
 
-def show_allocation_distrib(step, save_gens, save_eval_dates, Nbins=50,
+def show_allocation_distrib(step, generation, eval_dates, n_bins=50,
                             savefile=False, namefile="Allocation_Distribution.png"):
     """
-    Plots the distribution of a generation (including elites and individuals) \
-    for a certain step of the loop that ran in Genetic_Portfolio_Routine.
-    Since there are different individuals, we sum over these elements for each asset, \
-    and we divide by the number of individuals.
+    Plots the distribution of a generation (including elites and individuals)
+    for a certain step of the loop that ran in `Genetic_Portfolio_Routine`.
+    
+    Since there are different individuals, we sum over these elements
+    for each asset and we divide by the number of individuals.
+    
+    Parameters
+    ----------
+    step : int
+      Step of the loop.
+    generation : DataFrame
+      Generation to plot the distribution from.
+    eval_dates : List of Period dates
+      Evaluation dates for display.
+    n_bins : int
+      Number of bins.
+    savefile : bool
+      Option to save the plot.
+    namefile : str
+      Name of the file to save in.
+    
+    Returns
+    -------
+    None
+      None
     """
     
+    # Checks
+    assert(isinstance(step, int))
+    assert(isinstance(n_bins, int))
+    
     # Initialization
-    Nloops = len(save_gens)-1
-    tmp = (save_gens[step].sum() / save_gens[step].shape[0]).tolist()
+    Nloops = len(generation)-1
+    tmp = (generation[step].sum() / generation[step].shape[0]).tolist()
     fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(15,5))
 
     # Assuming the largest allocations are always at the last step (which may not be true)
-    xmin = min((save_gens[Nloops].sum() / save_gens[Nloops].shape[0]).tolist()) * 1.2
-    xmax = max((save_gens[Nloops].sum() / save_gens[Nloops].shape[0]).tolist()) * 1.2
+    xmin = min((generation[Nloops].sum() / generation[Nloops].shape[0]).tolist()) * 1.2
+    xmax = max((generation[Nloops].sum() / generation[Nloops].shape[0]).tolist()) * 1.2
 
     # Plotting
-    plt.hist(x=tmp, bins=Nbins, range=[xmin,xmax])
+    plt.hist(x=tmp, bins=n_bins, range=[xmin,xmax])
     plt.title("Histogram of allocations - "
-              + save_eval_dates[step].to_timestamp().strftime("%Y-%m-%d"))
+              + eval_dates[step].to_timestamp().strftime("%Y-%m-%d"))
     
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
 
-    pass
+    return None
 
 
 def config_4n(n1, n2, n3, n4, market, VIX,
@@ -695,6 +768,16 @@ def config_4n(n1, n2, n3, n4, market, VIX,
     and fitness lambda from the VIX and 4 structure numbers.
     It also mimicks the general loop, so that we can see how dates are evaluated \
     and how quantities are computed.
+    
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    None
+      None
     """
 
     # Initializations
@@ -773,6 +856,8 @@ def config_4n(n1, n2, n3, n4, market, VIX,
     # Saving plot as a png file
     if savefile:
         plt.savefig('./' + namefile)
+        
+    return None
 
 
 def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
@@ -780,6 +865,16 @@ def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
     """
     Computes and plots the difference between the portfolios of the genetic algorithm \
     and the Cap-Weighted Portfolio.
+    
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    None
+      None
     """
     
     # Computing values
@@ -806,19 +901,29 @@ def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
     if savefile:
         plt.savefig('./' + namefile)
     
-    pass
+    return None
 
 
-def plot_asset_evol(n, save_eval_dates, save_gens,
+def plot_asset_evol(n, save_eval_dates, generation,
                     savefile=False, namefile="asset_evol.png"):
     """
     Function plotting the evolution of asset allocations over time.
+    
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    None
+      None
     """
 
     # Forming the set of portfolio names
     set_indices = []
-    for x in range(len(save_gens)):
-        set_indices = set(set_indices).union(set(save_gens[x].index.tolist()))
+    for x in range(len(generation)):
+        set_indices = set(set_indices).union(set(generation[x].index.tolist()))
     
     # Creating the empty data frame
     asset_evol = pd.DataFrame(data=None, columns=save_eval_dates, index=set_indices)
@@ -826,8 +931,8 @@ def plot_asset_evol(n, save_eval_dates, save_gens,
     # Computing
     for x in range(len(save_eval_dates)):
         colname = save_eval_dates[x].to_timestamp().strftime("%Y-%m-%d")
-        for y in save_gens[x].index:
-            asset_evol.loc[y,colname] = save_gens[x].loc[y,'Asset ' + str(n)]
+        for y in generation[x].index:
+            asset_evol.loc[y,colname] = generation[x].loc[y,'Asset ' + str(n)]
     
     # Transpose
     asset_t = asset_evol.transpose()
@@ -839,7 +944,7 @@ def plot_asset_evol(n, save_eval_dates, save_gens,
     if savefile:
         plt.savefig('./' + namefile)
 
-    pass
+    return None
 
 
         
