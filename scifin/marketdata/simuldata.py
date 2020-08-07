@@ -44,18 +44,6 @@ def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
     -------
     DataFrame
       Data frame of returns for the market.
-    
-    Raises
-    ------
-      None
-    
-    Notes
-    -----
-      None
-    
-    Examples
-    --------
-      None
     """
     
     # Checks
@@ -80,13 +68,7 @@ def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
 def set_market_names(data, date, date_type="end", interval_type='D'):
     """
     Sets the column and row names of the market dataframe.
-    
-    Arguments:
-    - 
-    - 
-    
-    Note: 
-          
+      
     Parameters
     ----------
     data : DataFrame
@@ -166,6 +148,16 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
 def is_index_valid(market):
     """
     Checks if the market has a correct index, meaning no date value is repeated.
+    
+    Parameters
+    ----------
+    market : DataFrame
+      The market to be used.
+    
+    Returns
+    -------
+    bool
+      Returns True if the index is valid, False otherwise.
     """
     
     index = market.index.tolist()
@@ -179,12 +171,22 @@ def is_index_valid(market):
 
 def create_market_shares(market, mean=100000, stdv=10000):
     """
-    Function that creates a list of randomly generated numbers of shares
+    Creates a list of randomly generated numbers of shares for a market.
+    The number of shares is generated from a normal distribution.
     
-    Arguments:
-    - market: the market we want to create shares for
-    - mean: the average value of a market share
-    - stdv: the standard deviation
+    Parameters
+    ----------
+    market : DataFrame
+      The market we want to create shares for.
+    mean : float
+      The average value of a market share.
+    stdv : float
+      The standard deviation of the market shares.
+      
+    Returns
+    -------
+    DataFrame
+      The data frame containing the market shares.
     """
     
     # number of shares we want
@@ -202,25 +204,39 @@ def create_market_shares(market, mean=100000, stdv=10000):
 
 def plot_market_components(market, dims=(10,5), legend=True):
     """
-    Function that plots the assets contribution to the EW index
+    Plots the assets contribution to the Equally-Weighted (EW) index.
+    
+    Parameters
+    ----------
+    market : DataFrame
+      The market we take values from.
+    dims : (int,int)
+      Dimensions of the plot.
+    legend : bool
+      Option to plot the legend from market names.
+    
+    Returns
+    -------
+    None
+      None
     """
     
     # Computing the EW portfolio
     market_EW = marketdata.market_EWindex(market)
 
     # Plotting market
-    axis = market_EW.plot(figsize=dims, legend=legend)
+    axis = market_EW.plot(figsize=dims, color='k', lw=3, legend=legend)
     
     # Plotting individual portfolios
     x = market.index.values.tolist()
-    # y = np.array([market[c].values.tolist() for c in market.columns])
     y = market.to_numpy().transpose()
 
+    # Stack plot
     axis.stackplot(x, y, labels=market.columns.tolist())
     if legend:
         axis.legend(loc='upper left')
 
-    pass
+    return None
 
         
 
@@ -228,7 +244,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
 
 def propagate_investments(investment, market, name_indiv="Portfolio"):
     """
-    Function that propagates the initial investments into a portfolio over time.
+    Propagates the initial investments present in a portfolio over time.
     
     Argument:
     - individual: a list of Nassets elements that represent our initial investment.
