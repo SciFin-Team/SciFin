@@ -689,7 +689,6 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
         list_individuals[name].plot(ax=axis)
 
     # Re-Plotting market to appear on top
-    #axis = market_EW.plot(figsize=dims, color='gray', linestyle='-', linewidth=1)
     market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis)
 
     # Plotting the Cap-Weighted index so that it appears on top
@@ -903,8 +902,16 @@ def plot_diff_GenPort_CW(saved_propags, market_CW, eval_dates,
       None
     """
     
+    # Checks that all frequencies are the same
+    if (saved_propags.index.freq != market_CW.index.freq):
+        market_CW = market_CW.asfreq(saved_propags.index.freq)
+    if (saved_propags.index.freq != eval_dates.freq):
+        eval_dates = eval_dates.asfreq(saved_propags.index.freq)
+    
     # Computing values
-    diff_array = (saved_propags.to_numpy() - market_CW.to_numpy()) / market_CW.to_numpy() * 100
+    diff_array = (saved_propags.to_numpy() - market_CW.to_numpy()) \
+                        / market_CW.to_numpy() * 100
+        
     Diff_GenPort_CW = pd.DataFrame(data = diff_array,
                                    columns = saved_propags.columns,
                                    index=saved_propags.index)
@@ -937,8 +944,8 @@ def plot_asset_evol(n, eval_dates, saved_gens,
     
     Parameters
     ----------
-    n : 4-tuple of int
-      Structure parameters.
+    n : int
+      Number refering to the asset.
     eval_dates : List of Period dates
       Evaluation dates for display.
     saved_gens : DataFrame
@@ -954,7 +961,7 @@ def plot_asset_evol(n, eval_dates, saved_gens,
     """
     
     # Checks
-    assert(len(n)==4)
+    assert(isinstance(n, int))
     
     # Forming the set of portfolio names
     set_indices = []

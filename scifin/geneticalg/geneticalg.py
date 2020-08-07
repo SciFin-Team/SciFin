@@ -220,26 +220,52 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
 def roulette(cum_sum, chance):
     """
-    The function for roulette wheel selection takes the cumulative sums and the randomly generated value
-    for the selection process and returns the number of the selected individual. By calculating the cumulative sums,
-    each individual has a unique value between 0 and 1. To select individuals, a number between 0 and 1 is randomly
-    generated and the individual that is closes to the randomly generated number is selected.
+    Takes the cumulative sums and the randomly generated value for the selection process
+    and returns the number of the selected individual.
+    
+    By calculating the cumulative sums, each individual has a unique value between 0 and 1.
+    
+    To select individuals, a number between 0 and 1 is randomly generated
+    and the individual that is closes to it is selected.
+    
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    ...
+      ...
     """
     variable = list(cum_sum.copy())
     variable.append(chance)
     variable = sorted(variable)
+    
     return variable.index(chance)
 
 
 def selection(generation, method='Fittest Half'):
     """
-    Function that operates the selection among a generation, based on the last fitness.
-    Different methods can be used among 'Fittest Half', 'Random' and 'Roulette Wheel'.
+    Operates the selection among a generation based on the last fitness.
     
-    Methods:
-    'Fittest Half': the first half of the top fitness is kept
-    'Random': rows are picked up at random, but they can't be the same
-    'Roulette Wheel': rows are picked up at random, but with a preference for high cumulative sum (high fitness).
+    Different methods can be used among:
+    - 'Fittest Half':   the first half of the top fitness is kept.
+    - 'Random':         rows are picked up at random, but can't be the same.
+    - 'Roulette Wheel': rows are picked up at random, but with a preference
+                        for high cumulative sum (high fitness).
+                        
+    Parameters
+    ----------
+    generation : DataFrame
+      Generation to do the selection form.
+    method : str
+      Method of selection.
+    
+    Returns
+    -------
+    DataFrame
+      Data frame of selected individuals.    
     """
     
     # Initialization
@@ -248,7 +274,8 @@ def selection(generation, method='Fittest Half'):
     # Sorting:
     # We use the last fitness column and normalize it
     last_fitness = generation.filter(regex='Fit').columns[-1]
-    generation['Normalized Fitness'] = [generation[last_fitness][x]/sum(generation[last_fitness]) for x in range(len(generation[last_fitness]))]
+    generation['Normalized Fitness'] = [ generation[last_fitness][x]/sum(generation[last_fitness])
+                                         for x in range(len(generation[last_fitness])) ]
 
     # We sort the values from smallest to highest for computing the cumulative sum
     generation.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
@@ -264,7 +291,7 @@ def selection(generation, method='Fittest Half'):
     generation.drop(columns=["Normalized Fitness"], inplace=True)
     
     
-    # Selection:
+    # Doing the selection:
     if method == 'Fittest Half':
         select_rows = [x for x in range(N//2)]
         selected_individuals = generation.iloc[select_rows,:]
@@ -289,13 +316,27 @@ def selection(generation, method='Fittest Half'):
 
 def pairing(elite, selected, method = 'Fittest'):
     """
-    Function that establishes the pairing of the selected population and elite all together.
+    Establishes the pairing of the selected population and elite all together.
     
-    Methods:
-    - 'Fittest': the top fitness individuals are paired in order, this does not check if the elite is fit however (we let evolution do that).
-                 The selected individuals should be ranked from fittest to less fit if things have been done in the proper order before.
-    - 'Random': the pairing is done at random, but no individual can reproduce more than once.
-    - 'Weighted Random': the pairing is done with higher probability among high fitness individuals. Some individuals may reproduce several times.
+    Different methods can be used among:
+    - 'Fittest': the top fitness individuals are paired in order, this does not check
+                 if the elite is fit however (we let evolution do that).
+                 The selected individuals should be ranked from fittest to less fit
+                 if things have been done in the proper order before.
+    - 'Random': the pairing is done at random, but no individual
+                can reproduce more than once.
+    - 'Weighted Random': the pairing is done with higher probability among high fitness
+                         individuals. Some individuals may reproduce several times.
+
+    Parameters
+    ----------
+    ... : ...
+      ...
+    
+    Returns
+    -------
+    ...
+      ...
     """
     
     # Combining elite and previously selected individuals
@@ -329,7 +370,9 @@ def pairing(elite, selected, method = 'Fittest'):
             parents_pairs.append([individuals.index[pairs[x]], individuals.index[pairs[x+1]]])
             parents_values.append([individuals.iloc[pairs[x]], individuals.iloc[pairs[x+1]]])
                 
-    if method == 'Weighted Random': # This method does not allow a parent to reproduce with himself, but allows some parent to reproduce several times!
+    # Note: This method does not allow a parent to reproduce with himself,
+    #       but allows some parents to reproduce several times!
+    if method == 'Weighted Random':
         Normalized_Fitness = sorted([Fitness[x]/sum(Fitness) for x in range(len(Fitness))], reverse = True)
         Cumulative_Sum = np.array(Normalized_Fitness).cumsum()
         parents_pairs = []
@@ -379,7 +422,7 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
             list_pts.append(pt)
             count +=1
             
-    # Plot
+    # For visual check
     # fig = plt.figure(figsize=(15,5))
     # plt.hist(list_pts, bins=Nmax-Nmin)
     
@@ -482,7 +525,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=Non
             offspring1 = offspring1.append(parents.iloc[0, pivots[Npoints-1]:Ngene])
             offspring2 = offspring2.append(parents.iloc[1, pivots[Npoints-1]:Ngene])
         
-        # To check visually
+        # For visual check
         # print(Npoints)
         # print(pivots)
         # for d in range(parents.shape[1]):
