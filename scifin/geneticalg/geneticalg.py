@@ -151,8 +151,10 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     Returns
     -------
     DataFrame
-      Pandas data frame represented the propagated population
+      Pandas data frame represented the propagated population, i.e. the generation
       with individuals as rows and {genes, birth date, fitness} as columns.
+    DataFrame
+      Eventually returns also the propagation of the individuals.
     
     Raises
     ------
@@ -230,18 +232,21 @@ def roulette(cum_sum, chance):
     
     Parameters
     ----------
-    ... : ...
-      ...
+    cum_sum : Panda.Series
+      Series of cumulative sum of fitness for each individuals.
+    chance : float in [0,1]
+      Number to select the individual.
     
     Returns
     -------
-    ...
-      ...
+    int
+      Number refering to selected row.
     """
+
     variable = list(cum_sum.copy())
     variable.append(chance)
     variable = sorted(variable)
-    
+
     return variable.index(chance)
 
 
@@ -330,13 +335,19 @@ def pairing(elite, selected, method = 'Fittest'):
 
     Parameters
     ----------
-    ... : ...
-      ...
+    elite : DataFrame
+      Elite population.
+    selected : DataFrame
+      Selected population.
+    method : str
+      Method to be used.
     
     Returns
     -------
-    ...
-      ...
+    List of lists of 2 strings
+      List of pairs of parents mating together.
+    List of DataFrames
+      List of the parents genes.
     """
     
     # Combining elite and previously selected individuals
@@ -392,10 +403,28 @@ def pairing(elite, selected, method = 'Fittest'):
 
 def non_adjacent_random_list(Nmin, Nmax, Npoints):
     """
-    Function that generates a list of Npoints non-adjacent numbers at random, taken from a list of integers between Nmin and Nmax.
+    Generates a list of Npoints non-adjacent numbers at random,
+    taken from a list of integers between Nmin and Nmax.
+    
     Extreme ends of the list Nmin, Nmin+1, ..., Nmax-1, Nmax are excluded.
     
-    Note: this function is written to be used in the function `mating_pair`.
+    Parameters
+    ----------
+    Nmin : int
+      Minimal value.
+    Nmax : int
+      Maximal value.
+    Npoints : int
+      Number of points.
+    
+    Returns
+    -------
+    List of int
+      The list of non-adjacent numbers.
+      
+    Notes
+    -----
+    This function is written to be used in the function `mating_pair`.
     """
     
     # Initial tests
