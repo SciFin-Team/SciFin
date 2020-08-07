@@ -20,6 +20,7 @@ def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
                   steps_per_year=12, n_scenarios=1000):
     """
     Creates a market from a Geometric Brownian process for each stock.
+    
     The model is of the form:
     r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
     where r_t is the return series, mu is a drift (annualized),

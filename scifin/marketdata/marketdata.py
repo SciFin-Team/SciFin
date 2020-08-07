@@ -23,7 +23,16 @@ from .. import timeseries
 
 def get_sp500_tickers():
     """
-    Function that gets the SP500 tickers from Wikipedia.
+    Gets the SP500 tickers from Wikipedia.
+    
+    Parameters
+    ----------
+    None
+    
+    Returns
+    -------
+    List of str
+      The list of tickers from S&P 500.
     """
     
     # Getting the raw data
@@ -39,19 +48,46 @@ def get_sp500_tickers():
 
 def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     """
-    Function which extracts values associated to a feature for a list of assets \
+    Extracts values associated to a feature for a list of assets
     between 2 dates, using Yahoo Finance data.
     
-    The choices for the feature provided by Yahoo Finance are:
-    'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    Parameters
+    ----------
+    list_assets : list of str
+      The list of ticker names we want to extract from Yahoo Finance.
+    feature : str
+      The feature name among 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    start_date : str or datetime
+      The start date of extraction.
+    end_date : str or datetime
+      The end date of extraction.
     
-    Returns a list of timeseries all having the same index and distinctive names.
+    Returns
+    -------
+    DataFrame
+      A list of timeseries all having the same index and distinctive names.
+    
+    Raises
+    ------
+    AssertionError
+      When the chosen feature is not in the allowed list.
+    
+    Notes
+    -----
+      The choices for the feature provided by Yahoo Finance are:
+      'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    
+      Learn more about pandas_datareader on:
+      https://pydata.github.io/pandas-datareader/stable/index.html
+    
+    Examples
+    --------
+      None
     """
     
     # Check the feature is right
-    available_features = ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close']
     try:
-        assert(feature in available_features)
+        assert(feature in ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'])
     except AssertionError:
         raise(AssertionError("Feature must be one of the following: \
         'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
@@ -67,6 +103,7 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     # loop
     for i in range(N):
         print(i)
+        
         # Printing status of execution
         clear_output(wait=True)
         display("Running... " + str(int(counter/N*100)) + '%')
@@ -83,13 +120,29 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
 
 def convert_multicol_df_tolist(df, start_date, end_date):
     """
-    Converts the multi-columns data frame obtained from get_assets_from_yahoo() \
-    into a list of timeseries.
+    Converts the multi-columns data frame obtained from get_assets_from_yahoo()
+    into a list of TimeSeries.
+    
+    Parameters
+    ----------
+    df : DataFrame
+      The data frame obtained from get_assets_from_yahoo() or another method.
+    start_date : str or datetime
+      The starting date we want for the time series.
+    end_date : str or datetime
+      The ending date we want for the time series.
+    
+    Returns
+    -------
+    List of TimeSeries
+      The list of times series extracted from the data frame.
     """
     
     # Forming a list of timeseries
     list_ts = []
     shared_index = df.index
+    
+    # Loop over columns
     for c in df.columns:
         tmp_df = pd.DataFrame(data=df[start_date:end_date][c], index=shared_index)
         list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
@@ -100,23 +153,48 @@ def convert_multicol_df_tolist(df, start_date, end_date):
 
 def get_marketcap_today(market):
     """
-    Function returning the market capitalization as it is today.
+    Returns the market capitalization as it is today.
+    
+    Parameters
+    ----------
+    market : DataFrame
+      The market we extract tickers from.
+    
+    Returns
+    -------
+    Pandas Series
+      A pandas series with tickers as index and market cap values.
     """
+    
+    # Extracting the quotes from the market columns names
     marketcap_today = pdr.data.get_quote_yahoo(market.columns)['marketCap']
-    marketcap = pd.Series(data=marketcap_today, index=marketcap_today.index)
+    
+    # Creating a Pandas Series from them
+    marketcap = pd.Series(index=marketcap_today.index, data=marketcap_today)
     
     return marketcap
 
 
 def market_EWindex(market):
     """
-    Sums all assets to make an index, corresponds to the EW portfolio.
+    Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
     
     The formula for the weights here is:
     w_i = c / N for all i
     and we choose c = N so that \sum_i w_i = N.
-    Thus we get the value at time t of the whole portfolio:
+    
+    Thus we get the value at time t of the whole index:
     M_t = \sum_i w_i m_{ti} = \sum_i m_{ti}
+    
+    Parameters
+    ----------
+    market : DataFrame
+      The market we use to sum values.
+    
+    Returns
+    -------
+    DataFrame
+      A pandas data frame with the EW index values.
     """
     
     return pd.DataFrame(market.sum(axis=1), columns=["Market EW Index"])
@@ -124,7 +202,7 @@ def market_EWindex(market):
 
 def market_CWindex(market, marketcap):
     """
-    Function that returns the cap-weighted portfolio associated \
+    Function that returns the Cap-Weighted (CW) index associated
     with the assets of a market.
     
     We compute the total return at time t, called R_t as:
@@ -133,9 +211,17 @@ def market_CWindex(market, marketcap):
     And since we only have data of the v_j's today we compute it is:
     R_t = \sum_{i=1}^N v_i^today r_i^t / (\sum_{j=1}^N v_j^today)
     
-    Arguments:
-    - market: the assets composing the market
-    - marketvol: the volatility of these assets
+    Parameters
+    ----------
+    market : DataFrame
+      The market we use to sum values.
+    marketcap : DataFrame
+      The market capitalization we use to compute weights.
+    
+    Returns
+    -------
+    DataFrame
+      A pandas data frame with the CW index values.
     """
     
     # Initialization
