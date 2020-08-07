@@ -243,29 +243,44 @@ def plot_market_components(market, dims=(10,5), legend=True):
 
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
-def propagate_investments(investment, market, name_indiv="Portfolio"):
+def propagate_individual(individual, environment, name_indiv="Portfolio"):
     """
-    Propagates the initial investments present in a portfolio over time.
+    Propagates the initial individual over time by computing its sum of gene values.
     
-    Argument:
-    - individual: a list of Nassets elements that represent our initial investment.
-    - market: the market (set of assets) on which the investments are applied.
-    - name_indiv: name of the individual portfolio.
+    Parameters
+    ----------
+    individual : list of floats
+      List of Ngenes elements that represent our initial individual.
+    environment : DataFrame
+      Describes the time evolution of genes composing the individual.
+    name_indiv : str
+      Name of the individual.
+    
+    Returns
+    -------
+    DataFrame
+      Pandas data frame containing the sum value of genes.
+    
+    Notes
+    -----
+      In the context of portfolios, an individual would be a portfolio of assets,
+      Ngenes would be the number of assets in it, environment would be the market
+      that leads the changes in asset values.
     """
     
     # Checks
-    first_row = market.iloc[0]
+    first_row = environment.iloc[0]
     is_uniform = True
     first_value = first_row[0]
     for x in first_row:
         if x != first_value:
-            raise Error("First row of market must be uniform in value.")
+            raise Error("First row of environment must be uniform in value.")
     
     # Initializations
-    Nassets = len(investment)
+    Ngenes = len(individual)
     
-    # Propagating investments
-    portfolio = market / first_value * investment
+    # Propagating individuals
+    portfolio = environment / first_value * individual
     
     # Summing contributions
     portfolio_total = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
@@ -273,52 +288,85 @@ def propagate_investments(investment, market, name_indiv="Portfolio"):
     return portfolio_total
 
 
-def evaluation_dates(market, Ndates=10, interval_type='M'):
+def evaluation_dates(environment, n_dates=10, interval_type='M'):
     """
-    Function producing a number of equally spaced dates \
-    at which the portfolios will be evaluated.
+    Produces a number of equally spaced dates
+    at which the individuals will be evaluated.
     
-    Arguments:
-    - market: the dataframe representing the market (assets values over time).
-    - Ndates: the number of dates.
+    Parameters
+    ----------
+    environment : DataFrame
+      Represents the environment, i.e. the time evolution of gene values.
+    n_dates : int
+      Number of evaluation dates to generate.
+    interval_type : str or Offset string
+      Type of time interval between dates.
+    
+    Returns
+    -------
+    PeriodIndex
+      List of dates used for evaluation.
+    
+    Notes
+    -----
+      In the context of portfolios, an individual would be a portfolio of assets,
+      environment would be the market that leads the changes in asset values.
+      
+      To learn more about pandas .to_period() function, please refer to:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.dt.to_period.html
     """
+    
+    # Checks
+    assert(n_dates)
     
     # Initialization
-    Nticks = market.shape[0]
-    indices = np.linspace(start=0, stop=Nticks-1, num=Ndates+1).astype('int')
+    n_ticks = environment.shape[0]
+    indices = np.linspace(start = 0, stop = n_ticks-1, num = n_dates+1).astype('int')
     
     # Find the corresponding dates
-    special_dates = market.index.to_timestamp()[indices].to_period(interval_type)
+    special_dates = environment.index.to_timestamp()[indices].to_period(interval_type)
     
-    # Check
-    if special_dates[0] != market.index[0]:
+    # Raising exceptions if generated dates aren't satisfactory
+    if special_dates[0] != environment.index[0]:
         raise Exception("ERROR !")
-    if special_dates[-1] != market.index[-1]:
+    if special_dates[-1] != environment.index[-1]:
         raise Exception("ERROR !")
     
     return special_dates
 
 
-def find_tick_before_eval(market_dates, date):
+def find_tick_before_eval(environment_dates, eval_date):
     """
-    Function returning the tick before the evaluation date.
+    Returns the tick before the evaluation date.
+    
+    Parameters
+    ----------
+    environment_dates : List of Period dates
+      List of the dates given in the environment.
+    eval_date : Period date
+      Evaluation date for which we want the previous environment date.
+    
+    Returns
+    -------
+    Period date
+      Environment date just before the evaluation date.
     """
     
     # Check:
-    if (date in market_dates) == False:
-        raise Exception("It appears that the date does not belong to the market dates.")
+    if (eval_date in environment_dates) == False:
+        raise Exception("It appears that eval_date does not belong to the environment dates.")
     
     # Returning value
-    for d in market_dates:
-        if d == date:
+    for d in environment_dates:
+        if d == eval_date:
             return d-1
-    raise Exception("Apparently no date was found.")
+    raise Exception("No date was found.")
     
     
 def limited_propagation(population, market, start, end):
     """
     Function that propagates the initial investments into a portfolio over time, \
-    like `propagate_investments`, but only for a limited period of time.
+    like `propagate_individual`, but only for a limited period of time.
     Also, the function is extended from the case of one individual portfolio \
     to a dataframe of them.
     

@@ -114,7 +114,7 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
                          for _ in range(number_of_individuals) ])
     pop.columns = ["Asset " + str(i) for i in range(number_of_genes)]
     
-    # Setting the birthdate
+    # Setting the birth date of the individuals
     pop["Born"] = [birth_date for _ in range(number_of_individuals)]
     
     # Setting the row names
