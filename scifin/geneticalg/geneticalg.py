@@ -254,7 +254,7 @@ def selection(generation, method='Fittest Half'):
     """
     Operates the selection among a generation based on the last fitness.
     
-    Different methods can be used among:
+    Different methods can be used:
     - 'Fittest Half':   the first half of the top fitness is kept.
     - 'Random':         rows are picked up at random, but can't be the same.
     - 'Roulette Wheel': rows are picked up at random, but with a preference
@@ -323,7 +323,7 @@ def pairing(elite, selected, method = 'Fittest'):
     """
     Establishes the pairing of the selected population and elite all together.
     
-    Different methods can be used among:
+    Different methods can be used:
     - 'Fittest': the top fitness individuals are paired in order, this does not check
                  if the elite is fit however (we let evolution do that).
                  The selected individuals should be ranked from fittest to less fit
@@ -459,17 +459,42 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
 
 
 
-def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=None):
+def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=None):
     """
-    Function that takes a pair of parents and make a reproduction of them to produce two offsprings.
+    Takes a pair of parents and makes a reproduction of them to produce two offsprings.
+    This is done by exchanging sequences of genes between parents.
     
-    Methods:
-    - 'Single Point': using only one pivot value for exchange of genes
-    - 'Two Points': using two pivot value for exchange of genes
+    Different methods can be used:
+    - 'Single Point': using only one pivot value for exchange of genes.
+    - 'Two Points': using two pivot values for exchange of genes.
+    - 'Multi Points': using `n_points` pivot values for the exchange of genes.
     
-    Note: Since the echange of genes have changed the sum of each portfolio, we are enforced to renormalize the values.
-          This makes the exchange of genes harder to compare when looking at values, but it is necessary to avoi
-          portfolios overall investment to change.
+    Parameters
+    ----------
+    pair_of_parents : List of 2 DataFrames
+      List of the two parents to mate.
+    mating_date : str or Period date
+      Mating date.
+    method : str
+      Methods of mating.
+    n_points : int
+      Number of points pivot values for method 'Multi Points'.
+    
+    Returns
+    -------
+    List of 2 DataFrames
+      List of the 2 offsprings resulting from the mating of the 2 parents.
+      
+    Notes
+    -----
+      Considering that one application of this function is for portfolios,
+      we need to consider the following:
+      
+      - Since the echange of genes have changed the sum of each portfolio values,
+      we are enforced to renormalize the values.
+      
+      - This makes the exchange of genes harder to compare when looking at values,
+      but it is necessary to avoid portfolios overall investment to change.
     """
     
     # Check that there is only 2 parents here
@@ -512,50 +537,54 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=Non
             pivot_point_2 = random.randint(1, Ngene)
             
         offspring1 = parents.iloc[0,0:pivot_point_1].append(parents.iloc[1,pivot_point_1:pivot_point_2]).append(parents.iloc[0,pivot_point_2:])
+        
         if offspring1.sum() < 0:
-            print("An offspring got the sum of asset allocations negative before renormalization.")
+            print(  "An offspring got the sum of asset \
+                    allocations negative before renormalization.")
         offspring1_renorm = offspring1 * parents_sum / offspring1.sum()
         offsprings = [offspring1_renorm]
         
         offspring2 = parents.iloc[1,0:pivot_point_1].append(parents.iloc[0,pivot_point_1:pivot_point_2]).append(parents.iloc[1,pivot_point_2:])
+        
         if offspring2.sum() < 0:
-            print("An offspring got the sum of asset allocations negative before renormalization.")
+            print(  "An offspring got the sum of asset \
+                    allocations negative before renormalization.")
         offspring2_renorm = offspring2 * parents_sum / offspring2.sum()
         offsprings.append(offspring2_renorm)
     
     
     # Creating offsprings - Method 3
     if method == 'Multi Points':
-        if (Npoints is None) or (Npoints == 0):
-            raise Exception("Npoints must be specified.")
-        if Npoints%1!=0:
-            raise Exception("Npoints must be integer.")
+        if (n_points is None) or (n_points == 0):
+            raise Exception("n_points must be specified.")
+        if n_points%1!=0:
+            raise Exception("n_points must be integer.")
         
         # Create a set of pivot points
-        pivots = non_adjacent_random_list(0, Ngene, Npoints)
+        pivots = non_adjacent_random_list(0, Ngene, n_points)
         
-        # Case where Npoints is odd
-        if Npoints%2==1:
+        # Case where n_points is odd
+        if n_points%2==1:
             offspring1 = parents.iloc[0,0:pivots[0]]
             offspring2 = parents.iloc[1,0:pivots[0]]
-            for i in range(Npoints-1):
+            for i in range(n_points-1):
                 offspring1 = offspring1.append(parents.iloc[int((1+(-1)**i)/2), pivots[i]:pivots[i+1]])
                 offspring2 = offspring2.append(parents.iloc[int((1+(-1)**(i+1))/2), pivots[i]:pivots[i+1]])
-            offspring1 = offspring1.append(parents.iloc[1, pivots[Npoints-1]:Ngene])
-            offspring2 = offspring2.append(parents.iloc[0, pivots[Npoints-1]:Ngene])
+            offspring1 = offspring1.append(parents.iloc[1, pivots[n_points-1]:Ngene])
+            offspring2 = offspring2.append(parents.iloc[0, pivots[n_points-1]:Ngene])
         
-        # Case where Npoints is even
-        elif Npoints%2==0:
+        # Case where n_points is even
+        elif n_points%2==0:
             offspring1 = parents.iloc[0,0:pivots[0]]
             offspring2 = parents.iloc[1,0:pivots[0]]
-            for i in range(Npoints-1):
+            for i in range(n_points-1):
                 offspring1 = offspring1.append(parents.iloc[int((1+(-1)**i)/2), pivots[i]:pivots[i+1]])
                 offspring2 = offspring2.append(parents.iloc[int((1+(-1)**(i+1))/2), pivots[i]:pivots[i+1]])
-            offspring1 = offspring1.append(parents.iloc[0, pivots[Npoints-1]:Ngene])
-            offspring2 = offspring2.append(parents.iloc[1, pivots[Npoints-1]:Ngene])
+            offspring1 = offspring1.append(parents.iloc[0, pivots[n_points-1]:Ngene])
+            offspring2 = offspring2.append(parents.iloc[1, pivots[n_points-1]:Ngene])
         
         # For visual check
-        # print(Npoints)
+        # print(n_points)
         # print(pivots)
         # for d in range(parents.shape[1]):
         #     print(d, " ", parents.iloc[0,d], parents.iloc[1,d], offspring1[d], offspring2[d])
@@ -595,13 +624,33 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', Npoints=Non
 
 
 
-def get_offsprings(parents_values, mating_date, method='Single Point', Npoints=None, name_indiv="Offspring"):
+def get_offsprings(parents_values, mating_date, method='Single Point', n_points=None, name_indiv="Offspring"):
     """
-    Function that takes all the pairs of parents and make a reproduction of them to produce two offsprings for each, putting all of them in a dataframe.
+    Takes all the pairs of parents and proceeds to their mating in order
+    to produce two offsprings for each, putting all of them in a dataframe.
     
-    Methods:
-    - 'Single Point': using only one pivot value for exchange of genes
-    - 'Two Points': using two pivot value for exchange of genes
+    Different methods can be used:
+    - 'Single Point': using only one pivot value for exchange of genes.
+    - 'Two Points': using two pivot values for exchange of genes.
+    - 'Multi Points': using `n_points` pivot values for the exchange of genes.
+    
+    Parameters
+    ----------
+    parent_values : List of DataFrames
+      List of data frames containing the parents genes.
+    mating_date : str or Period date
+      Mating date.
+    method : str
+      Methods of mating.
+    n_points : int
+      Number of points pivot values for method 'Multi Points'.
+    name_indiv : str
+      Name of the offspring individuals.
+      
+    Returns
+    -------
+    DataFrame
+      Data frame of offsprings.
     """
     
     # Selecting only the columns with Asset allocations, i.e. the genes
@@ -611,7 +660,7 @@ def get_offsprings(parents_values, mating_date, method='Single Point', Npoints=N
     # Creating the offsprings
     offsprings_pop = pd.DataFrame(columns=asset_columns)
     for x in range(Npairs):
-        offsprings = mating_pair(parents_values[x], mating_date, method=method, Npoints=Npoints) # 2 offspring
+        offsprings = mating_pair(parents_values[x], mating_date, method=method, n_points=n_points) # 2 offspring
         offsprings_pop.loc[name_indiv + str(x*2)] = offsprings[0]
         offsprings_pop.loc[name_indiv + str(x*2 + 1)] = offsprings[1]
         
@@ -619,19 +668,44 @@ def get_offsprings(parents_values, mating_date, method='Single Point', Npoints=N
 
 
 
-def mutate_individual(input_individual, upper_limit, lower_limit, sum_target, mutation_rate=2, method='Reset', standard_deviation = 0.001):
+def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
+                      mutation_rate=2, method='Reset', standard_deviation = 0.001):
     """
-    Function that makes the mutation of a single individual
+    Makes the mutation of a single individual.
     
-    Arguments:
-    - individual: the individual we want to mutate
-    - upper_limit: the upper limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - lower_limit: the lower limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - sum_target: the tarket sum of genes (asset allocations) used for renormalization. Only for 'Reset' method.
-    - mutation_rate: the number of mutations to apply.
-    - method: method used for the mutations. 'Gauss' is a normal-distributed modification of affected genes. 'Reset' is a uniformly distributed modification.
-    - standard_deviation: the standard deviation of the mutation modification. Only for 'Gauss' method.
+    Different methods can be used:
+    - 'Gauss': normal-distributed modification of affected genes.
+    - 'Reset': uniformly distributed modificatio of affected genes.
+    
+    Parameters
+    ----------
+    input_individual : DataFrame
+      Individual we want to mutate.
+    upper_limit : float
+      Upper limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    lower_limit : float
+      Lower limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    sum_target : float
+      Tarket sum of genes (asset allocations) used for renormalization.
+      Only for 'Reset' method.
+    mutation_rate : int
+      Number of mutations to apply.
+    method : str
+      Method used for mutations.
+    standard_deviation: float
+      Standard deviation of the mutation modification.
+      Only for 'Gauss' method.
+      
+    Returns
+    -------
+    DataFrame
+      Data frame of the mutated individual.
     """
+    
+    # Checks
+    assert(isinstance(mutation_rate, int))
     
     # Initialization
     individual = input_individual.filter(regex="Asset")
@@ -669,10 +743,23 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target, mu
     return mutated_individual
 
 
-
 def mutation_set(num_indiv, num_genes, num_mut=0):
     """
-    Function that prepares a list of genes to be mutated.
+    Prepares a list of genes to be mutated for the function `mutate_population`.
+    
+    Parameters
+    ----------
+    num_indiv : int
+      Number of individuals.
+    num_genes : int
+      Number of genes.
+    num_mut : int
+      Number of mutations.
+      
+    Returns
+    -------
+    List of lists of int
+      List of lists of genes positions to be mutated.
     """
     
     if num_genes <= 1 :
@@ -684,23 +771,48 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
         while tmp_set[0] == tmp_set[1]:
             tmp_set[1] = random.randint(0, num_genes-1)
         mutated_genes.append(tmp_set)
-    
+
     return mutated_genes
 
 
-def mutate_population(input_individuals, upper_limit, lower_limit, sum_target, mutation_rate=2, method='Reset', standard_deviation = 0.001):
+def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
+                      mutation_rate=2, method='Reset', standard_deviation = 0.001):
     """
-    Function that makes the mutation of a population of individuals
+    Makes the mutation of a population of individuals.
+        
+    Different methods can be used:
+    - 'Gauss': normal-distributed modification of affected genes.
+    - 'Reset': uniformly distributed modificatio of affected genes.
     
-    Arguments:
-    - individual: the individual we want to mutate
-    - upper_limit: the upper limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - lower_limit: the lower limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - sum_target: the tarket sum of genes (asset allocations) used for renormalization. Only for 'Reset' method.
-    - mutation_rate: the number of mutations to apply.
-    - method: method used for the mutations. 'Gauss' is a normal-distributed modification of affected genes. 'Reset' is a uniformly distributed modification.
-    - standard_deviation: the standard deviation of the mutation modification. Only for 'Gauss' method.
+    Parameters
+    ----------
+    input_individuals : DataFrame
+      Population of individuals we want to mutate.
+    upper_limit : float
+      Upper limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    lower_limit : float
+      Lower limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    sum_target : float
+      Tarket sum of genes (asset allocations) used for renormalization.
+      Only for 'Reset' method.
+    mutation_rate : int
+      Number of mutations to apply.
+    method : str
+      Method used for mutations.
+    standard_deviation: float
+      Standard deviation of the mutation modification.
+      Only for 'Gauss' method.
+      
+    Returns
+    -------
+    DataFrame
+      Data frame of the mutated individuals.
     """
+    
+    # Checks
+    assert(isinstance(mutation_rate, int))
     
     # Initialization
     individuals = input_individuals.filter(regex="Asset")
@@ -740,7 +852,7 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target, m
 
 
 def next_generation(elite, gen, market, current_eval_date, next_eval_date, upper_limit, lower_limit, sum_target, mutation_rate, standard_deviation, fitness_lambda=0.5,
-                    fitness_method="Max Return and Vol", pairing_method="Fittest", mating_method="Single Point", Npoints=None, mutation_method="Gauss", selection_method="Fittest Half", return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
+                    fitness_method="Max Return and Vol", pairing_method="Fittest", mating_method="Single Point", n_points=None, mutation_method="Gauss", selection_method="Fittest Half", return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
 
     """
     Function that computes the next generation of portfolios. It uses a lot of the previous functions in order to select the individuals,
@@ -790,7 +902,7 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date, upper
     
     # Generating offsprings
     if Verbose: print(".... generating offsprings")
-    offsprings = get_offsprings(parents_values, current_eval_date, method=mating_method, Npoints=Npoints, name_indiv=name_indiv)
+    offsprings = get_offsprings(parents_values, current_eval_date, method=mating_method, n_points=n_points, name_indiv=name_indiv)
     if Verbose: print("    ", offsprings.index.values)
     
     # Mutating selected individuals and offsprings, but not the elite
