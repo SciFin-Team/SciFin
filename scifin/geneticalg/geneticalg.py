@@ -30,7 +30,7 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     upper_limit : float
       Maximum value taken by the genes, before normalization.
     lower_limit : float
-      Minimum value taken by the genes, before normalization.
+      Minimum value taken by the genes, before normalization. Can be negative.
     sum_target : float  
       Target value for the sum of the genes after normalization.
     
@@ -90,7 +90,7 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
     upper_limit : float
       Maximum value taken by the genes, before normalization.
     lower_limit : float
-      Minimum value taken by the genes, before normalization.
+      Minimum value taken by the genes, before normalization. Can be negative.
     sum_target : float  
       Target value for the sum of the genes after normalization.
     birth_date : str

@@ -706,10 +706,10 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     return None
 
 
-def show_allocation_distrib(step, generation, eval_dates, n_bins=50,
+def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
                             savefile=False, namefile="Allocation_Distribution.png"):
     """
-    Plots the distribution of a generation (including elites and individuals)
+    Plots the distribution of saved generations (including elites and individuals)
     for a certain step of the loop that ran in `Genetic_Portfolio_Routine`.
     
     Since there are different individuals, we sum over these elements
@@ -719,8 +719,8 @@ def show_allocation_distrib(step, generation, eval_dates, n_bins=50,
     ----------
     step : int
       Step of the loop.
-    generation : DataFrame
-      Generation to plot the distribution from.
+    saved_gens : DataFrame
+      Generations to plot from.
     eval_dates : List of Period dates
       Evaluation dates for display.
     n_bins : int
@@ -741,13 +741,13 @@ def show_allocation_distrib(step, generation, eval_dates, n_bins=50,
     assert(isinstance(n_bins, int))
     
     # Initialization
-    Nloops = len(generation)-1
-    tmp = (generation[step].sum() / generation[step].shape[0]).tolist()
+    Nloops = len(saved_gens)-1
+    tmp = (saved_gens[step].sum() / saved_gens[step].shape[0]).tolist()
     fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(15,5))
 
     # Assuming the largest allocations are always at the last step (which may not be true)
-    xmin = min((generation[Nloops].sum() / generation[Nloops].shape[0]).tolist()) * 1.2
-    xmax = max((generation[Nloops].sum() / generation[Nloops].shape[0]).tolist()) * 1.2
+    xmin = min((saved_gens[Nloops].sum() / saved_gens[Nloops].shape[0]).tolist()) * 1.2
+    xmax = max((saved_gens[Nloops].sum() / saved_gens[Nloops].shape[0]).tolist()) * 1.2
 
     # Plotting
     plt.hist(x=tmp, bins=n_bins, range=[xmin,xmax])
@@ -761,33 +761,48 @@ def show_allocation_distrib(step, generation, eval_dates, n_bins=50,
     return None
 
 
-def config_4n(n1, n2, n3, n4, market, VIX,
-              savefile=False, namefile="VIX_derived_quantities.png"):
+def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.png"):
     """
-    Function that plots the evaluation dates, ndays, mutation rate \
-    and fitness lambda from the VIX and 4 structure numbers.
-    It also mimicks the general loop, so that we can see how dates are evaluated \
-    and how quantities are computed.
+    Plots the evaluation dates, ndays, mutation rate and fitness lambda
+    as computed from the Volatility Index (VIX) and 4 structure numbers.
+    
+    Evaluation dates are computed according to the VIX, trying to get more evaluations
+    when the VIX takes high values.
+    
+    This function is used to set the configuration of a dynamical creation
+    of evaluation dates and mutation rate.
     
     Parameters
     ----------
-    ... : ...
-      ...
-    
+    n : 4-tuple of int
+      Structure parameters.
+    market : DataFrame
+      Market from which we extract data about assets (i.e. genes).
+    VIX : DataFrame
+      Values of the VIX over time.
+    savefile : bool
+      Option to save the plot.
+    namefile : str
+      Name of the file to save in.
+      
     Returns
     -------
     None
       None
     """
-
-    # Initializations
-    market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
     
+    # Checks
+    assert(len(n)==4)
+    
+    # Initializations
+    n1, n2, n3, n4 = n
+    market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
     save_eval_dates = []
     save_mutation_rate = []
     save_ndays = []
     save_fitness_lambda = []
 
+    # Loop
     loop = 0
     eval_date = market.index[0]
     next_eval_date = market.index[10]
@@ -829,7 +844,7 @@ def config_4n(n1, n2, n3, n4, market, VIX,
         loop +=1
         
         
-    # Converting the mutation rate into a dataFrame
+    # Converting interesting quantities into a data frames
     df_mutation_rate = pd.DataFrame(data=save_mutation_rate,
                                     index=save_eval_dates,
                                     columns=["Mutation Rate"])
@@ -841,13 +856,16 @@ def config_4n(n1, n2, n3, n4, market, VIX,
     df_fitness_lambda = pd.DataFrame(data=save_fitness_lambda,
                                      index=save_eval_dates,
                                      columns=["100 x Fitness lambda"])
+    
 
-    # PLOTTING EVALUATION DATES / MUTATION RATES
+    # Plotting quantities
     fig, axis = plt.subplots(nrows=1, ncols=1)
     VIX.plot(label="VIX")
     df_ndays.plot(figsize=(25,5), ax=axis, color="orange", linewidth=2, legend=True)
     df_mutation_rate.plot(legend=True, ax=axis, color="green", linewidth=2)
     df_fitness_lambda.plot(legend=True, ax=axis, color="purple", linewidth=2)
+    
+    # Plotting y=0 line and evaluation dates
     axis.axhline(0, color='red', linestyle='--', linewidth=2)
     for ed in save_eval_dates:
         axis.axvline(x=ed.to_timestamp().strftime("%Y-%m-%d"), color='grey', linestyle='--')
@@ -860,17 +878,25 @@ def config_4n(n1, n2, n3, n4, market, VIX,
     return None
 
 
-def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
+def plot_diff_GenPort_CW(saved_propags, market_CW, eval_dates,
                          savefile=False, namefile="ResultDifference.png"):
     """
-    Computes and plots the difference between the portfolios of the genetic algorithm \
-    and the Cap-Weighted Portfolio.
+    Computes and plots the difference between the portfolios
+    of the genetic algorithm and the Cap-Weighted Portfolio.
     
     Parameters
     ----------
-    ... : ...
-      ...
-    
+    saved_propags : DataFrame
+      Propagations that have been saved.
+    market_CW : DataFrame
+      Cap-Weighted portfolio to compare with.
+    eval_dates : List of Period dates
+      Evaluation dates for display.
+    savefile : bool
+      Option to save the plot.
+    namefile : str
+      Name of the file to save in.
+      
     Returns
     -------
     None
@@ -878,17 +904,17 @@ def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
     """
     
     # Computing values
-    diff_array = (save_propags.to_numpy() - market_CW.to_numpy()) / market_CW.to_numpy() * 100
+    diff_array = (saved_propags.to_numpy() - market_CW.to_numpy()) / market_CW.to_numpy() * 100
     Diff_GenPort_CW = pd.DataFrame(data = diff_array,
-                                   columns = save_propags.columns,
-                                   index=save_propags.index)
+                                   columns = saved_propags.columns,
+                                   index=saved_propags.index)
 
     # Plotting
     fig, axis = plt.subplots(nrows=1, ncols=1)
     Diff_GenPort_CW.plot(legend=False, figsize=(20,7), ax=axis)
     
     # Adding evaluation dates
-    for ed in evaluation_dates:
+    for ed in eval_dates:
         axis.axvline(x=ed, color='grey', linestyle='--', linewidth=1)
     
     # Setting axes
@@ -904,35 +930,45 @@ def plot_diff_GenPort_CW(save_propags, market_CW, evaluation_dates,
     return None
 
 
-def plot_asset_evol(n, save_eval_dates, generation,
+def plot_asset_evol(n, eval_dates, saved_gens,
                     savefile=False, namefile="asset_evol.png"):
     """
-    Function plotting the evolution of asset allocations over time.
+    Plots the evolution of asset allocations over time.
     
     Parameters
     ----------
-    ... : ...
-      ...
-    
+    n : 4-tuple of int
+      Structure parameters.
+    eval_dates : List of Period dates
+      Evaluation dates for display.
+    saved_gens : DataFrame
+      Generations to plot from.
+    savefile : bool
+      Option to save the plot.
+    namefile : str
+      Name of the file to save in.
+      
     Returns
     -------
     None
-      None
     """
-
+    
+    # Checks
+    assert(len(n)==4)
+    
     # Forming the set of portfolio names
     set_indices = []
-    for x in range(len(generation)):
-        set_indices = set(set_indices).union(set(generation[x].index.tolist()))
+    for x in range(len(saved_gens)):
+        set_indices = set(set_indices).union(set(saved_gens[x].index.tolist()))
     
     # Creating the empty data frame
-    asset_evol = pd.DataFrame(data=None, columns=save_eval_dates, index=set_indices)
+    asset_evol = pd.DataFrame(data=None, columns=eval_dates, index=set_indices)
 
     # Computing
-    for x in range(len(save_eval_dates)):
-        colname = save_eval_dates[x].to_timestamp().strftime("%Y-%m-%d")
-        for y in generation[x].index:
-            asset_evol.loc[y,colname] = generation[x].loc[y,'Asset ' + str(n)]
+    for x in range(len(eval_dates)):
+        colname = eval_dates[x].to_timestamp().strftime("%Y-%m-%d")
+        for y in saved_gens[x].index:
+            asset_evol.loc[y,colname] = saved_gens[x].loc[y,'Asset ' + str(n)]
     
     # Transpose
     asset_t = asset_evol.transpose()
