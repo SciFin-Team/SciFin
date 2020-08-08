@@ -1047,13 +1047,33 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
         return sorted_next_gen
 
 
-
 def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     """
-    Function that creates the elite and non-elite individual populations by ranking them according to the last fitness
-    and proceeding to a simple cut, highest fitnesses going to the new elite. Some formerly non-elite can become new elite
-    and formerly elite can become non-elite depending on values.
+    Creates the elite and non-elite individual populations by ranking
+    them according to the last fitness and proceeding to a simple cut,
+    the highest fitness individuals going to the new elite.
+    Some formerly non-elite can become new elite and formerly elite
+    can become non-elite depending on values.
+    
+    Parameters
+    ----------
+    generation : DataFrame
+      Generation we want to build new elite and non-elite from.
+    elite_rate : float in [0,1]
+      Rate of individuals going into the elite.
+    renaming : bool
+      Option to rename the individuals.
+    
+    Returns
+    -------
+    DataFrame
+      Data Frame of the new elite population.
+    DataFrame
+      Data Frame of the new non-elite population.
     """
+    
+    # Checks
+    assert(elite_rate>=0 and elite_rate <=1)
     
     # Initialization
     M = generation.shape[0]
@@ -1082,10 +1102,33 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
 
 def fitness_similarity_check(generation, number_of_similarity, precision_decimals=1):
     """
-    Function that checks the fitness similarity based on the last fitness.
+    Checks the fitness similarity based on the last fitness calculation.
+    This function tests if a certain number 'number_of_similarity' of individuals
+    converge to the same fitness value, up to a precision 'precision_decimals'.
     
-    Note: this function should be applied after the new generation is created and before we do a split into Elite + "Normal" individuals.
+    Parameters
+    ----------
+    generation : DataFrame
+      Generation that we consider.
+    number_of_similarity : int
+      Number of individuals to consider for similarity check.
+    precision_decimals : int
+      Precision decimals of the check.
+    
+    Returns
+    -------
+    bool
+      True if generation passed similarity check, False otherwise.
+    
+    Notes
+    -----
+      This function should be applied after the new generation is created
+      and before we do a split into Elite + Non-Elite individuals.
     """
+    
+    # Checks
+    assert(isinstance(number_of_similarity, int))
+    assert(isinstance(precision_decimals, int))
     
     # Initialization
     result = False
@@ -1106,6 +1149,18 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
 def sum_top_fitness(generation, num_elements=4):
     """
     Computes the sum of the top elements in the population.
+    
+    Parameters
+    ----------
+    generation : DataFrame
+      Generation that we consider.
+    num_elements : int
+      Number of elements to consider from the top.
+      
+    Returns
+    -------
+    float
+      The sum of fitness from the top elements.
     """
     
     gen = generation.filter(regex="Fit").iloc[:,-1]
