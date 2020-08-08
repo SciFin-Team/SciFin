@@ -440,10 +440,18 @@ def portfolio_vol(weights, cov_matrix):
 
 
 def fitness_calculation(population, propagation, environment, current_eval_date, next_eval_date,
-                        lamb=0.5, fitness_method="Max Return and Vol"):
+                        lamb=0.5, fitness_method="Last Return and Vol"):
     """
-    Simply collects the last value in time of each portfolio
-    and consider it as the fitness measure.
+    Computes the fitness of each individual in a population.
+    
+    Different fitness methods can be used:
+    - "Last Return": uses the value of return at the end of propagation,
+                     i.e. the value just before evaluation date.
+    - "Last Return and Vol": combines last return with estimation of volatility,
+                             the dosage between the two being tuned by lambda.
+    - "Avg Return and Vol": uses average return during the propagation and the
+                            estimation of volatility, also using lambda.
+    - "Sharpe Ratio": uses the ratio of average return over estimation of volatility.
     
     Parameters
     ----------
@@ -461,7 +469,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
       Parameter of the fitness calculation to decide between returns and volatility.
     fitness_method : str
       Name of the fitness method chosen among:
-      {"Max Return", "Max Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
+      {"Last Return", "Last Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
     
     Returns
     -------
@@ -486,13 +494,13 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
       None
     """
         
-    # Method of max return
-    if fitness_method == "Max Return":
+    # Method of last return
+    if fitness_method == "Last Return":
         fitness_value = [propagation[x][-1] for x in propagation.columns]
         
         
-    # Method combining max return and average volatility
-    elif fitness_method == "Max Return and Vol":
+    # Method combining last return and average volatility
+    elif fitness_method == "Last Return and Vol":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
         fitness_from_return = [propagation[x][-1] for x in propagation.columns]

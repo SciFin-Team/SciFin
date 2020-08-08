@@ -125,11 +125,20 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
 
 
 def get_generation(population, environment, current_eval_date, next_eval_date,
-                   lamb=0.5, fitness_method="Max Return and Vol",
+                   lamb=0.5, fitness_method="Last Return and Vol",
                    return_propag=False, date_format="%Y-%m"):
     """
     Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
     A generation is defined as a population with computed fitness and ranked by it.
+    
+    Different fitness methods can be used:
+    - "Last Return": uses the value of return at the end of propagation,
+                     i.e. the value just before evaluation date.
+    - "Last Return and Vol": combines last return with estimation of volatility,
+                             the dosage between the two being tuned by lambda.
+    - "Avg Return and Vol": uses average return during the propagation and the
+                            estimation of volatility, also using lambda.
+    - "Sharpe Ratio": uses the ratio of average return over estimation of volatility.
     
     Parameters
     ----------
@@ -141,8 +150,11 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
       Present date on which we evaluate the individuals.
     next_eval_date : Period date
       Target date until which we want to make the portfolios evolve.
-    lamb : float
+    lamb : float in [0,1]
       Parameter of the fitness calculation to decide between returns and volatility.
+    fitness_method : str
+      Name of the fitness method chosen among:
+      {"Last Return", "Last Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
     return_propag : bool
       An option to return or not the propagations.
     date_format : str
@@ -255,8 +267,8 @@ def selection(generation, method='Fittest Half'):
     Operates the selection among a generation based on the last fitness.
     
     Different methods can be used:
-    - 'Fittest Half':   the first half of the top fitness is kept.
-    - 'Random':         rows are picked up at random, but can't be the same.
+    - 'Fittest Half': the first half of the top fitness is kept.
+    - 'Random': rows are picked up at random, but can't be the same.
     - 'Roulette Wheel': rows are picked up at random, but with a preference
                         for high cumulative sum (high fitness).
                         
@@ -853,7 +865,7 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
 
 def next_generation(elite, gen, market, current_eval_date, next_eval_date,
                     upper_limit, lower_limit, sum_target, mutation_rate, standard_deviation,
-                    fitness_lambda=0.5, fitness_method="Max Return and Vol",
+                    fitness_lambda=0.5, fitness_method="Last Return and Vol",
                     pairing_method="Fittest", mating_method="Single Point", n_points=None,
                     mutation_method="Gauss", selection_method="Fittest Half",
                     return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
@@ -863,26 +875,105 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     with elite, generating offsprings, creating mutations in the offsprings,
     recomputing fitness and sorting the new population.
     
-
     
-    Arguments:
-    - elite: the generation of elites we start with.
-    - gen: the generation of individuals we start with.
-    - market: the market which serves as a basis for propagation.
-    - current_eval_date: the present date on which we evaluate the portfolios.
-    - next_eval_date: the target date until which we want to make the portfolios evolve.
-    - upper_limit: the upper limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - lower_limit: the lower limit of the gene (asset allocation), before renormalization. Only for 'Reset' method.
-    - sum_target: the tarket sum of genes (asset allocations) used for renormalization. Only for 'Reset' method.
-    - mutation_rate: the number of mutations to apply.
-    - method: method used for the mutations. 'Gauss' is a normal-distributed modification of affected genes. 'Reset' is a uniformly distributed modification.
-    - standard_deviation: the standard deviation of the mutation modification. Only for 'Gauss' method.
-    - return_propag: an option to return the propagations
-    - name_indiv: a string to set the name of the offsprings
-    - date_format: format of dates used in the dataframes
-
-    TO BE UPDATED !!!
+    Parameters
+    ----------
+    elite : DataFrame
+      Generation of elites we start with.
+    gen : DataFrame
+      Generation of individuals we start with.
+    market : DataFrame
+      Market which serves as a basis for propagation.
+    current_eval_date : DataFrame
+      Present date on which we evaluate the individuals.
+    next_eval_date : DataFrame
+      Target date until which we want to make the individuals evolve.
+    upper_limit : float
+      Upper limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    lower_limit : float
+      Lower limit of the gene (asset allocation), before renormalization.
+      Only for 'Reset' method.
+    sum_target : float
+      Tarket sum of genes (asset allocations) used for renormalization.
+      Only for 'Reset' method.
+    mutation_rate : int
+      Number of mutations to apply.
+    standard_deviation: float
+      Standard deviation of the mutation modification.
+      Only for 'Gauss' method.
+    fitness_lambda : float in [0,1]
+      Parameter of the fitness calculation to decide between returns and volatility.
+    fitness_method : str
+      Method used to evaluate fitness.
+        - 'Last Return': uses the value of return at the end of propagation,
+                         i.e. the value just before evaluation date.
+        - 'Last Return and Vol': combines last return with estimation of volatility,
+                                 the dosage between the two being tuned by lambda.
+        - 'Avg Return and Vol': uses average return during the propagation and the
+                                estimation of volatility, also using lambda.
+        - 'Sharpe Ratio': uses the ratio of average return over estimation of volatility.
+    pairing_method : str
+      Method used for pairing.
+        - 'Fittest': the top fitness individuals are paired in order, this does not check
+                     if the elite is fit however (we let evolution do that).
+                     The selected individuals should be ranked from fittest to less fit
+                     if things have been done in the proper order before.
+        - 'Random': the pairing is done at random, but no individual
+                    can reproduce more than once.
+        - 'Weighted Random': the pairing is done with higher probability among high fitness
+                             individuals. Some individuals may reproduce several times.
+    mating_method : str
+      Method used for mating:
+        - 'Single Point': using only one pivot value for exchange of genes.
+        - 'Two Points': using two pivot values for exchange of genes.
+        - 'Multi Points': using `n_points` pivot values for the exchange of genes.
+    mutation_method : str
+      Method used for the mutations.
+        - 'Gauss': normal-distributed modification of affected genes.
+        - 'Reset': uniformly distributed modification.
+    selection_method : str
+      Method used for selection.
+        - 'Fittest Half': the first half of the top fitness is kept.
+        - 'Random': rows are picked up at random, but can't be the same.
+        - 'Roulette Wheel': rows are picked up at random, but with a preference
+                            for high cumulative sum (high fitness).
+    return_propag : bool
+      Option to return the propagations or not.
+    name_indiv : str
+      String to set the name of the offsprings.
+    date_format : str
+      Format of dates used in the dataframes.
+    Verbose : bool
+      Verbose option.
+    
+    Returns
+    -------
+    DataFrame
+      Data frame with the next generation, including parents and offsprings.
+    
+    Raises
+    ------
+    ValueError
+      To make sure than elite and current generation of the same columns.
+    
+    Notes
+    -----
+      None
+    
+    Examples
+    --------
+      None
     """
+    
+    # Checks
+    assert(fitness_lambda>=0 and fitness_lambda<=1)
+    assert(fitness_method in ["Last Return", "Last Return and Vol",
+                              "Avg Return and Vol", "Sharpe Ratio"])
+    assert(pairing_method in ["Fittest", "Random", "Weighted Random"])
+    assert(mating_method in ["Single Point", "Two Points", "Multi Points"])
+    assert(mutation_method in ["Gauss", "Reset"])
+    assert(selection_method in ["Fittest Half", "Random", "Roulette Wheel"])
     
     # Check columns are the same:
     if elite.columns.tolist() != gen.columns.tolist():
@@ -896,32 +987,42 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     selected = selection(gen, method=selection_method)
     if Verbose: print("    ", selected.index.values)
 
-    
     # Combine them with the elite
     if Verbose: print(".... forming pairs")
     testM = elite.shape[0] + selected.shape[0]
+    
     if testM % 2 != 0:
         name_of_indiv_to_remove = selected.index[-1]
         selected.drop([name_of_indiv_to_remove], axis=0, inplace=True)
-        print(name_of_indiv_to_remove, " has been removed as it was the last element of a selection with odd number of individuals to pair.")
+        print(name_of_indiv_to_remove, " has been removed as it was the last \
+              element of a selection with odd number of individuals to pair.")
+        
     parents_pairs, parents_values = pairing(elite, selected, method=pairing_method)
     if Verbose: print("    ", parents_pairs)
     
     # Generating offsprings
     if Verbose: print(".... generating offsprings")
-    offsprings = get_offsprings(parents_values, current_eval_date, method=mating_method, n_points=n_points, name_indiv=name_indiv)
+    offsprings = get_offsprings(parents_values, current_eval_date,
+                                method=mating_method, n_points=n_points,
+                                name_indiv=name_indiv)
     if Verbose: print("    ", offsprings.index.values)
     
     # Mutating selected individuals and offsprings, but not the elite
     name_col_to_drop = selected.filter(regex="CumSum").columns
     selected.drop(columns=name_col_to_drop, inplace=True)
+    
     if Verbose: print(".... appending offsprings to selection")
     unmutated = selected.append(offsprings)
     if Verbose: print("    ", unmutated.index.values)
+        
     if Verbose: print(".... mutating offsprings")
-    mutated = mutate_population(unmutated, upper_limit, lower_limit, sum_target, mutation_rate, mutation_method, standard_deviation)
+    mutated = mutate_population(unmutated, upper_limit, lower_limit, sum_target,
+                                mutation_rate, mutation_method, standard_deviation)
+    
     if Verbose: print(".... forming mutated generation")
-    mutated_gen = get_generation(mutated, market, current_eval_date, next_eval_date, lamb=fitness_lambda, fitness_method=fitness_method,return_propag=False, date_format=date_format)
+    mutated_gen = get_generation(mutated, market, current_eval_date, next_eval_date,
+                                 lamb=fitness_lambda, fitness_method=fitness_method,
+                                 return_propag=False, date_format=date_format)
     if Verbose: print("    ", mutated_gen.index.values)
     
     # Combine mutated population with the elite
@@ -933,10 +1034,16 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     # get generation also sorts the individuals by fitness
     if Verbose: print(".... getting the generation of combined elite and mutated individuals")
     if return_propag == True:
-        sorted_next_gen, propagation = get_generation(unsorted_individuals, market, current_eval_date, next_eval_date, lamb=fitness_lambda, return_propag=True, date_format=date_format)
+        sorted_next_gen, propagation = get_generation(unsorted_individuals, market,
+                                                      current_eval_date, next_eval_date,
+                                                      lamb=fitness_lambda, return_propag=True,
+                                                      date_format=date_format)
         return sorted_next_gen, propagation
     else:
-        sorted_next_gen = get_generation(unsorted_individuals, market, current_eval_date, next_eval_date, lamb=fitness_lambda, return_propag=False, date_format=date_format)
+        sorted_next_gen = get_generation(unsorted_individuals, market,
+                                         current_eval_date, next_eval_date,
+                                         lamb=fitness_lambda, return_propag=False,
+                                         date_format=date_format)
         return sorted_next_gen
 
 
@@ -998,7 +1105,7 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
 
 def sum_top_fitness(generation, num_elements=4):
     """
-    Function that computes the sum of the top elements in the population.
+    Computes the sum of the top elements in the population.
     """
     
     gen = generation.filter(regex="Fit").iloc[:,-1]
