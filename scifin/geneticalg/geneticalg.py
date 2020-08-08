@@ -875,7 +875,6 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     with elite, generating offsprings, creating mutations in the offsprings,
     recomputing fitness and sorting the new population.
     
-    
     Parameters
     ----------
     elite : DataFrame

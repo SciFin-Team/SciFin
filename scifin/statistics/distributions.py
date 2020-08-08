@@ -20,12 +20,37 @@ from scipy.special import erf, erfinv, gamma, zeta
 
 class Distribution:
     """
-    General class for a distribution.
+    Creates a statistical distribution.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    MAD : float
+      Mean Absolute Deviation of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         # Type of distribution
         self.type = None
@@ -43,7 +68,7 @@ class Distribution:
         
         # others
         self.mode = None
-        self.MAD = None # MAD = Mean Absolute Deviation
+        self.MAD = None
         
         # name (or nickname)
         self.name = name
@@ -72,13 +97,45 @@ class Distribution:
         
 class Normal(Distribution):
     """
-    Class implementing the normal distribution of mean 'mu' and standard deviation 'sigma'.
-    This class is inheriting from the class 'Distribution'.
+    Implements the normal distribution of mean 'mu' and standard deviation 'sigma'.
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    mu : float
+      Mean parameter of the distribution.
+    sigma : float
+      Standard deviation parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    MAD : float
+      Mean Absolute Deviation of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, mu=0., sigma=1., name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         try:
             assert(sigma>0)
@@ -114,7 +171,7 @@ class Normal(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Normal distribution.
         """
         pdf = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) 
@@ -123,7 +180,7 @@ class Normal(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Normal distribution.
         """
         cdf = [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
@@ -131,7 +188,7 @@ class Normal(Distribution):
     
     def quantile(self, p):
         """
-        Method returning the quantile associated to the Normal distribution.
+        Returns the quantile associated to the Normal distribution.
         """
         assert(p>0 and p<1)
         return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
@@ -140,14 +197,48 @@ class Normal(Distribution):
 
 class Uniform(Distribution):
     """
-    Class implementing the uniform distribution taking a non-zero value \
+    Implements the uniform distribution taking a non-zero value
     between values 'a' and 'b>a'.
-    This class is inheriting from the class 'Distribution'.
+    
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    a : float
+      Left parameter of the distribution.
+    b : float
+      Right parameter of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
+      
+    Notes
+    -----
+      Requires b>a.
     """
     
     def __init__(self, a=0., b=1., name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(a<b)
         
@@ -179,7 +270,7 @@ class Uniform(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the uniform distribution.
         """
         pdf = []
@@ -192,7 +283,7 @@ class Uniform(Distribution):
     
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the uniform distribution.
         """
         cdf = []
@@ -208,16 +299,48 @@ class Uniform(Distribution):
 
 class Weibull(Distribution):
     """
-    Class implementing the Weibull distribution with shape parameter 'k' (>0) \
+    Implements the Weibull distribution with shape parameter 'k' (>0)
     and scale parameter 'lmbda' (>0).
-    This class is inheriting from the class 'Distribution'.
     
-    Note: default value for 'k' is 1, making it equal to an Exponential distribution.
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    k : float
+      Shape parameter (>0) of the distribution.
+    lmbda : float
+      Scale parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
+    
+    Notes
+    -----
+      Default value for 'k' is 1, making it equal to an Exponential distribution.
     """
     
     def __init__(self, k=1, lmbda=1, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(k>0)
         assert(lmbda>0)
@@ -250,7 +373,7 @@ class Weibull(Distribution):
         
     def skewness_Weibull(self, k, lmbda):
         """
-        Function computing the skewness of the Weibull distribution.
+        Computes the skewness of the Weibull distribution.
         """
         g1 = gamma(1 + 1/k)
         g2 = gamma(1 + 2/k)
@@ -263,7 +386,7 @@ class Weibull(Distribution):
         
     def kurtosis_Weibull(self, k, lmbda):
         """
-        Function computing the kurtosis of the Weibull distribution.
+        Computes the kurtosis of the Weibull distribution.
         """
         g1 = gamma(1 + 1/k)
         g2 = gamma(1 + 2/k)
@@ -278,7 +401,7 @@ class Weibull(Distribution):
         
     def mode_Weibull(self, k, lmbda):
         """
-        Function computing the mode of the Weibull distribution.
+        Computes the mode of the Weibull distribution.
         """
         if k>1:
             return lmbda * np.power((k-1)/k, 1/k)
@@ -287,7 +410,7 @@ class Weibull(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Weibull distribution.
         """
         pdf = []
@@ -301,7 +424,7 @@ class Weibull(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Weibull distribution.
         """
         cdf = []
@@ -315,13 +438,41 @@ class Weibull(Distribution):
 
 class Rayleigh(Distribution):
     """
-    Class implementing the Rayleigh distribution with scale parameter 'sigma'.
-    This class is inheriting from the class 'Distribution'.
+    Implements the Rayleigh distribution with scale parameter 'sigma'.
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    sigma : float
+      Scale parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, sigma=1, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(sigma>0)
         
@@ -352,7 +503,7 @@ class Rayleigh(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Rayleigh distribution.
         """
         pdf = []
@@ -365,7 +516,7 @@ class Rayleigh(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Rayleigh distribution.
         """
         cdf = []
@@ -379,13 +530,41 @@ class Rayleigh(Distribution):
 
 class Exponential(Distribution):
     """
-    Class implementing the Exponential distribution with rate parameter 'lmbda' (>0).
-    This class is inheriting from the class 'Distribution'.
+    Implements the Exponential distribution with rate parameter 'lmbda' (>0).
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    lmbda : float
+      Rate parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, lmbda=1 , name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(lmbda>0)
         
@@ -416,7 +595,7 @@ class Exponential(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Exponential distribution.
         """
         pdf = []
@@ -429,7 +608,7 @@ class Exponential(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Exponential distribution.
         """
         cdf = []
@@ -442,7 +621,7 @@ class Exponential(Distribution):
     
     def quantile(self, p):
         """
-        Method returning the quantile associated to the Exponential distribution.
+        Returns the quantile associated to the Exponential distribution.
         """
         assert(p>0 and p<1)
         return - np.log(1 - p) / self.lmbda
@@ -450,13 +629,45 @@ class Exponential(Distribution):
     
 class Gumbel(Distribution):
     """
-    Class implementing the Gumbel distribution with mode 'mu' and parameter 'beta' (>0).
-    This class is inheriting from the class 'Distribution'.
+    Implements the Gumbel distribution with mode 'mu' and parameter 'beta' (>0).
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    mu : float
+      Mode parameter of the distribution.
+    beta : float
+      Initialization parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    MAD : float
+      Mean Absolute Deviation of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, mu=0, beta=1 , name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(beta>0)
         
@@ -488,7 +699,7 @@ class Gumbel(Distribution):
         
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Gumbel distribution.
         """
         z = (np.array(x) - self.mu) / self.beta
@@ -497,7 +708,7 @@ class Gumbel(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Gumbel distribution.
         """
         z = (np.array(x) - self.mu) / self.beta
@@ -506,7 +717,7 @@ class Gumbel(Distribution):
     
     def quantile(self, p):
         """
-        Method returning the quantile associated to the Gumbel distribution.
+        Returns the quantile associated to the Gumbel distribution.
         """
         assert(p>0 and p<1)
         return self.mu - self.beta * np.log(-np.log(p))
@@ -516,13 +727,43 @@ class Gumbel(Distribution):
     
 class Laplace(Distribution):
     """
-    Class implementing the Laplace distribution with mean 'mu' and scale parameter 'b' (>0).
-    This class is inheriting from the class 'Distribution'.
+    Implements the Laplace distribution with mean 'mu' and scale parameter 'b' (>0).
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    mu : float
+      Mean parameter of the distribution.
+    b : float
+      Scale parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, mu=0, b=1 , name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(b>0)
         
@@ -554,7 +795,7 @@ class Laplace(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Laplace distribution.
         """
         pdf = np.exp(-np.abs(np.array(x)-self.mu)/self.b) / (2*self.b)
@@ -562,7 +803,7 @@ class Laplace(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Laplace distribution.
         """
         cdf = []
@@ -575,7 +816,7 @@ class Laplace(Distribution):
     
     def quantile(self, p):
         """
-        Method returning the quantile associated to the Laplace distribution.
+        Returns the quantile associated to the Laplace distribution.
         """
         assert(p>0 and p<1)
         if p <= 1/2:
@@ -586,14 +827,44 @@ class Laplace(Distribution):
 
 class Levy(Distribution):
     """
-    Class implementing the Lévy distribution with location parameter 'mu' \
+    Implements the Lévy distribution with location parameter 'mu'
     and scale parameter 'c' (>0).
-    This class is inheriting from the class 'Distribution'.
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    mu : float
+      Location parameter of the distribution.
+    c : float
+      Scale parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, mu=0, c=1, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(c>0)
         
@@ -625,7 +896,7 @@ class Levy(Distribution):
     
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Lévy distribution.
         """
         pdf = []
@@ -641,7 +912,7 @@ class Levy(Distribution):
 
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Lévy distribution.
         """
         cdf = []
@@ -655,14 +926,44 @@ class Levy(Distribution):
 
 class Cauchy(Distribution):
     """
-    Class implementing the Cauchy distribution with mode/median 'a' \
+    Implements the Cauchy distribution with mode/median 'a'
     and scale parameter 'b' (>0).
-    This class is inheriting from the class 'Distribution'.
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    a : float
+      Mean/mode parameter of the distribution.
+    b : float
+      Scale parameter (>0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
     """
     
     def __init__(self, a=0, b=1 , name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(b>0)
         
@@ -694,7 +995,7 @@ class Cauchy(Distribution):
 
     def pdf(self, x):
         """
-        Method implementing the Probability Density Function (PDF) \
+        Implements the Probability Density Function (PDF)
         for the Cauchy distribution.
         """
         z = (np.array(x) - self.a) / self.b
@@ -704,7 +1005,7 @@ class Cauchy(Distribution):
     
     def cdf(self, x):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Cauchy distribution.
         """
         z = (np.array(x) - self.a) / self.b
@@ -719,17 +1020,49 @@ class Cauchy(Distribution):
     
 class Poisson(Distribution):
     """
-    Class implementing the Poisson distribution \
-    with expected rate of event occurence 'lambda'.
-    This class is inheriting from the class 'Distribution'.
+    Implements the Poisson distribution
+    with expected rate of event occurence 'lambda' (>=0).
+
+    This class inherits from the parent class 'Distribution'.
     
-    Note: We use a value k_max to set the limit of summation \
-    for the entropy calculation.
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    lmbda : float
+      Rate of occurence parameter (>=0) of the distribution.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    k_max : int, >0
+      Limit of summation in entropy calculation.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
+    
+    Notes
+    -----
+      We use a value k_max to set the limit of summation
+      for the entropy calculation.
     """
     
     def __init__(self, lmbda=0., k_max=1000, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         assert(lmbda>=0.)
         assert(isinstance(k_max,int))
@@ -778,7 +1111,7 @@ class Poisson(Distribution):
         
     def pmf(self, klist):
         """
-        Method implementing the Probability Mass Function (PMF) \
+        Implements the Probability Mass Function (PMF)
         for the Poisson distribution.
         """
         assert(len(klist)>0)
@@ -791,7 +1124,7 @@ class Poisson(Distribution):
 
     def cdf(self, klist):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the Poisson distribution.
         """
         # Checks
@@ -828,22 +1161,58 @@ class Poisson(Distribution):
 
 class Binomial(Distribution):
     """
-    Class implementing the binomial distribution of "successes" having \
-    probability of success 'p' in a sequence of 'n' independent \
+    Implements the binomial distribution of "successes" having
+    probability of success 'p' in a sequence of 'n' independent
     experiments (number of trials).
-    I also applies to drawing an element with probability p in \
-    a population of n elements, with replacement after draw.
-    This class is inheriting from the class 'Distribution'.
     
-    Note: Default value for n is taken to be 1, \
-    hence corresponding to the Bernoulli distribution.
-    Note 2: Computation of entropy is only an approximation \
-    valid at order O(1/n).
+    I also applies to drawing an element with probability p in
+    a population of n elements, with replacement after draw.
+
+    This class inherits from the parent class 'Distribution'.
+    
+    Attributes
+    ----------
+    type : str
+      Represents the type of distribution.
+    support : str
+      Represents the support of the distribution.
+    p : float in [0,1]
+      Probability of success for a trial.
+    n : int
+      Number of independent experiments.
+    q : float in [0,1]
+      Probability of failure, i.e. q = 1 - p.
+    mean : float
+      Mean of the distribution.
+    variance : float
+      Variance of the distribution.
+    std : float
+      Standard deviation of the distribution.
+    skewness : float
+      Skewness of the distribution.
+    kurtosis : float
+      Kurtosis of the distribution.
+    median : float
+      Median of the distribution.
+    mode : float
+      Mode of the distribution.
+    entropy : float
+      Entropy of the distribution.
+    name : str
+      Name of nickname given to the distribution.
+    
+    Notes
+    -----
+      Default value for n is taken to be 1,
+      hence corresponding to the Bernoulli distribution.
+      
+      Computation of entropy is only an approximation
+      valid at order O(1/n).
     """
     
     def __init__(self, n=1, p=0.5, name=""):
         """
-        Initilialization function.
+        Initializes the distribution.
         """
         # Checks
         assert(n>=0)
@@ -902,7 +1271,7 @@ class Binomial(Distribution):
     
     def pmf(self, klist):
         """
-        Method implementing the Probability Mass Function (PMF) \
+        Implements the Probability Mass Function (PMF)
         for the binomial distribution.
         """
         assert(len(klist)>0)
@@ -917,7 +1286,7 @@ class Binomial(Distribution):
     
     def cdf(self, klist):
         """
-        Method implementing the Cumulative Distribution Function (CDF) \
+        Implements the Cumulative Distribution Function (CDF)
         for the binomial distribution.
         """
         # Checks
