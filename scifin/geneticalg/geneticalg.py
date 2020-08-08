@@ -851,12 +851,19 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
 
 
 
-def next_generation(elite, gen, market, current_eval_date, next_eval_date, upper_limit, lower_limit, sum_target, mutation_rate, standard_deviation, fitness_lambda=0.5,
-                    fitness_method="Max Return and Vol", pairing_method="Fittest", mating_method="Single Point", n_points=None, mutation_method="Gauss", selection_method="Fittest Half", return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
+def next_generation(elite, gen, market, current_eval_date, next_eval_date,
+                    upper_limit, lower_limit, sum_target, mutation_rate, standard_deviation,
+                    fitness_lambda=0.5, fitness_method="Max Return and Vol",
+                    pairing_method="Fittest", mating_method="Single Point", n_points=None,
+                    mutation_method="Gauss", selection_method="Fittest Half",
+                    return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
 
     """
-    Function that computes the next generation of portfolios. It uses a lot of the previous functions in order to select the individuals,
-    group them with the elite, generate offsprings, create the mutations on the offsprings, and recompute the fitness to sort the new population.
+    Computes the next generation of individuals from selection, forming groups
+    with elite, generating offsprings, creating mutations in the offsprings,
+    recomputing fitness and sorting the new population.
+    
+
     
     Arguments:
     - elite: the generation of elites we start with.
@@ -1002,6 +1009,47 @@ def sum_top_fitness(generation, num_elements=4):
         ValueError("Generation does not have enough elements.")
 
     return sum_top_fitness
+
+
+def plot_compare_genomes(indiv1, indiv2, names=("Indiv1", "Indiv2")):
+    """
+    Plots the genes of two individual next to each other.
+    
+    This function can be used for example when we want to
+    compare the genes of an offspring and its mutated version.
+    
+    Parameters
+    ----------
+    indiv1 : Pandas.Series
+      First individual.
+    indiv2 : Pandas.Series
+      Second individual.
+    names : 2-tuple of str
+      Names we want for display.
+    
+    Returns
+    -------
+    None
+      None
+    """
+
+    # Checks
+    if "Born" in indiv1.index:
+        indiv1.drop(index="Born", inplace=True)
+    if "Born" in indiv2.index:
+        indiv2.drop(index="Born", inplace=True)
+    assert(indiv1.index.tolist() == indiv2.index.tolist())
+        
+    # Building a data frame
+    tmp = pd.DataFrame(columns=indiv1.index.tolist())
+    tmp.index.names = ["Individuals"]
+    tmp.loc[names[0]] = indiv1
+    tmp.loc[names[1]] = indiv2
+
+    # Plotting
+    tmp.transpose().plot.bar(figsize=(10,5))
+    
+    return None
 
 
 
