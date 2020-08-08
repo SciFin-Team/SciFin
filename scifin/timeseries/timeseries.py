@@ -29,7 +29,21 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 class Series:
     """
     Abstract class defining a Series and its methods.
+    
     This class serves as a parent class for TimeSeries and CatTimeSeries.
+    
+    Attributes
+    ----------
+    data : DataFrame
+      Contains a time-like index and for each time a single value.
+    start : Pandas.Timestamp
+      Starting date.
+    end : Pandas.Timestamp
+      Ending date.
+    nvalues : int
+      Number of values, i.e. also of dates.
+    name : str
+      Name of nickname of the series.
     """
     
     def __init__(self, df=None, name=""):
@@ -120,6 +134,23 @@ class Series:
 class TimeSeries(Series):
     """
     Class defining a time series and its methods.
+    
+    This class inherits from the parent class 'Series'.
+    
+    Attributes
+    ----------
+    data : DataFrame
+      Contains a time-like index and for each time a single value.
+    start : Pandas.Timestamp
+      Starting date.
+    end : Pandas.Timestamp
+      Ending date.
+    nvalues : int
+      Number of values, i.e. also of dates.
+    name : str
+      Name of nickname of the series.
+    type : str
+      Type of the series.
     """
     
     def __init__(self, df=None, name=""):
@@ -140,9 +171,12 @@ class TimeSeries(Series):
         """
         Plots the time series in a simple way.
 
-        Arguments:
-        - figsize: size of the figure as tuple of 2 integers.
-        - dpi: dots-per-inch definition of the figure.
+        Parameters
+        ----------
+        figsize : 2-tuple of ints
+          Dimensions of the figure.
+        dpi : int
+          Dots-per-inch definition of the figure.
         """
         
         # Plotting
@@ -269,7 +303,10 @@ class TimeSeries(Series):
         """
         Returns a number of scatter plots x_t v.s. x_{t-l}
         where l is the lag value taken from [0,...,nlags].
-        We require nlags > 1.
+        
+        Notes
+        -----
+          It is required that nlags > 1.
         """
         # Check
         try:
@@ -393,7 +430,9 @@ class TimeSeries(Series):
         (using LaTeX notations here).
         """
         
+        # Initialization
         l = abs(lag)
+        
         # Trivial case
         if l==0:
             return 1
@@ -417,7 +456,10 @@ class TimeSeries(Series):
         of the autocorrelation againts the lag values.
         """
         
+        # Checks
         assert(lag_max>lag_min)
+        
+        # Computing autocorrelation
         x_range = list(range(lag_min, lag_max+1, 1))
         ac = [self.autocorrelation(lag=x, start=start, end=end) for x in x_range]
         
@@ -498,14 +540,22 @@ class TimeSeries(Series):
         The 'normalize' option allows to renormalize 'func' such that
         the sum of its values is one.
         
-        Arguments:
-        - self: refering to the time series itself.
-        - func: the function we want to employ for convolution.
-        - x_min: the minimal value to consider for 'func'.
-        - x_max: the maximal value to consider for 'func'.
-        - n_points: the number of points to consider in the function.
-        - normalize: the option to impose the sum of func values to be 1.
+        Parameters
+        ----------
+        func : function
+          Function we want to employ for convolution.
+        x_min : float
+          Minimum value to consider for 'func'.
+        x_max : float
+          Maximum value to consider for 'func'.
+        n_points : int
+          Number of points to consider in the function.
+        normalize: bool
+          Option to impose the sum of func values to be 1.
         """
+        
+        # Checks
+        assert(isinstance(n_points, int))
         
         # Getting the time series values
         ts = self.data.values
@@ -626,6 +676,24 @@ class TimeSeries(Series):
         """
         Performs a decomposition of the time series
         and returns the different components.
+        
+        Parameters
+        ----------
+        polyn_order : None or int
+          Order of the polynomial when fitting a non-linear component.
+        start : str
+          Starting date.
+        end : str
+          Ending date.
+        extract_seasonality : bool
+          Option to extract seasonality signal.
+        period : int
+          Period of seasonality.
+          
+        Returns
+        -------
+        List of TimeSeries
+          Content of the list depends on choices in arguments.
         """
         # Check
         if polyn_order is not None:
@@ -673,6 +741,7 @@ class TimeSeries(Series):
             # Receiving the period of seasonality in the residue
             try:
                 assert(period)
+                assert(isinstance(period, int))
             except AssertionError:
                 raise AssertionError("Period must be specified for \
                                         extrac_seasonality=True mode.")
@@ -725,19 +794,30 @@ class TimeSeries(Series):
     def gaussian_process(self, rbf_scale, rbf_scale_bounds, noise, noise_bounds,
                          alpha=1e-10, plotting=False, figsize=(12,5), dpi=100):
         """
-        Method that employs Gaussian Process Regression (GPR) from scikit-learn
-        to fit a time series. It returns 3 time series for the mean and the envelope
-        +sigma and -sigma of standard deviation.
+        Employs Gaussian Process Regression (GPR) from scikit-learn to fit a time series. 
         
-        Arguments:
-        - rbf_scale: length scale for the RBF kernel.
-        - rbf_scale_bounds: length scale bounds for the RBF kernel.
-        - noise: noise level for the white noise kernel.
-        - noise_bounds: noise level bounds for the white noise kernel.
-        - alpha: noise added to the diagonal of the kernel matrix during fitting.
-        - plotting: option to plot the result of the GPR.
-        - figsize: size of the figure as tuple of 2 integers.
-        - dpi: dots-per-inch definition of the figure.
+        Parameters
+        rbf_scale : float
+          Length scale for the RBF kernel.
+        rbf_scale_bounds : 2-tuple of floats
+          Length scale bounds for the RBF kernel.
+        noise : float
+          Noise level for the white noise kernel.
+        noise_bounds : 2-tuple of floats
+          Noise level bounds for the white noise kernel.
+        alpha : float
+          Noise added to the diagonal of the kernel matrix during fitting.
+        plotting : bool
+         Option to plot or not the result of the GPR.
+        figsize : 2-tuple of ints
+          Dimensions of the figure.
+        dpi : int
+          Dots-per-inch definition of the figure.
+        
+        Returns
+        -------
+        List of 3 TimeSeries
+          3 time series for the mean and the envelope +sigma and -sigma of standard deviation.
         """
 
         # Shaping the data
@@ -805,6 +885,15 @@ class TimeSeries(Series):
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
     Function that plots multiple time series together.
+    
+    Parameters
+    ----------
+    Series : List of Series
+      Series (i.e. TimeSeries or CatTimeSeries) to be plotted.
+    figsize : 2-tuple of ints
+      Dimensions of the figure.
+    dpi : int
+      Dots-per-inch definition of the figure.
     """
 
     # Initialization
@@ -865,6 +954,23 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
 class CatTimeSeries(Series):
     """
     Class defining a categoric time series and its methods.
+    
+    This class inherits from the parent class 'Series'.
+    
+    Attributes
+    ----------
+    data : DataFrame
+      Contains a time-like index and for each time a single value.
+    start : Pandas.Timestamp
+      Starting date.
+    end : Pandas.Timestamp
+      Ending date.
+    nvalues : int
+      Number of values, i.e. also of dates.
+    name : str
+      Name of nickname of the series.
+    type : str
+      Type of the series.
     """
     
     def __init__(self, df=None, name=""):
@@ -916,9 +1022,12 @@ class CatTimeSeries(Series):
         Plots the categorical time series in a simple way.
         The number of categories is limited to 10 in order to easily handle colors.
 
-        Arguments:
-        - figsize: size of the figure as tuple of 2 integers.
-        - dpi: dots-per-inch definition of the figure.
+        Parameters
+        ----------
+        figsize : 2-tuple of ints
+          Dimensions of the figure.
+        dpi : int
+          Dots-per-inch definition of the figure.
         """
         
         # Making the restricted color dictionary

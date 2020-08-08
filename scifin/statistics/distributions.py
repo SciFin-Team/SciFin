@@ -20,7 +20,7 @@ from scipy.special import erf, erfinv, gamma, zeta
 
 class Distribution:
     """
-    Creates a statistical distribution.
+    Abtract class that reates a statistical distribution.
     
     Attributes
     ----------
