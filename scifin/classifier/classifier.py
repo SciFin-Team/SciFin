@@ -51,7 +51,7 @@ def euclidean_distance(ts1, ts2):
         
     # Return distance
     squares = (ts1.data - ts2.data)**2
-    return float(squares.sum())
+    return np.sqrt(float(squares.sum()))
     
     
     
