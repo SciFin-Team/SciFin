@@ -87,17 +87,17 @@ def dtw_distance(ts1, ts2):
     N1 = len(ts1.data.index.tolist())
     N2 = len(ts2.data.index.tolist())
     
-    dist = np.full(shape=(N1+1,N2+1), fill_value=np.inf)
-    dist[0,0] = 0
+    dtw = np.full(shape=(N1+1,N2+1), fill_value=np.inf)
+    dtw[0,0] = 0
 
     # Loop
     for i in range(0,N1,1):
         for j in range(0,N2,1):
-            cost = abs(ts1.data.values[i] - ts2.data.values[j])
-            dist[i+1,j+1] = cost + min(dist[i,j+1], dist[i+1,j], dist[i,j])
+            cost = (ts1.data.values[i] - ts2.data.values[j])**2
+            dtw[i+1,j+1] = cost + min(dtw[i,j+1], dtw[i+1,j], dtw[i,j])
 
     # Return distance
-    return dist[N1, N2]
+    return np.sqrt(dtw[N1, N2])
 
 
 
