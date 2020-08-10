@@ -37,6 +37,8 @@ Installing SciFin on Linux or Mac is very easy, you can simply run `pip install 
 
 If you encounter problems during installation or after and think you know how the problem can be improved, please share it with me.
 
+Version 0.0.8 may lead to a small problem from pandas. If you get an error message such as `ImportError: cannot import name 'urlencode' from 'pandas.io.common'`, it is advised to install pandas version 1.0.3 using e.g. the command line `pip install pandas==1.0.3`.
+
 
 ## Contact
 
