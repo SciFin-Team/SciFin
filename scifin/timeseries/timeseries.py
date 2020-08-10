@@ -43,7 +43,7 @@ class Series:
     nvalues : int
       Number of values, i.e. also of dates.
     name : str
-      Name of nickname of the series.
+      Name or nickname of the series.
     """
     
     def __init__(self, df=None, name=""):
@@ -148,7 +148,7 @@ class TimeSeries(Series):
     nvalues : int
       Number of values, i.e. also of dates.
     name : str
-      Name of nickname of the series.
+      Name or nickname of the series.
     type : str
       Type of the series.
     """
@@ -162,6 +162,7 @@ class TimeSeries(Series):
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
+    
     
     
     
@@ -968,7 +969,7 @@ class CatTimeSeries(Series):
     nvalues : int
       Number of values, i.e. also of dates.
     name : str
-      Name of nickname of the series.
+      Name or nickname of the series.
     type : str
       Type of the series.
     """

@@ -19,13 +19,80 @@ from . import TimeSeries
 
 ### TIME SERIES MODELS ###
 
+
+# Simple models
+
+
+def constant(start_date, end_date, frequency, cst=0., sigma=0., name=""):
+    """
+    Defines a time series with constant numerical value
+    and eventually add a noise to it.
+    
+    Parameters
+    ----------
+    start_date : str or datetime
+      Starting date of the time series.
+    end_date : str or datetime
+      Ending date of the time series.
+    frequency : str or DateOffset
+      Indicates the frequency of data as an offset alias (e.g. 'D' for days, 'M' for months, etc.).
+    cst : int or float
+      The constant to build the time series from.
+    sigma : float
+      Standard deviation for the Gaussian noise.
+    name : str
+      Name or nickname of the series.
+
+    Returns
+    -------
+    TimeSeries
+      The constant time series with eventual Gaussian noise.
+    
+    Raises
+    ------
+      None
+    
+    Notes
+    -----
+     White noise is Gaussian here.
+     For offset aliases available see:
+     https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
+    
+    Examples
+    --------
+      None
+    """
+
+    # Checks
+    assert(isinstance(cst, int) or isinstance(cst, float))
+    assert(isinstance(sigma, int) or isinstance(sigma, float))
+    
+    # Generate index
+    data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    T = len(data_index)
+    
+    # Generate data
+    if float(sigma) != 0.:
+        rand_val = np.random.normal(loc=0., scale=sigma, size=T)
+        data_vals = [cst] * T + rand_val
+    else:
+        data_vals = [cst] * T
+
+    # Make time series
+    df = pd.DataFrame(index=data_index, data=data_vals)
+    ts = TimeSeries(df, name=name)
+
+    return ts
+
+
+
+
+
 # These models describe the evolution of time series.
 
 
 def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
     """
-    Description
-    -----------
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
     The model is of the form:
