@@ -140,7 +140,7 @@ Good practice syntax:
 - Avoid starting description of parameters with "The" or "A".
 - Use 'DataFrame' to refer to the pandas object and 'data frame' to refer to it in a more general context.
 - Same for classes like 'TimeSeries' with 'time series' or 'CatTimeSeries' with 'categorical time series'.
-
+- Try to use infinite form of verbs in comments, e.g. 'Create a variable' instead of 'Creating a variable'.
 
     
     
