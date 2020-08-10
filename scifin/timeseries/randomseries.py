@@ -91,7 +91,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., name=""):
 # These models describe the evolution of time series.
 
 
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, name=""):
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -119,6 +119,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
       Coefficients of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    name : str
+      Name or nickname of the series.
     
     Returns
     -------
@@ -173,7 +175,7 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     return rs
 
 
-def random_walk(start_date, end_date, frequency, start_value, sigma):
+def random_walk(start_date, end_date, frequency, start_value, sigma, name=""):
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -194,6 +196,8 @@ def random_walk(start_date, end_date, frequency, start_value, sigma):
       Initial value of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    name : str
+      Name or nickname of the series.
     
     Returns
     -------
@@ -235,7 +239,7 @@ def random_walk(start_date, end_date, frequency, start_value, sigma):
     return rs
 
 
-def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma):
+def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, name=""):
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -258,6 +262,8 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
       Value of the drift.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    name : str
+      Name or nickname of the series.
     
     Returns
     -------
@@ -299,7 +305,7 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, name=""):
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -330,7 +336,9 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
       List of coefficients.
     sigma : float
       Standard deviation of the Gaussian white noise.
-    
+    name : str
+      Name or nickname of the series.
+      
     Returns
     -------
     TimeSeries
@@ -388,7 +396,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma):
 
 
 def ARMA(start_date, end_date, frequency, start_values,
-         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma):
+         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, name=""):
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -422,6 +430,8 @@ def ARMA(start_date, end_date, frequency, start_values,
       List of coefficients for the MA part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    name : str
+      Name or nickname of the series.
     
     Returns
     -------
@@ -479,7 +489,7 @@ def ARMA(start_date, end_date, frequency, start_values,
 
 
 
-def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma):
+def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, name=""):
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -510,7 +520,9 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
-    
+    name : str
+      Name or nickname of the series.
+      
     Returns
     -------
     TimeSeries
@@ -576,7 +588,7 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def ARCH(start_date, end_date, frequency, cst, order, coeffs):
+def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -605,7 +617,9 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
       Order of the process (i.e. value of M).
     coeffs : list
       List of coefficients of the process.
-    
+    name : str
+      Name or nickname of the series.
+      
     Returns
     -------
     TimeSeries
@@ -673,7 +687,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs):
     return rs
 
 
-def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig):
+def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, name=""):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -707,7 +721,9 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
       Order of the sig_t part of the process (i.e. value of S).
     coeffs_sig : list
       List of coefficients of the sig_t part of the process.
-    
+    name : str
+      Name or nickname of the series.
+      
     Returns
     -------
     TimeSeries
@@ -778,7 +794,7 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     return rs
 
 
-def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
+def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -803,7 +819,9 @@ def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma):
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
-    
+    name : str
+      Name or nickname of the series.
+      
     Returns
     -------
     TimeSeries
