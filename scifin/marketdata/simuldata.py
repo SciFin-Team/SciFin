@@ -2,14 +2,19 @@
 
 # This module is for simulating market data.
 
-import numpy as np
-import pandas as pd
+# Standard library imports
 from datetime import datetime
 from datetime import timedelta
 import random as random
+
+# Third party imports
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
+# Local application imports
 from . import marketdata
+
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
