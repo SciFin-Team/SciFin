@@ -170,7 +170,7 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -234,7 +234,7 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, name=""):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -300,7 +300,7 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -389,7 +389,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -483,7 +483,7 @@ def ARMA(start_date, end_date, frequency, start_values,
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -578,7 +578,7 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -682,7 +682,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -789,7 +789,7 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
@@ -872,7 +872,7 @@ def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
     
     # Combining them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df)
+    rs = TimeSeries(df, name=name)
     
     return rs
 
