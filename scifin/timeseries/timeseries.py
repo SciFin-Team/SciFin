@@ -365,6 +365,16 @@ class TimeSeries(Series):
         return std
     
     
+    def hist_vol(self, start=None, end=None):
+        """
+        Returns the historical volatility of the time series
+        between two dates (default is the whole series).
+        """
+        data = self.specify_data(start, end)
+        std = data.values.std()
+        return std**2
+    
+    
     def hist_skew(self, start=None, end=None):
         """
         Returns the historical skew of the time series
@@ -413,9 +423,20 @@ class TimeSeries(Series):
         """
         data = self.specify_data(start, end)
         new_data = data.pct_change()
-        new_ts = TimeSeries(new_data, name=name)
+        new_ts = TimeSeries(new_data[1:], name=name)
         
         return new_ts
+    
+    
+    def describe(self, start=None, end=None):
+        """
+        Returns description of time series between two dates.
+        This uses the pandas function having same name.
+        """
+        data = self.specify_data(start, end)
+        print(data.describe())
+        return None
+    
     
     
     ### AUTOCORRELATION COMPUTATION ###
