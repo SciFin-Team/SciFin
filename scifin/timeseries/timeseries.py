@@ -381,6 +381,27 @@ class TimeSeries(Series):
         return std**2
     
     
+    def annualized_vol(self, start=None, end=None):
+        """
+        Returns the annualized volatility of the time series
+        between two dates (default is the whole series),
+        using the frequency of the time series when usable.
+        """
+        
+        # Initializations
+        D = {'D': 365, 'B': 252, 'W': 52,
+             'SM': 24, 'SMS': 24, 
+             'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
+             'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
+             'Y': 1, 'A':1}
+        hvol = self.hist_vol(start, end)
+        
+        if (self.freq is not None) and (self.freq in D.keys()):
+            return hvol * np.sqrt(D[self.freq])
+        else:
+            raise EvaluationError('Annualized volatility could not be evaluated.')
+    
+    
     def hist_skew(self, start=None, end=None):
         """
         Returns the historical skew of the time series
