@@ -174,17 +174,22 @@ class TimeSeries(Series):
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
     
-    def simple_plot(self, figsize=(12,5), dpi=100):
+    def simple_plot(self, add_unit='', figsize=(12,5), dpi=100):
         """
         Plots the time series in a simple way.
 
         Parameters
         ----------
+        add_unit : str
+          Unit of values.
         figsize : 2-tuple of ints
           Dimensions of the figure.
         dpi : int
           Dots-per-inch definition of the figure.
         """
+        
+        # Checks
+        assert(isinstance(add_unit, str))
         
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
@@ -193,7 +198,11 @@ class TimeSeries(Series):
         # Make it cute
         title = "Time series " + self.name + " from " + str(self.start)[:10] \
                 + " to " + str(self.end)[:10]
-        plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+        if add_unit == '':
+            ylabel = 'Value'
+        else:
+            ylabel = 'Value (' + add_unit + ')'
+        plt.gca().set(title=title, xlabel="Date", ylabel=ylabel)
         plt.show()
         
         return None
@@ -369,16 +378,48 @@ class TimeSeries(Series):
         std = data.values.std()
         
         return std
+        
+        
+    def hist_var(self, start=None, end=None):
+        """
+        Returns the historical variance of the time series
+        between two dates (default is the whole series).
+        """
+        data = self.specify_data(start, end)
+        var = data.values.var()
+        
+        return var
     
     
     def hist_vol(self, start=None, end=None):
         """
-        Returns the historical volatility of the time series
+        Computes the net return of the time series and
+        returns its associated historical volatility
         between two dates (default is the whole series).
+        
+        Notes
+        -----
+          When computing the percent change, first date gets
+          NaN value and is thus removed from calculation.
+        
+          Since pandas.DataFrame.pct_change() returns values in
+          percent, we divide by 100 to bring back numerical values.
         """
+        
+        # Initialization
         data = self.specify_data(start, end)
-        std = data.values.std()
-        return std**2
+        
+        # Warning message
+        if self.is_sampling_uniform() is not True:
+            print('Index not uniformly sampled. Result could be meaningless.')
+            
+        # Computing net returns
+        net_returns = data.pct_change()[1:] / 100.
+        
+        # Compute standard deviation, i.e. volatility
+        std = net_returns.values.std()
+        
+        return std
     
     
     def annualized_vol(self, start=None, end=None):
@@ -399,7 +440,7 @@ class TimeSeries(Series):
         if (self.freq is not None) and (self.freq in D.keys()):
             return hvol * np.sqrt(D[self.freq])
         else:
-            raise EvaluationError('Annualized volatility could not be evaluated.')
+            raise ValueError('Annualized volatility could not be evaluated.')
     
     
     def hist_skew(self, start=None, end=None):
@@ -446,7 +487,12 @@ class TimeSeries(Series):
     
     def percent_change(self, start=None, end=None, name=""):
         """
-        Returns the percent change of the series.
+        Returns the percent change of the series (in %).
+        
+        Notes
+        -----
+        When computing the percent change, first date gets
+        NaN value and is thus removed from the time series.
         """
         data = self.specify_data(start, end)
         new_data = data.pct_change()
