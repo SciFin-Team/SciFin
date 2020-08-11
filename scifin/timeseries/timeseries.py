@@ -42,6 +42,8 @@ class Series:
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
+    freq : str or None
+      Frequency inferred from index.
     name : str
       Name or nickname of the series.
     """
@@ -57,6 +59,7 @@ class Series:
             self.start = None
             self.end = None
             self.nvalues = 0
+            self.freq = None
             self.name = 'Empty TimeSeries'
         
         else:
@@ -70,6 +73,7 @@ class Series:
             self.start = df.index[0]
             self.end = df.index[-1]
             self.nvalues = df.shape[0]
+            self.freq = pd.infer_freq(self.data.index)
             self.name = name
     
 
@@ -147,6 +151,8 @@ class TimeSeries(Series):
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
+    freq : str or None
+      Frequency inferred from index.
     name : str
       Name or nickname of the series.
     type : str
@@ -1056,6 +1062,8 @@ class CatTimeSeries(Series):
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
+    freq : str or None
+      Frequency inferred from index.
     name : str
       Name or nickname of the series.
     type : str
