@@ -13,6 +13,11 @@ def ...(arg1, arg2=1):
     arg2 : int, optional
       Description of arg2...
       Default=1.
+    ...
+    *args
+      Variable length argument list.
+    **kwargs
+      Arbitrary keyword arguments.
     
     Returns
     -------

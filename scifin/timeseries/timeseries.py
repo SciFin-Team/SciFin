@@ -203,7 +203,7 @@ class TimeSeries(Series):
             
         # Plotting distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
-        data.hist(bins=bins, color='k', grid=False)
+        data.hist(bins=bins, grid=False, color='w', lw=2, edgecolor='k')
         
         # Make it cute        
         s,e = self.start_end_names(start, end)
@@ -259,7 +259,7 @@ class TimeSeries(Series):
         
         # Plot 2 - Distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
-        data.hist(bins=bins, color='k', grid=False, ax=f_ax2, orientation="horizontal")
+        data.hist(bins=bins, grid=False, ax=f_ax2, orientation="horizontal", color='w', lw=2, edgecolor='k')
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
         title2 = "Distribution"
         plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
@@ -407,13 +407,13 @@ class TimeSeries(Series):
         return ts_max
     
     
-    def percent_change(self, start=None, end=None):
+    def percent_change(self, start=None, end=None, name=""):
         """
         Returns the percent change of the series.
         """
         data = self.specify_data(start, end)
         new_data = data.pct_change()
-        new_ts = TimeSeries(new_data)
+        new_ts = TimeSeries(new_data, name=name)
         
         return new_ts
     
@@ -469,7 +469,7 @@ class TimeSeries(Series):
         
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
-        plt.bar(x_range, ac, color='k')
+        plt.bar(x_range, ac, color='w', lw=2, edgecolor='k')
         s,e = self.start_end_names(start, end)
         title = "Autocorrelation from " + s + " to " + e + " for lags = [" \
                 + str(lag_min) + "," + str(lag_max) + "]"
