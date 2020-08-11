@@ -235,11 +235,14 @@ class TimeSeries(Series):
         return None
     
 
-    def plot_series_distrib(self, start=None, end=None, bins=20, figsize=(10,4), dpi=100):
+    def simple_plot_distrib(self, start=None, end=None, bins=20, figsize=(10,4), dpi=100):
         """
         Plots the time series and its associated distribution of values between two dates.
         """
 
+        # Checks
+        assert(isinstance(bins,int))
+        
         # Preparing data frame
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
@@ -254,7 +257,7 @@ class TimeSeries(Series):
         title1 = "Time series " + self.name + " from " + s + " to " + e
         plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
         
-        # Plot 2 - distribution of values
+        # Plot 2 - Distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
         data.hist(bins=bins, color='k', grid=False, ax=f_ax2, orientation="horizontal")
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
@@ -262,7 +265,7 @@ class TimeSeries(Series):
         plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
         
         return None
-        
+    
     
     
     def get_sampling_interval(self):
@@ -885,7 +888,7 @@ class TimeSeries(Series):
     
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
-    Function that plots multiple time series together.
+    Plots multiple time series together.
     
     Parameters
     ----------
@@ -903,6 +906,7 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
     min_date, max_date = Series[0].data.index[0], Series[0].data.index[-1]
     min_val, max_val = min(Series[0].data.values.flatten()), max(Series[0].data.values.flatten())
 
+    # Determine min and max values
     for i in range(1,N):
         min_date = min(Series[i].data.index[0], min_date)
         max_date = max(Series[i].data.index[-1], max_date)
@@ -947,6 +951,69 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
 
 
 
+def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
+    """
+    Plots multiple time series together and their distributions of values.
+    Only TimeSeries are allowed here, not CatTimeSeries.
+    
+    Parameters
+    ----------
+    Series : List of Series
+      Series TimeSeries to be plotted.
+    bins : int
+      Number of bins for the distribution of values.
+    figsize : 2-tuple of ints
+      Dimensions of the figure.
+    dpi : int
+      Dots-per-inch definition of the figure.
+      
+    Returns
+    -------
+    None
+      None
+    """
+
+    # Checks
+    assert(isinstance(bins,int))
+
+    # Initialization
+    N = len(Series)
+    min_date, max_date = Series[0].data.index[0], Series[0].data.index[-1]
+    min_val, max_val = min(Series[0].data.values.flatten()), max(Series[0].data.values.flatten())
+
+    # Determine min and max values
+    for i in range(1,N):
+        min_date = min(Series[i].data.index[0], min_date)
+        max_date = max(Series[i].data.index[-1], max_date)
+        if Series[i].type == 'TimeSeries':
+            min_val = min(min(Series[i].data.values.flatten()), min_val)
+            max_val = max(max(Series[i].data.values.flatten()), max_val)
+        
+    # Plotting
+    fig = plt.figure(figsize=figsize, dpi=dpi)
+    gs = fig.add_gridspec(1, 4)
+
+    # Plot 1 - Time Series simple plot
+    f_ax1 = fig.add_subplot(gs[:, 0:3])
+    # Loop through the series
+    for i in range(N):
+        f_ax1.plot(Series[i].data.index, Series[i].data.values)
+    title1 = "Time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
+    plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
+
+    # Plot 2 - Distribution of values
+    f_ax2 = fig.add_subplot(gs[:, 3:])
+    # Loop through the series
+    for i in range(N):
+        Series[i].data.hist(bins=bins, grid=False, ax=f_ax2, orientation="horizontal", alpha=N/(2*N-1))
+    plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
+    title2 = "Distributions"
+    plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
+
+    return None
+
+
+    
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
