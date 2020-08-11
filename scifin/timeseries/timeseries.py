@@ -153,13 +153,15 @@ class TimeSeries(Series):
       Number of values, i.e. also of dates.
     freq : str or None
       Frequency inferred from index.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
     type : str
       Type of the series.
     """
     
-    def __init__(self, df=None, name=""):
+    def __init__(self, df=None, unit=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
@@ -168,28 +170,24 @@ class TimeSeries(Series):
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
+        self.unit = unit
     
     
     
     
     ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
     
-    def simple_plot(self, add_unit='', figsize=(12,5), dpi=100):
+    def simple_plot(self, figsize=(12,5), dpi=100):
         """
         Plots the time series in a simple way.
 
         Parameters
         ----------
-        add_unit : str
-          Unit of values.
         figsize : 2-tuple of ints
           Dimensions of the figure.
         dpi : int
           Dots-per-inch definition of the figure.
         """
-        
-        # Checks
-        assert(isinstance(add_unit, str))
         
         # Plotting
         plt.figure(figsize=figsize, dpi=dpi)
@@ -198,10 +196,10 @@ class TimeSeries(Series):
         # Make it cute
         title = "Time series " + self.name + " from " + str(self.start)[:10] \
                 + " to " + str(self.end)[:10]
-        if add_unit == '':
+        if self.unit is None:
             ylabel = 'Value'
         else:
-            ylabel = 'Value (' + add_unit + ')'
+            ylabel = 'Value (' + self.unit + ')'
         plt.gca().set(title=title, xlabel="Date", ylabel=ylabel)
         plt.show()
         
@@ -280,7 +278,6 @@ class TimeSeries(Series):
         plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
         
         return None
-    
     
     
     def get_sampling_interval(self):
@@ -496,7 +493,7 @@ class TimeSeries(Series):
         """
         data = self.specify_data(start, end)
         new_data = data.pct_change()
-        new_ts = TimeSeries(new_data[1:], name=name)
+        new_ts = TimeSeries(new_data[1:], unit='%', name=name)
         
         return new_ts
     
