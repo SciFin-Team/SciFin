@@ -22,6 +22,15 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 # /
 
 
+# Dictionary of Pandas' Offset Aliases in days
+DPOA = {'D': 365, 'B': 252, 'W': 52,
+        'SM': 24, 'SMS': 24, 
+        'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
+        'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
+        'Y': 1, 'A':1}
+
+
+
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 # CLASS Series
@@ -388,58 +397,6 @@ class TimeSeries(Series):
         return var
     
     
-    def hist_vol(self, start=None, end=None):
-        """
-        Computes the net return of the time series and
-        returns its associated historical volatility
-        between two dates (default is the whole series).
-        
-        Notes
-        -----
-          When computing the percent change, first date gets
-          NaN value and is thus removed from calculation.
-        
-          Since pandas.DataFrame.pct_change() returns values in
-          percent, we divide by 100 to bring back numerical values.
-        """
-        
-        # Initialization
-        data = self.specify_data(start, end)
-        
-        # Warning message
-        if self.is_sampling_uniform() is not True:
-            print('Index not uniformly sampled. Result could be meaningless.')
-            
-        # Computing net returns
-        net_returns = data.pct_change()[1:] / 100.
-        
-        # Compute standard deviation, i.e. volatility
-        std = net_returns.values.std()
-        
-        return std
-    
-    
-    def annualized_vol(self, start=None, end=None):
-        """
-        Returns the annualized volatility of the time series
-        between two dates (default is the whole series),
-        using the frequency of the time series when usable.
-        """
-        
-        # Initializations
-        D = {'D': 365, 'B': 252, 'W': 52,
-             'SM': 24, 'SMS': 24, 
-             'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
-             'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
-             'Y': 1, 'A':1}
-        hvol = self.hist_vol(start, end)
-        
-        if (self.freq is not None) and (self.freq in D.keys()):
-            return hvol * np.sqrt(D[self.freq])
-        else:
-            raise ValueError('Annualized volatility could not be evaluated.')
-    
-    
     def hist_skew(self, start=None, end=None):
         """
         Returns the historical skew of the time series
@@ -482,6 +439,18 @@ class TimeSeries(Series):
         return ts_max
     
     
+    def describe(self, start=None, end=None):
+        """
+        Returns description of time series between two dates.
+        This uses the pandas function having same name.
+        """
+        data = self.specify_data(start, end)
+        print(data.describe())
+        return None
+    
+    
+    ### METHODS THAT ARE CLOSER TO FINANCIAL APPLICATIONS ###
+    
     def percent_change(self, start=None, end=None, name=""):
         """
         Returns the percent change of the series (in %).
@@ -498,14 +467,108 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def describe(self, start=None, end=None):
+    # Alias method of percent_change()
+    # For people with a Finance terminology preference
+    net_returns = percent_change
+    
+    
+    def gross_returns(self, start=None, end=None, name=""):
         """
-        Returns description of time series between two dates.
-        This uses the pandas function having same name.
+        Returns the gross returns of the series (in %),
+        i.e. percent change + 1.
+        
+        Notes
+        -----
+        When computing the percent change, first date gets
+        NaN value and is thus removed from the time series.
         """
+        
         data = self.specify_data(start, end)
-        print(data.describe())
-        return None
+        new_data = data.pct_change() / 100. + 1
+        new_ts = TimeSeries(new_data[1:], name=name)
+        
+        return new_ts
+    
+    
+    def hist_vol(self, start=None, end=None):
+        """
+        Computes the net returns of the time series and
+        returns their associated historical volatility
+        between two dates (default is the whole series).
+        
+        Notes
+        -----
+          When computing the percent change, first date gets
+          NaN value and is thus removed from calculation.
+        
+          Since pandas.DataFrame.pct_change() returns values in
+          percent, we divide by 100 to bring back numerical values.
+        """
+        
+        # Initialization
+        data = self.specify_data(start, end)
+        
+        # Warning message
+        if self.is_sampling_uniform() is not True:
+            print('Index not uniformly sampled. Result could be meaningless.')
+            
+        # Computing net returns
+        net_returns = data.pct_change()[1:] / 100.
+        
+        # Compute standard deviation, i.e. volatility
+        std = net_returns.values.std()
+        
+        return std
+    
+    
+    def annualized_vol(self, start=None, end=None):
+        """
+        Returns the annualized volatility of the time series
+        between two dates (default is the whole series),
+        using the frequency of the time series when usable.
+        """
+        
+        # Initializations
+        hvol = self.hist_vol(start, end)
+        
+        if (self.freq is not None) and (self.freq in DPOA.keys()):
+            return hvol * np.sqrt(DPOA[self.freq])
+        else:
+            raise ValueError('Annualized volatility could not be evaluated.')
+
+    
+    def annualized_return(self, start=None, end=None):
+        """
+        Returns the annualized return of the time series
+        between two dates (default is the whole series),
+        using the frequency of the time series when usable.
+        """
+        
+        # Initializations
+        gross_returns = self.gross_returns(start, end)
+        prd = gross_returns.data.prod()
+
+        # Checks
+        assert(gross_returns.nvalues == self.nvalues-1)
+        assert(gross_returns.freq == self.freq)
+        
+        if (self.freq is not None) and (self.freq in DPOA.keys()):
+            return prd**(DPOA[self.freq]/self.nvalues) - 1
+        else:
+            raise ValueError('Annualized return could not be evaluated.')
+    
+    
+    def risk_ratio(self, start=None, end=None):
+        """
+        Returns the risk ratio, i.e. the ratio of annualized return
+        over annualized volatility.
+        """
+
+        ann_return = self.annualized_return(start, end)
+        ann_volatility = self.annualized_vol(start, end)
+        
+        return ann_return / ann_volatility
+
     
     
     
