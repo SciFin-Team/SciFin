@@ -1155,7 +1155,7 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-def build_from_csv(name="", **kwargs):
+def build_from_csv(unit="", name="", **kwargs):
     """
     Returns a time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
@@ -1177,12 +1177,36 @@ def build_from_csv(name="", **kwargs):
     """
    
     df = pd.read_csv(**kwargs)
-    ts = TimeSeries(df, name=name)
+    ts = TimeSeries(df, unit=unit, name=name)
     
     return ts
 
 
-
+def build_from_excel(unit="", name="", **kwargs):
+    """
+    Returns a time series from the reading of an excel file.
+    This function uses the function pandas.read_excel().
+    
+    Arguments
+    ---------
+    **kwargs
+        Arbitrary keyword arguments for pandas.read_excel().
+    
+    Returns
+    -------
+    TimeSeries
+      Time series built from the excel file.
+      
+    Notes
+    -----
+      To learn more about pandas.read_excel(), please refer to:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html
+    """
+   
+    df = pd.read_excel(**kwargs)
+    ts = TimeSeries(df, unit=unit, name=name)
+    
+    return ts
 
 
     
