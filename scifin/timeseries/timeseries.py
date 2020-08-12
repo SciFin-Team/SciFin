@@ -22,7 +22,8 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 # /
 
 
-# Dictionary of Pandas' Offset Aliases in days
+# Dictionary of Pandas' Offset Aliases
+# and their numbers of appearance in a year.
 DPOA = {'D': 365, 'B': 252, 'W': 52,
         'SM': 24, 'SMS': 24, 
         'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
@@ -277,7 +278,11 @@ class TimeSeries(Series):
         f_ax1 = fig.add_subplot(gs[:, 0:3])
         f_ax1.plot(data.index, data.values, color='k')
         title1 = "Time series " + self.name + " from " + s + " to " + e
-        plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
+        if self.unit is None:
+            ylabel = 'Value'
+        else:
+            ylabel = 'Value (' + self.unit + ')'
+        plt.gca().set(title=title1, xlabel="Date", ylabel=ylabel)
         
         # Plot 2 - Distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
@@ -484,7 +489,7 @@ class TimeSeries(Series):
         """
         
         data = self.specify_data(start, end)
-        new_data = data.pct_change() / 100. + 1
+        new_data = 1 + data.pct_change()
         new_ts = TimeSeries(new_data[1:], name=name)
         
         return new_ts
@@ -513,7 +518,7 @@ class TimeSeries(Series):
             print('Index not uniformly sampled. Result could be meaningless.')
             
         # Computing net returns
-        net_returns = data.pct_change()[1:] / 100.
+        net_returns = data.pct_change()[1:]
         
         # Compute standard deviation, i.e. volatility
         std = net_returns.values.std()
@@ -546,14 +551,16 @@ class TimeSeries(Series):
         
         # Initializations
         gross_returns = self.gross_returns(start, end)
-        prd = gross_returns.data.prod()
+        prd = gross_returns.data.prod()[0]
 
         # Checks
         assert(gross_returns.nvalues == self.nvalues-1)
-        assert(gross_returns.freq == self.freq)
+        if (gross_returns.freq != self.freq):
+            print('Warning: gross_returns frequency and time series frequency do not match.')
+            print('         In that context, results may not be making sense.')
         
         if (self.freq is not None) and (self.freq in DPOA.keys()):
-            return prd**(DPOA[self.freq]/self.nvalues) - 1
+            return prd**(DPOA[self.freq]/gross_returns.nvalues) - 1
         else:
             raise ValueError('Annualized return could not be evaluated.')
     
