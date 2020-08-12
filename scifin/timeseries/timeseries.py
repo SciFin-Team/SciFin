@@ -760,6 +760,7 @@ class TimeSeries(Series):
         TimeSeries
           Time series of the drawdowns.
         """
+        
         # Preparing data frame
         data = self.specify_data(start, end)
         
@@ -771,6 +772,26 @@ class TimeSeries(Series):
         new_ts = TimeSeries(drawdowns, name=name)
         
         return new_ts
+    
+    
+    def max_drawdown(self, start=None, end=None, name=""):
+        """
+        Returns the maximum drawdown of a time series.
+        
+        Returns
+        -------
+        float
+          Maximum drawdown.
+        """
+        
+        # Preparing data frame
+        data = self.specify_data(start, end)
+        
+        # Compute drawdowns
+        trailing_max = data.cummax()
+        drawdowns = (data - trailing_max) / trailing_max
+        
+        return -drawdowns.values.min()
     
     
     
