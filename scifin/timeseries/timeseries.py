@@ -1031,15 +1031,165 @@ class TimeSeries(Series):
         return [ts_mean, ts_std_m, ts_std_p]
 
 
+#---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
+
+# CLASS CatTimeSeries
+
+class CatTimeSeries(Series):
+    """
+    Class defining a categoric time series and its methods.
+    
+    This class inherits from the parent class 'Series'.
+    
+    Attributes
+    ----------
+    data : DataFrame
+      Contains a time-like index and for each time a single value.
+    start : Pandas.Timestamp
+      Starting date.
+    end : Pandas.Timestamp
+      Ending date.
+    nvalues : int
+      Number of values, i.e. also of dates.
+    freq : str or None
+      Frequency inferred from index.
+    name : str
+      Name or nickname of the series.
+    type : str
+      Type of the series.
+    """
+    
+    def __init__(self, df=None, name=""):
+        """
+        Receives a data frame as an argument and initializes the time series.
+        """
+
+        super().__init__(df=df, name=name)
+        
+        # Add attributes initialization if needed
+        self.type = 'CatTimeSeries'
+    
+
+    
+    def prepare_cat_plot(self):
+        """
+        Returns an appropriate dictionary to plot values of a CatTimeSeries.
+        """
+        
+        # Initialization
+        set_cats = sorted(list(set(self.data.values.flatten())))
+        n_cats = len(set_cats)
+        
+        try:
+            assert(n_cats<=10)
+        except ValueError:
+            raise ValueError("Number of categories too large for colors handling.")
+        
+        X = [datetime.timestamp(x) for x in self.data.index]
+        y = self.data.values.flatten()
+            
+        # Preparing Colors
+        large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
+                             4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
+                             8: 'DarkTurquoise', 9:'DodgerBlue' }
+        restricted_keys = [int(x) for x in np.linspace(0,9,n_cats).tolist()]
+        restricted_colors = [large_color_dict[x] for x in restricted_keys]
+        keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
+
+        # Creating the restricted color dictionary
+        D = dict(zip(keys_to_cats, restricted_colors))
+        
+        return X, y, D
+    
+    
+    
+    def simple_plot(self, figsize=(12,5), dpi=100):
+        """
+        Plots the categorical time series in a simple way.
+        The number of categories is limited to 10 in order to easily handle colors.
+
+        Parameters
+        ----------
+        figsize : 2-tuple of ints
+          Dimensions of the figure.
+        dpi : int
+          Dots-per-inch definition of the figure.
+        """
+        
+        # Making the restricted color dictionary
+        X, y, D = self.prepare_cat_plot()
+        
+        # Initiate figure
+        #plt.figure(figsize=figsize, dpi=dpi)
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        
+        # Color block
+        left_X = X[0]
+        current_y = y[0]
+        for i in range(1,self.nvalues,1):
+            
+            # For any block
+            if y[i] != current_y:
+                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                [0,0], [1,1], color=D[current_y], alpha=0.5)
+                left_X = X[i]
+                current_y = y[i]
+
+            # For the last block
+            if i == self.nvalues-1:
+                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
+                                [0,0], [1,1], color=D[current_y], alpha=0.5)
+        
+        # Make it cute
+        title = "Categorical Time series " + self.name + " from " + str(self.start)[:10] \
+                + " to " + str(self.end)[:10]
+        plt.gca().set(title=title, xlabel="Date", ylabel="")
+        plt.show()
+        
+        return None
     
     
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
     
+
+### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
+
+def build_from_csv(name="", **kwargs):
+    """
+    Returns a time series from the reading of a .csv file.
+    This function uses the function pandas.read_csv().
+    
+    Arguments
+    ---------
+    **kwargs
+        Arbitrary keyword arguments for pandas.read_csv().
+    
+    Returns
+    -------
+    TimeSeries
+      Time series built from the .csv file.
+      
+    Notes
+    -----
+      To learn more about pandas.read_csv(), please refer to:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+    """
+   
+    df = pd.read_csv(**kwargs)
+    ts = TimeSeries(df, name=name)
+    
+    return ts
+
+
+
+
+
+    
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
     
-    
+
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
     Plots multiple time series together.
@@ -1165,127 +1315,6 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
     plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
 
     return None
-
-
-    
-#---------#---------#---------#---------#---------#---------#---------#---------#---------#
-
-
-# CLASS CatTimeSeries
-
-class CatTimeSeries(Series):
-    """
-    Class defining a categoric time series and its methods.
-    
-    This class inherits from the parent class 'Series'.
-    
-    Attributes
-    ----------
-    data : DataFrame
-      Contains a time-like index and for each time a single value.
-    start : Pandas.Timestamp
-      Starting date.
-    end : Pandas.Timestamp
-      Ending date.
-    nvalues : int
-      Number of values, i.e. also of dates.
-    freq : str or None
-      Frequency inferred from index.
-    name : str
-      Name or nickname of the series.
-    type : str
-      Type of the series.
-    """
-    
-    def __init__(self, df=None, name=""):
-        """
-        Receives a data frame as an argument and initializes the time series.
-        """
-
-        super().__init__(df=df, name=name)
-        
-        # Add attributes initialization if needed
-        self.type = 'CatTimeSeries'
-    
-
-    
-    def prepare_cat_plot(self):
-        """
-        Returns an appropriate dictionary to plot values of a CatTimeSeries.
-        """
-        
-        # Initialization
-        set_cats = sorted(list(set(self.data.values.flatten())))
-        n_cats = len(set_cats)
-        
-        try:
-            assert(n_cats<=10)
-        except ValueError:
-            raise ValueError("Number of categories too large for colors handling.")
-        
-        X = [datetime.timestamp(x) for x in self.data.index]
-        y = self.data.values.flatten()
-            
-        # Preparing Colors
-        large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
-                             4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
-                             8: 'DarkTurquoise', 9:'DodgerBlue' }
-        restricted_keys = [int(x) for x in np.linspace(0,9,n_cats).tolist()]
-        restricted_colors = [large_color_dict[x] for x in restricted_keys]
-        keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
-
-        # Creating the restricted color dictionary
-        D = dict(zip(keys_to_cats, restricted_colors))
-        
-        return X, y, D
-    
-    
-    
-    def simple_plot(self, figsize=(12,5), dpi=100):
-        """
-        Plots the categorical time series in a simple way.
-        The number of categories is limited to 10 in order to easily handle colors.
-
-        Parameters
-        ----------
-        figsize : 2-tuple of ints
-          Dimensions of the figure.
-        dpi : int
-          Dots-per-inch definition of the figure.
-        """
-        
-        # Making the restricted color dictionary
-        X, y, D = self.prepare_cat_plot()
-        
-        # Initiate figure
-        #plt.figure(figsize=figsize, dpi=dpi)
-        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
-        
-        # Color block
-        left_X = X[0]
-        current_y = y[0]
-        for i in range(1,self.nvalues,1):
-            
-            # For any block
-            if y[i] != current_y:
-                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
-                                [0,0], [1,1], color=D[current_y], alpha=0.5)
-                left_X = X[i]
-                current_y = y[i]
-
-            # For the last block
-            if i == self.nvalues-1:
-                ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
-                                [0,0], [1,1], color=D[current_y], alpha=0.5)
-        
-        # Make it cute
-        title = "Categorical Time series " + self.name + " from " + str(self.start)[:10] \
-                + " to " + str(self.end)[:10]
-        plt.gca().set(title=title, xlabel="Date", ylabel="")
-        plt.show()
-        
-        return None
-    
     
     
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

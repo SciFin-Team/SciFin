@@ -33,7 +33,7 @@ The topics already developed are time series analysis, genetic algorithms and st
 
 ## Installation
 
-Installing SciFin on Linux or Mac is very easy, you can simply run this on a terminal:
+Installing SciFin on Linux or Mac is very easy, you can simply run this on a terminal:  
 `pip install SciFin`  
 You can also access the last version of the package on PyPI by clicking [--> Here <--](https://pypi.org/project/scifin/).
 
