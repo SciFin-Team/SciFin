@@ -751,6 +751,29 @@ class TimeSeries(Series):
         return convolved_ts
     
     
+    def get_drawdowns(self, start=None, end=None, name=""):
+        """
+        Computes the drawdowns and returns a new time series from them.
+        
+        Returns
+        -------
+        TimeSeries
+          Time series of the drawdowns.
+        """
+        # Preparing data frame
+        data = self.specify_data(start, end)
+        
+        # Compute drawdowns
+        trailing_max = data.cummax()
+        drawdowns = (data - trailing_max) / trailing_max
+        
+        # Make a time series from them
+        new_ts = TimeSeries(drawdowns, name=name)
+        
+        return new_ts
+    
+    
+    
     ### FITTING METHODS ###
     
     def rolling_avg(self, pts=1):
