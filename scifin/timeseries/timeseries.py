@@ -397,7 +397,7 @@ class TimeSeries(Series):
         return var
     
     
-    def hist_skew(self, start=None, end=None):
+    def hist_skewness(self, start=None, end=None):
         """
         Returns the historical skew of the time series
         between two dates (default is the whole series).
