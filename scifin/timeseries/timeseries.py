@@ -515,7 +515,7 @@ class TimeSeries(Series):
         
         # Warning message
         if self.is_sampling_uniform() is not True:
-            print('Index not uniformly sampled. Result could be meaningless.')
+            print('Warning: Index not uniformly sampled. Result could be meaningless.')
             
         # Computing net returns
         net_returns = data.pct_change()[1:]
@@ -576,6 +576,16 @@ class TimeSeries(Series):
         
         return ann_return / ann_volatility
 
+    
+    def Sharpe_ratio(self, risk_free_rate=0, start=None, end=None):
+        """
+        Returns the Sharpe ratio, also known as risk adjusted return.
+        """
+        
+        ann_return = self.annualized_return(start, end)
+        ann_volatility = self.annualized_vol(start, end)
+        
+        return (ann_return - risk_free_rate) / ann_volatility
     
     
     
