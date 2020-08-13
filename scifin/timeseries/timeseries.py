@@ -588,11 +588,67 @@ class TimeSeries(Series):
         return (ann_return - risk_free_rate) / ann_volatility
     
     
+    
     ### METHODS RELATED TO VALUE AT RISK ###
     
+    def hist_var(self, p=None, start=None, end=None):
+        """
+        Returns the historical p-VaR (Value at Risk) between two dates.
+        
+        Returns
+        -------
+        float
+          VaR value computed between the chosen dates.
+        """
+        
+        # Checks
+        assert(p>=0 and p<=1)
+        if 100*p%1 != 0:
+            print("Warning: Probability too precise, only closest percentile computed here.")
+            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+        
+        # Preparing data
+        data = self.specify_data(start, end)
+        
+        return np.percentile(data.values, int(100*p))
     
     
     
+    def hist_cvar(self, p=None, start=None, end=None):
+        """
+        Returns the historical CVaR (Conditional Value at Risk) between two dates.
+        This quantity is also known as the Expected Shortfall (ES).
+        
+        Returns
+        -------
+        float
+          CVaR value computed between the chosen dates.
+        """
+        
+        # Checks
+        assert(p>=0 and p<=1)
+        if 100*p%1 != 0:
+            print("Warning: Probability too precise, only closest percentile computed here.")
+            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+        
+        # Preparing data
+        data = self.specify_data(start, end)
+        var = self.hist_var(p=p, start=start, end=end)
+        
+        # Computing CVaR
+        tmp_sum = 0
+        tmp_n = 0
+        for val in data.values:
+            if val <= var:
+                tmp_sum += val[0]
+                tmp_n += 1
+
+        return tmp_sum / tmp_n
+
+    
+    # Alias method of hist_cvar
+    # For people with a Finance terminology preference
+    hist_expected_shortfall = hist_cvar
     
     
     
