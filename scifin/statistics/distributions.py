@@ -89,12 +89,41 @@ class Distribution:
         print("Median: \t", self.median)
         print("Mode: \t\t", self.mode)
         print("Entropy: \t", self.entropy)
-        
+        print("VaR: \t\t", self.var)
+        print("CVaR: \t\t", self.cvar)
         
         
         
 # CONTINUOUS DISTRIBUTIONS
-        
+
+
+def standard_normal_pdf(x):
+    """
+    Implements the Probability Density Function (PDF)
+    for the Standard Normal distribution.
+    """
+    assert(isinstance(x,float) or isinstance(x, int))
+    return np.exp(- x**2 / 2) / np.sqrt(2*np.pi)
+
+
+def standard_normal_cdf(x):
+    """
+    Implements the Cumulative Distribution Function (CDF)
+    for the Standard Normal distribution.
+    """
+    assert(isinstance(x,float) or isinstance(x, int))
+    return (1/2) * ( 1 + erf(x / np.sqrt(2)) )
+
+
+def standard_normal_quantile(p):
+    """
+    Returns the quantile associated to the Standard Normal distribution.
+    """
+    assert(p>=0 and p<=1)
+    return np.sqrt(2) * erfinv(2*p-1)
+
+
+
 class Normal(Distribution):
     """
     Implements the normal distribution of mean 'mu' and standard deviation 'sigma'.
@@ -174,8 +203,7 @@ class Normal(Distribution):
         Implements the Probability Density Function (PDF)
         for the Normal distribution.
         """
-        pdf = np.exp(-(np.array(x)-self.mu) * (np.array(x)-self.mu) 
-              / (2 * self.sigma * self.sigma)) / (self.sigma * np.sqrt(2 * np.pi))
+        pdf = np.exp(-(np.array(x)-self.mu)**2 / (2 * self.sigma**2)) / (self.sigma * np.sqrt(2 * np.pi))
         return pdf
 
     def cdf(self, x):
@@ -193,6 +221,16 @@ class Normal(Distribution):
         assert(p>0 and p<1)
         return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
     
+    # Alias method
+    var = quantile
+        
+    def cvar(self, p):
+        """
+        Returns the Conditional Value At Risk (CVaR) of the Normal distribution
+        for a certain probability p.
+        """
+        assert(p>0 and p<1)
+        return self.mu + self.sigma * standard_normal_pdf(standard_normal_quantile(p)) / p
 
 
 class Uniform(Distribution):
