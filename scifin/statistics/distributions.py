@@ -9,13 +9,18 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.special import erf, erfinv, gamma, zeta
+from scipy.special import erf, erfinv, gamma, zeta, gammaincc
 
 # Local application imports
 # /
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
+
+def upper_incomplete_gamma(a,z):
+    return gamma(a) * gammaincc(a, z)
+
 
 
 class Distribution:
@@ -89,8 +94,6 @@ class Distribution:
         print("Median: \t", self.median)
         print("Mode: \t\t", self.mode)
         print("Entropy: \t", self.entropy)
-        print("VaR: \t\t", self.var)
-        print("CVaR: \t\t", self.cvar)
         
         
         
@@ -472,6 +475,24 @@ class Weibull(Distribution):
             else:
                 cdf.append(0)
         return cdf
+    
+    def quantile(self, p):
+        """
+        Returns the quantile associated to the Weibull distribution.
+        """
+        assert(p>0 and p<1)
+        return self.lmbda * np.power(-np.log(1-p), 1/self.k)
+    
+    # Alias method
+    var = quantile
+        
+    def cvar(self, p):
+        """
+        Returns the Conditional Value At Risk (CVaR) of the Weibull distribution
+        for a certain probability p.
+        """
+        assert(p>0 and p<1)
+        return (self.lmbda/(1-p)) * upper_incomplete_gamma(1 + 1/self.k, -np.log(1-p))
 
 
 class Rayleigh(Distribution):
