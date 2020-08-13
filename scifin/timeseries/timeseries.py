@@ -391,7 +391,7 @@ class TimeSeries(Series):
         return std
         
         
-    def hist_var(self, start=None, end=None):
+    def hist_variance(self, start=None, end=None):
         """
         Returns the historical variance of the time series
         between two dates (default is the whole series).
@@ -586,6 +586,13 @@ class TimeSeries(Series):
         ann_volatility = self.annualized_vol(start, end)
         
         return (ann_return - risk_free_rate) / ann_volatility
+    
+    
+    ### METHODS RELATED TO VALUE AT RISK ###
+    
+    
+    
+    
     
     
     
