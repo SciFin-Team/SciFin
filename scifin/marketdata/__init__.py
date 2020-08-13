@@ -9,7 +9,7 @@ The :mod:`scifin.marketdata` module includes methods for market data gathering.
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
-from .marketdata import get_sp500_tickers, get_assets_from_yahoo, convert_multicol_df_tolist, \
+from .marketdata import get_sp500_tickers, get_assets_from_yahoo_df, get_assets_from_yahoo, convert_multicol_df_tolist, \
                         get_marketcap_today, market_EWindex, market_CWindex
 
 from .simuldata  import create_market, set_market_names, is_index_valid, create_market_shares, \

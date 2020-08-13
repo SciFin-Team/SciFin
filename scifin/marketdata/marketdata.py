@@ -46,7 +46,7 @@ def get_sp500_tickers():
 
 
 
-def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
+def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
     """
     Extracts values associated to a feature for a list of assets
     between 2 dates, using Yahoo Finance data.
@@ -93,6 +93,78 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
         'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
     
     # Sort list
+    listassets = np.sort(list_assets)
+    
+    # Initialization
+    assets = pd.DataFrame(data=None, columns=listassets)
+    N = len(listassets)
+    counter = 1
+    
+    # loop
+    for i in range(N):
+        print(i)
+        
+        # Printing status of execution
+        clear_output(wait=True)
+        display("Running... " + str(int(counter/N*100)) + '%')
+        counter += 1
+        
+        try:
+            tmp = pdr.get_data_yahoo(listassets[i], start=start_date, end=end_date)[feature]
+            assets[listassets[i]] = tmp
+        except:
+            print(listassets[i], " could not be imported.")
+
+    return assets
+
+
+def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
+    """
+    Extracts values associated to a feature for a list of assets
+    between 2 dates, using Yahoo Finance data.
+    
+    Parameters
+    ----------
+    list_assets : list of str
+      The list of ticker names we want to extract from Yahoo Finance.
+    feature : str
+      The feature name among 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    start_date : str or datetime
+      The start date of extraction.
+    end_date : str or datetime
+      The end date of extraction.
+    
+    Returns
+    -------
+    List of TimeSeries
+      A list of time series representing the assets.
+    
+    Raises
+    ------
+    AssertionError
+      When the chosen feature is not in the allowed list.
+    
+    Notes
+    -----
+      The choices for the feature provided by Yahoo Finance are:
+      'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+    
+      Learn more about pandas_datareader on:
+      https://pydata.github.io/pandas-datareader/stable/index.html
+    
+    Examples
+    --------
+      None
+    """
+    
+    # Check the feature is right
+    try:
+        assert(feature in ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'])
+    except AssertionError:
+        raise(AssertionError("Feature must be one of the following: \
+        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
+    
+    # Sort list
     assets_names = np.sort(list_assets)
     
     # Initialization
@@ -100,7 +172,7 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     N = len(assets_names)
     counter = 1
     
-    # loop
+    # Loop to obtain the assets data from Yahoo
     for i in range(N):
         print(i)
         
@@ -114,6 +186,7 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
         except:
             print(assets_names[i], " could not be imported.")
 
+    # Making a list of TimeSeries with them
     list_ts = []
     for a in assets:
         tmp_ts = ts.TimeSeries(df=a[0], name=str(a[1]))
@@ -124,8 +197,8 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
 
 def convert_multicol_df_tolist(df, start_date, end_date):
     """
-    Converts the multi-columns data frame obtained from get_assets_from_yahoo()
-    into a list of TimeSeries.
+    Converts the multi-columns data frame obtained
+    from get_assets_from_yahoo() into a list of TimeSeries.
     
     Parameters
     ----------
@@ -155,6 +228,42 @@ def convert_multicol_df_tolist(df, start_date, end_date):
 
 
 
+
+
+
+def market_EWindex(market, name="Market EW Index"):
+    """
+    Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
+    
+    The formula for the weights here is:
+    w_i = c / N for all i
+    and we choose c = N so that \sum_i w_i = N.
+    
+    Thus we get the value at time t of the whole index:
+    M_t = \sum_i w_i m_{ti} = \sum_i m_{ti}
+    
+    Parameters
+    ----------
+    market : DataFrame
+      The market we use to sum values.
+    
+    Returns
+    -------
+    DataFrame
+      A pandas data frame with the EW index values.
+    """
+    
+    # Checks
+    for asset in market:
+        assert(asset.values.countna()!=0)
+    
+    df = pd.DataFrame(market.sum(axis=1))
+    EWindex_ts = ts.TimeSeries(df, name=name)
+    
+    return EWindex_ts
+
+
+
 def get_marketcap_today(market):
     """
     Returns the market capitalization as it is today.
@@ -178,30 +287,6 @@ def get_marketcap_today(market):
     
     return marketcap
 
-
-def market_EWindex(market):
-    """
-    Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
-    
-    The formula for the weights here is:
-    w_i = c / N for all i
-    and we choose c = N so that \sum_i w_i = N.
-    
-    Thus we get the value at time t of the whole index:
-    M_t = \sum_i w_i m_{ti} = \sum_i m_{ti}
-    
-    Parameters
-    ----------
-    market : DataFrame
-      The market we use to sum values.
-    
-    Returns
-    -------
-    DataFrame
-      A pandas data frame with the EW index values.
-    """
-    
-    return pd.DataFrame(market.sum(axis=1), columns=["Market EW Index"])
 
 
 def market_CWindex(market, marketcap):
