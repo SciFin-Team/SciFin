@@ -685,6 +685,17 @@ class Exponential(Distribution):
         assert(p>0 and p<1)
         return - np.log(1 - p) / self.lmbda
     
+    # Alias method
+    var = quantile
+        
+    def cvar(self, p):
+        """
+        Returns the Conditional Value At Risk (CVaR) of the Exponential distribution
+        for a certain probability p.
+        """
+        assert(p>0 and p<1)
+        return (-np.log(1-p)+1)/self.lmbda
+    
     
 class Gumbel(Distribution):
     """
@@ -882,6 +893,20 @@ class Laplace(Distribution):
             return self.mu + self.b * np.log(2*p)
         else:
             return self.mu - self.b * np.log(2-2*p)
+
+    # Alias method
+    var = quantile
+        
+    def cvar(self, p):
+        """
+        Returns the Conditional Value At Risk (CVaR) of the Laplace distribution
+        for a certain probability p.
+        """
+        assert(p>0 and p<1)
+        if p <= 1/2:
+            return self.mu + self.b * p / (1-p) * (1 - np.log(2*p))
+        else:
+            return self.mu + self.b * (1 - np.log(2-2*p))
 
 
 class Levy(Distribution):
