@@ -577,7 +577,7 @@ class TimeSeries(Series):
         return ann_return / ann_volatility
 
     
-    def Sharpe_ratio(self, risk_free_rate=0, start=None, end=None):
+    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None):
         """
         Returns the Sharpe ratio, also known as risk adjusted return.
         """
