@@ -419,7 +419,7 @@ class TimeSeries(Series):
         between two dates (default is the whole series).
         """
         data = self.specify_data(start, end)
-        kurt = stats.kurtosis(data.values)[0]
+        kurt = stats.kurtosis(data.values, fisher=False)[0]
         
         return kurt
     
@@ -591,7 +591,7 @@ class TimeSeries(Series):
     
     ### METHODS RELATED TO VALUE AT RISK ###
     
-    def hist_var(self, p=None, start=None, end=None):
+    def hist_var(self, p, start=None, end=None):
         """
         Returns the historical p-VaR (Value at Risk) between two dates.
         
@@ -613,8 +613,7 @@ class TimeSeries(Series):
         return np.percentile(data.values, int(100*p))
     
     
-    
-    def hist_cvar(self, p=None, start=None, end=None):
+    def hist_cvar(self, p, start=None, end=None):
         """
         Returns the historical CVaR (Conditional Value at Risk) between two dates.
         This quantity is also known as the Expected Shortfall (ES).
@@ -649,6 +648,35 @@ class TimeSeries(Series):
     # Alias method of hist_cvar
     # For people with a Finance terminology preference
     hist_expected_shortfall = hist_cvar
+    
+    
+    def Cornish_Fisher_var(self, p, start=None, end=None):
+        """
+        Returns the VaR (Value at Risk) between two dates from
+        the Cornish-Fisher expansion.
+        
+        Returns
+        -------
+        float
+          VaR value computed between the chosen dates.
+        """
+        
+        # Checks
+        assert(p>=0 and p<=1)
+        
+        # Preparing data
+        data = self.specify_data(start, end)
+
+        # Compute z-score based on normal distribution
+        z = stats.norm.ppf(p)
+        
+        # Compute modified z-score from expansion
+        s = stats.skew(data.values)[0]
+        k = stats.kurtosis(data.values, fisher=False)[0]
+        new_z = z + (z**2 - 1) * s/6 + (z**3 - 3*z) * (k-3)/24 \
+                  - (2*z**3 - 5*z) * (s**2)/36
+        
+        return data.values.mean() + new_z * data.values.std(ddof=0)
     
     
     
