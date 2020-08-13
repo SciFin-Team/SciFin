@@ -15,7 +15,7 @@ import pandas as pd
 import pandas_datareader as pdr
 
 # Local application imports
-from .. import timeseries
+from .. import timeseries as ts
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -93,11 +93,11 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
         'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
     
     # Sort list
-    listassets = np.sort(list_assets)
+    assets_names = np.sort(list_assets)
     
     # Initialization
-    assets = pd.DataFrame(data=None, columns=listassets)
-    N = len(listassets)
+    assets = []
+    N = len(assets_names)
     counter = 1
     
     # loop
@@ -110,12 +110,16 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
         counter += 1
         
         try:
-            tmp = pdr.get_data_yahoo(listassets[i], start=start_date, end=end_date)[feature]
-            assets[listassets[i]] = tmp
+            assets.append( (pdr.get_data_yahoo(assets_names[i], start=start_date, end=end_date)[feature].to_frame(), assets_names[i]) )
         except:
-            print(listassets[i], " could not be imported.")
+            print(assets_names[i], " could not be imported.")
 
-    return assets
+    list_ts = []
+    for a in assets:
+        tmp_ts = ts.TimeSeries(df=a[0], name=str(a[1]))
+        list_ts.append(tmp_ts)
+        
+    return list_ts
 
 
 def convert_multicol_df_tolist(df, start_date, end_date):
