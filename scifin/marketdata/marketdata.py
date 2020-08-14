@@ -90,8 +90,8 @@ def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
     try:
         assert(feature in ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'])
     except AssertionError:
-        raise(AssertionError("Feature must be one of the following: \
-        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
+        raise AssertionError("Feature must be one of the following: \
+        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.")
     
     # Sort list
     listassets = np.sort(list_assets)
@@ -162,8 +162,8 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
     try:
         assert(feature in ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'])
     except AssertionError:
-        raise(AssertionError("Feature must be one of the following: \
-        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'."))
+        raise AssertionError("Feature must be one of the following: \
+        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.")
     
     # Sort list
     assets_names = np.sort(list_assets)
@@ -318,7 +318,7 @@ def market_CWindex(market, marketcap):
     if (set(market.columns) != set(marketcap.index)):
         print(market.columns)
         print(marketcap.index)
-        raise Exception("Error: the two data sources need to have same columns.")
+        raise IndexError("Error: the two data sources need to have same columns.")
     Nassets = market.shape[1]
     
     # Computing weighted returns

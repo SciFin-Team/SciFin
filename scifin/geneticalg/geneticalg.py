@@ -68,7 +68,7 @@ def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     
     # Check the normalization is positive
     if normalization < 0:
-        raise Exception("Negative normalization not allowed.")
+        raise ValueError("Negative normalization not allowed.")
         
     normalized_individual = np.array(individual) / normalization
     
@@ -170,9 +170,9 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     Raises
     ------
-    Exception
+    ValueError
       Imposes that individuals are born before the evaluation date.
-    Exception
+    ValueError
       Checks that the current evaluation date is before the next evaluation date.
     
     Notes
@@ -198,10 +198,10 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     # Make sure all the individual portfolios were born before the current date:
     for birth_date in population['Born']:
         if birth_date >= next_eval_date:
-            raise Exception("Individuals can't be born at/after the evaluation date.")
+            raise ValueError("Individuals can't be born at/after the evaluation date.")
     # Make sure the next evaluation date is later than the current date:
     if current_eval_date >= next_eval_date:
-        raise Exception("Current date can't be after the evaluation date.")
+        raise ValueError("Current date can't be after the evaluation date.")
     
     # Getting the date just before the next evaluation date
     # (date at which reproduction will happen)
@@ -376,7 +376,7 @@ def pairing(elite, selected, method = 'Fittest'):
     
     # odd_indiv = False
     if M%2 != 0:
-        raise Exception("NUMBER OF INDIVIDUALS IS ODD ! PROBLEM WITH PAIRING !")
+        raise ValueError("Number of individuals is odd, creating impossible pairing!")
     
     # Start the pairing
     pairs = []
@@ -441,11 +441,11 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
     
     # Initial tests
     if Nmin%1!=0 or Nmax%1!=0 or Npoints%1!=0:
-        raise Exception("Nmin, Nmax and Npoints must be integers.")
+        raise TypeError("Nmin, Nmax and Npoints must be integers.")
 
     if Npoints > int((Nmax-Nmin-2)/3):
         print("For Nmin =",Nmin,"and Nmax =",Nmax,"we must have Npoints <=",int((Nmax-Nmin-2)/5))
-        raise Exception("Please take a lower value to avoid slowness.")
+        raise ValueError("Please take a lower value to avoid slowness.")
 
     # Initialization
     list_pts=[]
@@ -511,7 +511,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     
     # Check that there is only 2 parents here
     if len(pair_of_parents) != 2:
-        raise Exception("Only a pair of parents allowed here!")
+        raise ValueError("Only a pair of parents allowed here!")
     
     # Selecting only the columns with Asset allocations, i.e. the genes
     parents = pd.DataFrame(pair_of_parents).filter(regex="Asset")
@@ -520,7 +520,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     # Check that the parents have the same sum
     if parents.iloc[0].sum() - parents.iloc[1].sum() > 1E-5 :
         print(parents.iloc[0].sum(), parents.iloc[1].sum())
-        raise Exception("Parents must have the same sum of assets allocations.")
+        raise ValueError("Parents must have the same sum of assets allocations.")
     parents_sum = parents.iloc[0].sum()
         
     # Creating offsprings - Method 1
@@ -568,9 +568,9 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     # Creating offsprings - Method 3
     if method == 'Multi Points':
         if (n_points is None) or (n_points == 0):
-            raise Exception("n_points must be specified.")
+            raise ValueError("n_points must be specified.")
         if n_points%1!=0:
-            raise Exception("n_points must be integer.")
+            raise ValueError("n_points must be integer.")
         
         # Create a set of pivot points
         pivots = non_adjacent_random_list(0, Ngene, n_points)
@@ -618,15 +618,15 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     if sum_allocations - parents.iloc[1].sum() > 1E-5 :
         print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
         print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
-        raise Exception("Parents must all have the same sum of assets allocations.")
+        raise ValueError("Parents must all have the same sum of assets allocations.")
     if sum_allocations - offsprings[0].sum() > 1E-5 :
         print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
         print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
-        raise Exception("Offsprings and parents must have the same sum of assets allocations.")
+        raise ValueError("Offsprings and parents must have the same sum of assets allocations.")
     if sum_allocations - offsprings[1].sum() > 1E-5 :
         print([parents.iloc[0], parents.iloc[1], offsprings[0], offsprings[1]])
         print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
-        raise Exception("Offsprings and parents must have the same sum of assets allocations.")
+        raise ValueError("Offsprings and parents must have the same sum of assets allocations.")
         
     # Adding the mating date, which is also the birth date of the offsprings (no gestation period here).
     offsprings[0]["Born"] = mating_date
@@ -976,7 +976,7 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     
     # Check columns are the same:
     if elite.columns.tolist() != gen.columns.tolist():
-        ValueError("Elite and current generation must have the same columns!")
+        raise ValueError("Elite and current generation must have the same columns!")
     
     # Next generation empty dataframe
     next_gen = pd.DataFrame(data=None, columns=gen.columns)

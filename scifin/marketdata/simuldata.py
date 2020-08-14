@@ -93,7 +93,8 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     
     Raises
     ------
-      ValueError if the choice for 'date_type' is neither "start" or "end".
+    ValueError
+      If the choice for 'date_type' is neither "start" or "end".
     
     Notes
     -----
@@ -211,7 +212,7 @@ def create_market_shares(market, mean=100000, stdv=10000):
     market_shares.index = market.columns
     
     if market_shares.min() < 0:
-        raise Exception("A negative market share was generated, please launch again.")
+        raise ValueError("A negative market share was generated, please launch again.")
     
     return market_shares
 
@@ -287,7 +288,7 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     first_value = first_row[0]
     for x in first_row:
         if x != first_value:
-            raise Error("First row of environment must be uniform in value.")
+            raise ValueError("First row of environment must be uniform in value.")
     
     # Initializations
     Ngenes = len(individual)
@@ -341,9 +342,9 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     
     # Raising exceptions if generated dates aren't satisfactory
     if special_dates[0] != environment.index[0]:
-        raise Exception("ERROR !")
+        raise IndexError("Generated dates unsatisfactory !")
     if special_dates[-1] != environment.index[-1]:
-        raise Exception("ERROR !")
+        raise IndexError("Generated dates unsatisfactory !")
     
     return special_dates
 
@@ -367,13 +368,13 @@ def find_tick_before_eval(environment_dates, eval_date):
     
     # Checks
     if (eval_date in environment_dates) == False:
-        raise Exception("It appears that eval_date does not belong to the environment dates.")
+        raise ValueError("It appears that eval_date does not belong to the environment dates.")
     
     # Returning value
     for d in environment_dates:
         if d == eval_date:
             return d-1
-    raise Exception("No date was found.")
+    raise ValueError("No date was found.")
     
     
 def limited_propagation(population, environment, start, end):
@@ -483,7 +484,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     
     Raises
     ------
-    Exception
+    ValueError
       In case the entered fitness_method name is not known.
     
     Notes
@@ -586,7 +587,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
         
     # Otherwise return Exception
     else:
-        raise Exception("Specified fitness method does not exist.")
+        raise ValueError("Specified fitness method does not exist.")
     
     return fitness_value
 
@@ -831,7 +832,7 @@ def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.p
         save_ndays.append(ndays)
 
         if ndays <= 0:
-            raise Exception("Distance between dates must be strictly positive !")
+            raise ValueError("Distance between dates must be strictly positive !")
 
         # Computing next date of evaluation
         current_date_index = market_dates.index(eval_date.to_timestamp().strftime("%Y-%m-%d"))
