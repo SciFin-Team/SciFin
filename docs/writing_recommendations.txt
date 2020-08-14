@@ -1,4 +1,10 @@
 
+IMPORTANT:
+----------
+
+Once several people work on the same piece of code, one should all remember to create our own development branch
+before proceeding with coding. Once functions work correctly and with agreement among contributors, the merger will be done.
+
 
 Good practice syntax:
 ---------------------
@@ -11,7 +17,7 @@ Good practice syntax:
 - Cite only reliable sources.
 
 
-    
+
     
     
     
