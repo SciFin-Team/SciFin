@@ -147,14 +147,14 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     assert(len(start_values)==order)
     P = len(start_values)
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise (Note: p first values are not used)
+    # Generate the white noise (Note: p first values are not used)
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     for t_ini in range(P):
         x[t_ini] = start_values[t_ini]
@@ -163,12 +163,12 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
         for p in range(P):
             x[t] += coeffs[p] * x[t-p-1]
     
-    # Computing theoretical expectation value
+    # Compute theoretical expectation value
     E = cst / (1 - sum(coeffs))
     print("Under stationarity assumption, the expected value for this AR("
           + str(P) + ") model is: " + str(E) + "\n")
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs = TimeSeries(df, name=name)
     
@@ -219,20 +219,20 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, name=""):
       None
     """
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise (Note: first value is not used)
+    # Generate the white noise (Note: first value is not used)
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     x[0] = start_value
     for t in range(1,T,1):
         x[t] = x[t-1] + a[t]
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs = TimeSeries(df, name=name)
     
@@ -285,20 +285,20 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
       None
     """
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise (Note: first value is not used)
+    # Generate the white noise (Note: first value is not used)
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     x[0] = start_value
     for t in range(1,T,1):
         x[t] = drift + x[t-1] + a[t]
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs = TimeSeries(df, name=name)
     
@@ -363,14 +363,14 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
     assert(len(coeffs)==order)
     Q = order
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise
+    # Generate the white noise
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     for t in range(T):
         x[t] = cst + a[t]
@@ -378,7 +378,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
             if t-q > 0:
                 x[t] -= coeffs[q] * a[t-q-1]
     
-    # Computing theoretical values
+    # Compute theoretical values
     V = 1.
     for q in range(Q):
         V += coeffs[q]**2
@@ -387,7 +387,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
     print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
           " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs = TimeSeries(df, name=name)
     
@@ -395,7 +395,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
 
 
 
-def ARMA(start_date, end_date, frequency, start_values,
+def arma(start_date, end_date, frequency, start_values,
          cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, name=""):
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
@@ -460,14 +460,14 @@ def ARMA(start_date, end_date, frequency, start_values,
     P = ARorder
     Q = MAorder
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise
+    # Generate the white noise
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     # Taking care of {x_0, x_1, ..., x_P}
     for t_ini in range(P):
@@ -481,7 +481,7 @@ def ARMA(start_date, end_date, frequency, start_values,
             if t-q > 0:
                 x[t] -= MAcoeffs[q] * x[t-q-1]
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
     rs = TimeSeries(df, name=name)
     
@@ -489,7 +489,7 @@ def ARMA(start_date, end_date, frequency, start_values,
 
 
 
-def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, name=""):
+def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, name=""):
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -559,24 +559,24 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
             assert(x>=0)
     M = order
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the white noise
+    # Generate the white noise
     a = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     x = [0.] * T
     for t in range(T):
         x[t] = cst + a[t]
-        # Generating the list of coefficients
+        # Generate the list of coefficients
         coeffs = np.random.multivariate_normal(mean=[0.] * M, cov=cov_matrix, size=1)[0]
         for m in range(M):
             if t-m > 0:
                 x[t] += (ARcoeffs[m] + coeffs[m]) * a[t-m-1]
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs = TimeSeries(df, name=name)
     
@@ -588,7 +588,7 @@ def RCA(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
+def arch(start_date, end_date, frequency, cst, order, coeffs, name=""):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -655,14 +655,14 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
     assert(sum(coeffs)<1)
     M = order
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the "unit" white noise
+    # Generate the "unit" white noise
     eps = np.random.normal(loc=0., scale=1, size=T)
 
-    # Generating the random series
+    # Generate the random series
     a = [0.] * T
     for t in range(T):
         sig_square = cst
@@ -672,7 +672,7 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
         sig = np.sqrt(sig_square)
         a[t] = sig * eps[t]
     
-    # Computing theoretical values
+    # Compute theoretical values
     print("The expected value for this ARCH(" + str(M) \
           + ") model is 0, like any other ARCH model, and the estimated value is : " \
           + str(np.mean(a)))
@@ -680,14 +680,14 @@ def ARCH(start_date, end_date, frequency, cst, order, coeffs, name=""):
     print("The theoretical standard deviation value for this ARCH(" + str(M) \
           + ") model is: " + str(V))
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs = TimeSeries(df, name=name)
     
     return rs
 
 
-def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, name=""):
+def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, name=""):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -761,14 +761,14 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     M = order_a
     S = order_sig
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the "unit" white noise
+    # Generate the "unit" white noise
     eps = np.random.normal(loc=0., scale=1, size=T)
 
-    # Generating the random series
+    # Generate the random series
     a = [0.] * T
     sig = [0.] * T
     for t in range(T):
@@ -782,19 +782,19 @@ def GARCH(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
         sig[t] = np.sqrt(sig_square)
         a[t] = sig[t] * eps[t]
 
-    # Computing theoretical values
+    # Compute theoretical values
     V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
     print("The theoretical standard deviation for this GARCH(" + str(M) \
           + "," + str(S) + ") model is: " + str(np.sqrt(V)))
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs = TimeSeries(df, name=name)
     
     return rs
 
 
-def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
+def charma(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -853,24 +853,24 @@ def CHARMA(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
             assert(x>=0)
     M = order
     
-    # Generating index
+    # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
     T = len(data_index)
     
-    # Generating the "unit" white noise
+    # Generate the "unit" white noise
     eta = np.random.normal(loc=0., scale=sigma, size=T)
     
-    # Generating the random series
+    # Generate the random series
     a = [0.] * T
     for t in range(T):
         a[t] = eta[t]
-        # Generating the list of coefficients
+        # Generate the list of coefficients
         coeffs = np.random.multivariate_normal(mean=[0.] * M, cov=cov_matrix, size=1)[0]
         for m in range(M):
             if t-m > 0:
                 a[t] += coeffs[m] * a[t-m-1]
     
-    # Combining them into a time series
+    # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
     rs = TimeSeries(df, name=name)
     

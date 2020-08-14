@@ -185,7 +185,7 @@ class TimeSeries(Series):
     
     
     
-    ### PLOTTING INFORMATION ABOUT THE TIME SERIES ###
+    ### Plot INFORMATION ABOUT THE TIME SERIES ###
     
     def simple_plot(self, figsize=(12,5), dpi=100):
         """
@@ -199,7 +199,7 @@ class TimeSeries(Series):
           Dots-per-inch definition of the figure.
         """
         
-        # Plotting
+        # Plot
         plt.figure(figsize=figsize, dpi=dpi)
         plt.plot(self.data.index, self.data.values, color='k')
         
@@ -224,7 +224,7 @@ class TimeSeries(Series):
         # Prepare data frame
         data = self.specify_data(start, end)
             
-        # Plotting distribution of values
+        # Plot distribution of values
         plt.figure(figsize=figsize, dpi=dpi)
         data.hist(bins=bins, grid=False, color='w', lw=2, edgecolor='k')
         
@@ -246,7 +246,7 @@ class TimeSeries(Series):
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
-        # Plotting distribution of values
+        # Plot distribution of values
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         data.plot.density(color='k', ax=ax, legend=False)
         
@@ -270,7 +270,7 @@ class TimeSeries(Series):
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
-        # Plotting
+        # Plot
         fig = plt.figure(figsize=figsize, dpi=dpi)
         gs = fig.add_gridspec(1, 4)
         
@@ -317,11 +317,11 @@ class TimeSeries(Series):
         except AssertionError:
             raise AssertionError("The lag must be an integer equal or more than 1.")
         
-        # Doing the plot
+        # Do the plot
         fig = plt.figure(figsize=figsize, dpi=dpi)
         pd.plotting.lag_plot(self.data, lag=lag, c='black', alpha=alpha)
         
-        # Setting title
+        # Set title
         title = "Lag plot of time series " + self.name
         plt.gca().set(title=title, xlabel="x(t)", ylabel="x(t+"+str(lag)+")")
         plt.show()
@@ -351,7 +351,7 @@ class TimeSeries(Series):
         else:
             nrows = nlags//ncols + 1
         
-        # Doing the plots
+        # Do the plots
         fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True,
                                  figsize=figsize, dpi=dpi)
         for i, ax in enumerate(axes.flatten()[:nlags]):
@@ -359,7 +359,7 @@ class TimeSeries(Series):
             ax.set_xlabel("x(t)")
             ax.set_ylabel("x(t+"+str(i+1)+")")
         
-        # Setting title
+        # Set title
         title = "Multiple lag plots of time series " + self.name
         fig.suptitle(title, )
         plt.show()
@@ -650,7 +650,7 @@ class TimeSeries(Series):
     hist_expected_shortfall = hist_cvar
     
     
-    def Cornish_Fisher_var(self, p, start=None, end=None):
+    def cornish_fisher_var(self, p, start=None, end=None):
         """
         Returns the VaR (Value at Risk) between two dates from
         the Cornish-Fisher expansion.
@@ -729,7 +729,7 @@ class TimeSeries(Series):
         x_range = list(range(lag_min, lag_max+1, 1))
         ac = [self.autocorrelation(lag=x, start=start, end=end) for x in x_range]
         
-        # Plotting
+        # Plot
         plt.figure(figsize=figsize, dpi=dpi)
         plt.bar(x_range, ac, color='w', lw=2, edgecolor='k')
         s,e = self.start_end_names(start, end)
@@ -746,7 +746,7 @@ class TimeSeries(Series):
         Returns a plot of the AutoCorrelation Function (ACF)
         and Partial AutoCorrelation Function (PACF) from statsmodels.
         """
-        # Plotting
+        # Plot
         fig, axes = plt.subplots(1,2, figsize=figsize, dpi=dpi)
         plot_acf(self.data.values.tolist(), lags=lag_max, ax=axes[0])
         plot_pacf(self.data.values.tolist(), lags=lag_max, ax=axes[1])
@@ -837,7 +837,7 @@ class TimeSeries(Series):
             sum_vals = np.array(func_vals).sum()
             func_vals /= sum_vals
         
-        # Generating convolved values
+        # Generate convolved values
         convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
         convolved_ts = TimeSeries(pd.DataFrame(index=self.data.index, data=convolved_vals))
         
@@ -905,7 +905,7 @@ class TimeSeries(Series):
         # as the dividing time series
         assert(data.index.tolist() == other_ts.data.index.tolist())
         
-        # Doing the division
+        # Do the division
         new_data = np.array(data.values) / np.array(other_ts.data.values)
         new_df = pd.DataFrame(index=data.index, data=new_data)
         new_ts = TimeSeries(new_df, name=name)
@@ -1087,7 +1087,7 @@ class TimeSeries(Series):
         X = np.reshape(X, (len(X), 1))
         y = [data.values.tolist()[x][0] for x in range(len(data))]
         
-        # Fitting the linear component
+        # Fit the linear component
         model = LinearRegression()
         model.fit(X, y)
         
@@ -1107,7 +1107,7 @@ class TimeSeries(Series):
             polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
             polyn_comp_ts = TimeSeries(polyn_comp_df)
         
-        # Generating the resting part time series
+        # Generate the resting part time series
         if polyn_order is not None:
             rest_y = nonlin_y - polyn_component_y
         else:
@@ -1126,7 +1126,7 @@ class TimeSeries(Series):
                                         extrac_seasonality=True mode.")
             P = period
 
-            # Cutting the series into seasonality-period chunks
+            # Cut the series into seasonality-period chunks
             t = []
             if int(len(rest_y))%P==0:
                 nchunks = int(len(rest_y))//P
@@ -1139,19 +1139,19 @@ class TimeSeries(Series):
                 else:
                     t.append(rest_y[i*P:i*P+P])
 
-            # Doing the average of the chunks
+            # Do the average of the chunks
             t_avg = []
             for i in range(P):
                 t_avg.append(np.mean([t[x][i] for x in range(nchunks)]))
 
-            # Creating a new series repeating this pattern
+            # Create a new series repeating this pattern
             seasonal_y = []
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
             seasonal_df = pd.DataFrame(index=data.index, data=seasonal_y)
             seasonal_ts = TimeSeries(seasonal_df)
 
-            # Building the residue time series
+            # Build the residue time series
             residue_y = rest_y - seasonal_y
             residue_df = pd.DataFrame(index=data.index, data=residue_y)
             residue_ts = TimeSeries(residue_df)
@@ -1199,17 +1199,17 @@ class TimeSeries(Series):
           3 time series for the mean and the envelope +sigma and -sigma of standard deviation.
         """
 
-        # Shaping the data
+        # Shape the data
         X = np.array([float(datetime.timestamp(x)) for x in self.data.index])[:, np.newaxis]
         y = self.data.values.flatten()
 
-        # Setting the kernel
+        # Set the kernel
         initial_kernel = 1 * kernels.RBF(length_scale=rbf_scale,
                                          length_scale_bounds=rbf_scale_bounds) \
                          + kernels.WhiteKernel(noise_level=noise,
                                                noise_level_bounds=noise_bounds)
 
-        # Doing regression
+        # Do regression
         gpr = GaussianProcessRegressor(kernel=initial_kernel,
                                        alpha=alpha,
                                        optimizer='fmin_l_bfgs_b',
@@ -1218,7 +1218,7 @@ class TimeSeries(Series):
         gpr = gpr.fit(X,y)
         print("The GPR score is: ", gpr.score(X,y))
         
-        # Creating fitting time series
+        # Create fitting time series
         N = len(y)
         X_ = np.linspace(min(X)[0], max(X)[0], N)
         
@@ -1235,7 +1235,7 @@ class TimeSeries(Series):
         y_std_p = y_mean + np.sqrt(np.diag(y_cov))
         ts_std_p = TimeSeries(pd.DataFrame(index=idx, data=y_std_p), name='Mean+sigma from GPR')
         
-        # Plotting the result
+        # Plot the result
         if plotting==True:
             plt.figure(figsize=figsize, dpi=dpi)
             plt.plot(self.data.index, y_mean, color='k', lw=3)
@@ -1318,7 +1318,7 @@ class CatTimeSeries(Series):
         restricted_colors = [large_color_dict[x] for x in restricted_keys]
         keys_to_cats = [set_cats[x] for x in range(0,n_cats)]
 
-        # Creating the restricted color dictionary
+        # Create the restricted color dictionary
         D = dict(zip(keys_to_cats, restricted_colors))
         
         return X, y, D
@@ -1538,7 +1538,7 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
             min_val = min(min(Series[i].data.values.flatten()), min_val)
             max_val = max(max(Series[i].data.values.flatten()), max_val)
         
-    # Plotting
+    # Plot
     fig = plt.figure(figsize=figsize, dpi=dpi)
     gs = fig.add_gridspec(1, 4)
 
