@@ -93,7 +93,7 @@ class Series:
         or not the desired start and end dates.
         """
          
-        # Preparing data frame
+        # Prepare data frame
         if (start is None) and (end is None):
             data = self.data
 
@@ -125,7 +125,7 @@ class Series:
         Tests if the sampling of a time series is uniform or not.
         Returns a boolean value True when the sampling is uniform, False otherwise.
         """
-        # Preparing data
+        # Prepare data
         sampling = [datetime.timestamp(x) for x in self.data.index]
         assert(len(sampling)==self.nvalues)
         intervals = [sampling[x] - sampling[x-1] for x in range(1,self.nvalues,1)]
@@ -221,7 +221,7 @@ class TimeSeries(Series):
         Plots the distribution of values between two dates.
         """
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
             
         # Plotting distribution of values
@@ -242,7 +242,7 @@ class TimeSeries(Series):
         Plots the density of values between two dates.
         """
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
@@ -266,7 +266,7 @@ class TimeSeries(Series):
         # Checks
         assert(isinstance(bins,int))
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
@@ -607,7 +607,7 @@ class TimeSeries(Series):
             print("Warning: Probability too precise, only closest percentile computed here.")
             print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
         
-        # Preparing data
+        # Prepare data
         data = self.specify_data(start, end)
         
         return np.percentile(data.values, int(100*p))
@@ -630,7 +630,7 @@ class TimeSeries(Series):
             print("Warning: Probability too precise, only closest percentile computed here.")
             print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
         
-        # Preparing data
+        # Prepare data
         data = self.specify_data(start, end)
         var = self.hist_var(p=p, start=start, end=end)
         
@@ -664,7 +664,7 @@ class TimeSeries(Series):
         # Checks
         assert(p>=0 and p<=1)
         
-        # Preparing data
+        # Prepare data
         data = self.specify_data(start, end)
 
         # Compute z-score based on normal distribution
@@ -703,16 +703,16 @@ class TimeSeries(Series):
         if l==0:
             return 1
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         
         # General case
         assert(l < data.shape[0])
         shifted_data = data.shift(l)
-        Numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
-        Denominator = data.std() * shifted_data.std()
+        numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
+        denominator = data.std() * shifted_data.std()
         
-        return Numerator / Denominator
+        return numerator / denominator
     
     
     def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None,
@@ -795,7 +795,8 @@ class TimeSeries(Series):
         according to linear combination:
         factor1 * current_ts + factor2 * other_ts.
         """
-        new_df = factor1 * self.data + factor2 * other_ts.data
+        new_data = factor1 * np.array(self.data.values) + factor2 * np.array(other_ts.data.values)
+        new_df = pd.DataFrame(index=self.data.index, data=new_data)
         new_ts = TimeSeries(new_df)
         
         return new_ts
@@ -853,7 +854,7 @@ class TimeSeries(Series):
           Time series of the drawdowns.
         """
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         
         # Compute drawdowns
@@ -876,7 +877,7 @@ class TimeSeries(Series):
           Maximum drawdown.
         """
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         
         # Compute drawdowns
@@ -888,15 +889,16 @@ class TimeSeries(Series):
     
     def divide_by_timeseries(self, other_ts, start=None, end=None, name=""):
         """
-        Returns the maximum drawdown of a time series.
+        Returns a time series from the division of the current time series
+        with another time series (current_ts / other_ts).
         
         Returns
         -------
-        float
-          Maximum drawdown.
+        TimeSeries
+          Division time series.
         """
         
-        # Preparing data frame
+        # Prepare data frame
         data = self.specify_data(start, end)
         
         # Check that data has the same index
@@ -904,13 +906,53 @@ class TimeSeries(Series):
         assert(data.index.tolist() == other_ts.data.index.tolist())
         
         # Doing the division
-        new_data = data / other_ts.data
+        new_data = np.array(data.values) / np.array(other_ts.data.values)
         new_df = pd.DataFrame(index=data.index, data=new_data)
         new_ts = TimeSeries(new_df, name=name)
         
         return new_ts
         
+    
+    def add_gaussian_noise(self, mu, sigma, start=None, end=None, name=""):
+        """
+        Adds a Gaussian noise to the current time series.
         
+        Parameters
+        ----------
+        mu : float
+          Mean parameter of the noise.
+        sigma : float
+          Standard deviation of the noise.
+        start : str
+          Starting date.
+        end : str
+          Ending date.
+        name : str
+          Name or nickname of the series.
+        
+        Returns
+        -------
+        TimeSeries
+          Time series with added Gaussian noise.
+        """
+        
+        # Prepare data frame
+        data = self.specify_data(start, end)
+        n = len(data.values)
+        
+        # Generate noise
+        noise = np.random.normal(loc=mu, scale=sigma, size=n)
+        
+        # Generate new time series
+        new_data = []
+        for i in range(n):
+            new_data.append(data.values[i][0] + noise[i])
+        new_df = pd.DataFrame(index=data.index, data=new_data)
+        new_ts = TimeSeries(new_df, name=name)
+        
+        return new_ts
+    
+    
     
     
     ### FITTING METHODS ###
@@ -931,18 +973,18 @@ class TimeSeries(Series):
         Provides a polynomial fit of the time series.
         """
         
-        # Preparing data
+        # Prepar data
         data = self.specify_data(start, end)
         new_index = [datetime.timestamp(x) for x in data.index]
         new_values = [data.values.tolist()[x][0] for x in range(len(data))]
         
-        # Doing the fit
+        # Do the fit
         fit_formula = np.polyfit(new_index, new_values, deg=order)
         model = np.poly1d(fit_formula)
         print("Evaluated model: \n", model)
         yfit = [model(x) for x in new_index]
         
-        # Building data frame
+        # Build data frame
         assert(len(data.index)==len(yfit))
         new_df = pd.DataFrame(index=data.index, data=yfit)
         new_ts = TimeSeries(new_df)
@@ -961,7 +1003,7 @@ class TimeSeries(Series):
                   Returning the same time series.")
             return self
         
-        # Preparing the new index
+        # Prepare the new index
         original_timestamps = [datetime.timestamp(x) for x in self.data.index]
         original_values = self.data.values
         N = len(original_values)
@@ -1001,7 +1043,7 @@ class TimeSeries(Series):
             slope = (after[1] - before[1]) / (after[0] - before[0])
             new_values[i] = before[1] + slope * (new_timestamps[i] - before[0])
 
-        # Building the time series
+        # Build the time series
         new_df = pd.DataFrame(index=new_index, data=new_values)
         new_ts = TimeSeries(new_df)
         
@@ -1039,7 +1081,7 @@ class TimeSeries(Series):
             except AssertionError:
                 raise AssertionError("polyn_order must be equal or more than 2.")
         
-        # Preparing data in the specified period
+        # Prepare data in the specified period
         data = self.specify_data(start, end)
         X = [datetime.timestamp(x) for x in data.index]
         X = np.reshape(X, (len(X), 1))
@@ -1268,7 +1310,7 @@ class CatTimeSeries(Series):
         X = [datetime.timestamp(x) for x in self.data.index]
         y = self.data.values.flatten()
             
-        # Preparing Colors
+        # Prepare Colors
         large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
                              4: 'Magenta', 5: 'Lime', 6: 'Dark Green', 7: 'DarkCyan',
                              8: 'DarkTurquoise', 9:'DodgerBlue' }
