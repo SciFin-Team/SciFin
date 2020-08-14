@@ -755,6 +755,7 @@ class TimeSeries(Series):
         return None
     
     
+    
     ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
     
     def trim(self, new_start, new_end):
@@ -788,13 +789,13 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def linear_combination(self, OtherTimeSeries, factor1=1, factor2=1):
+    def linear_combination(self, other_ts, factor1=1, factor2=1):
         """
         Method that adds a time series to the current one
         according to linear combination:
-        factor1 * current_ts + factor2 * OtherTimeSeries.
+        factor1 * current_ts + factor2 * other_ts.
         """
-        new_df = factor1 * self.data + factor2 * OtherTimeSeries.data
+        new_df = factor1 * self.data + factor2 * other_ts.data
         new_ts = TimeSeries(new_df)
         
         return new_ts
@@ -884,6 +885,32 @@ class TimeSeries(Series):
         
         return -drawdowns.values.min()
     
+    
+    def divide_by_timeseries(self, other_ts, start=None, end=None, name=""):
+        """
+        Returns the maximum drawdown of a time series.
+        
+        Returns
+        -------
+        float
+          Maximum drawdown.
+        """
+        
+        # Preparing data frame
+        data = self.specify_data(start, end)
+        
+        # Check that data has the same index
+        # as the dividing time series
+        assert(data.index.tolist() == other_ts.data.index.tolist())
+        
+        # Doing the division
+        new_data = data / other_ts.data
+        new_df = pd.DataFrame(index=data.index, data=new_data)
+        new_ts = TimeSeries(new_df, name=name)
+        
+        return new_ts
+        
+        
     
     
     ### FITTING METHODS ###
