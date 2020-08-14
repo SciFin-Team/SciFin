@@ -19,14 +19,17 @@ The development goal of this package is to offer a toolbox that can be used to d
 ## Contents
 
 The current development is focused on the following topics:
-- `classifier`: Classification techniques
-- `fouriertrf`: Fourier transforms
-- `geneticalg`: Genetic algorithms
-- `marketdata`: Reading market data
-- `montecarlo`: Monte Carlo simulations
-- `neuralnets`: Neural networks
-- `statistics`: Basic statistics
-- `timeseries`: Time series analysis
+
+| Subpackage | Short Description | Development Stage |
+| :-----: | :-----: | :-----: |
+| `classifier` | Classification techniques | ■ □ □ □ □ |
+| `fouriertrf` | Fourier transforms | ■ □ □ □ □ |
+| `geneticalg` | Genetic algorithms | ■ ■ ■ □ □ |
+| `marketdata` | Reading market data | ■ □ □ □ □ |
+| `montecarlo` | Monte Carlo simulations | □ □ □ □ □ |
+| `neuralnets` | Neural networks | □ □ □ □ □ |
+| `statistics` | Basic statistics | ■ □ □ □ □ |
+| `timeseries` | Time series analysis | ■ ■ ■ ■ □ |
 
 The topics already developed are time series analysis, genetic algorithms and statistics. A lot of development still needs to be done. Other topics will also later follow.
 

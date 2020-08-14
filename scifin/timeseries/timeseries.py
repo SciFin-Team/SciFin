@@ -71,6 +71,7 @@ class Series:
             self.nvalues = 0
             self.freq = None
             self.name = 'Empty TimeSeries'
+            self.timezone = None
         
         else:
             
