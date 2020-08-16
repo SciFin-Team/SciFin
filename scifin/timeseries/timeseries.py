@@ -38,6 +38,16 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
+
+def get_list_timezones():
+    """
+    Lists all the time zone names that can be used.
+    """
+    print(pytz.all_timezones)
+    return None
+        
+
+
 # CLASS Series
 
 class Series:
@@ -76,6 +86,7 @@ class Series:
             self.nvalues = 0
             self.freq = None
             self.name = 'Empty TimeSeries'
+            
             if tz is None:
                 self.timezone = pytz.utc
             else:
@@ -88,17 +99,26 @@ class Series:
             assert(df.shape[1]==1)
             
             # Extract values
-            self.data = df
-            self.start_utc = datetime.strptime(str(df.index[0]), fmt)
-            self.end_utc = datetime.strptime(str(df.index[-1]), fmt)
-            self.nvalues = df.shape[0]
-            self.freq = pd.infer_freq(self.data.index)
-            self.name = name
+            if type(df.index[0]) == 'str':
+                new_index = pd.to_datetime(df.index, format=fmt)
+                self.data = pd.DataFrame(index=new_index, data=df.values)
+                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
+                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.nvalues = df.shape[0]
+                self.freq = pd.infer_freq(self.data.index)
+                self.name = name
+            else:
+                self.data = df
+                self.start_utc = df.index[0]
+                self.end_utc = df.index[-1]
+                self.nvalues = df.shape[0]
+                self.freq = pd.infer_freq(self.data.index)
+                self.name = name
+
             if tz is None:
                 self.timezone = pytz.utc
             else:
                 self.timezone = pytz.timezone(tz)
-                
                 
         
     def get_start_date_local(self):
@@ -107,6 +127,7 @@ class Series:
         """
         start_tmp = datetime.strptime(str(self.start_utc), fmt).astimezone(self.timezone)
         return datetime.strftime(start_tmp, format=fmtz)
+    
     
     def get_end_date_local(self):
         """
@@ -143,8 +164,8 @@ class Series:
         Recasts the time series dates to 10 characters strings
         if the date hasn't been re-specified (i.e. value is 'None').
         """
-        s = str(self.start)[:10] if (start is None) else start
-        e = str(self.end)[:10] if (end is None) else end
+        s = str(self.start_utc)[:10] if (start is None) else start
+        e = str(self.end_utc)[:10] if (end is None) else end
 
         return s,e
     
@@ -234,8 +255,8 @@ class TimeSeries(Series):
         plt.plot(self.data.index, self.data.values, color='k')
         
         # Make it cute
-        title = "Time series " + self.name + " from " + str(self.start)[:10] \
-                + " to " + str(self.end)[:10]
+        title = "Time series " + self.name + " from " + str(self.start_utc)[:10] \
+                + " to " + str(self.end_utc)[:10]
         if self.unit is None:
             ylabel = 'Value'
         else:
@@ -1274,7 +1295,7 @@ class TimeSeries(Series):
             plt.fill_between(self.data.index, y_std_m, y_std_p, alpha=0.5, color='gray')
             plt.plot(self.data.index, self.data.values, color='r')
             title = "Gaussian Process Regression: \n Time series " \
-                    + " from " + str(self.start)[:10] + " to " + str(self.end)[:10]
+                    + " from " + str(self.start_utc)[:10] + " to " + str(self.end_utc)[:10]
             plt.gca().set(title=title, xlabel="Date", ylabel="Value")
             plt.show()
         
@@ -1394,8 +1415,8 @@ class CatTimeSeries(Series):
                                 [0,0], [1,1], color=D[current_y], alpha=0.5)
         
         # Make it cute
-        title = "Categorical Time series " + self.name + " from " + str(self.start)[:10] \
-                + " to " + str(self.end)[:10]
+        title = "Categorical Time series " + self.name + " from " + str(self.start_utc)[:10] \
+                + " to " + str(self.end_utc)[:10]
         plt.gca().set(title=title, xlabel="Date", ylabel="")
         plt.show()
         

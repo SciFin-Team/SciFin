@@ -2,8 +2,10 @@
 IMPORTANT:
 ----------
 
-Once several people work on the same piece of code, one should all remember to create our own development branch
-before proceeding with coding. Once functions work correctly and with agreement among contributors, the merger will be done.
+Once several people work on the same piece of code, one should all remember to create our own development branch before proceeding with coding. Once functions work correctly and with agreement among contributors, the merger will be done.
+
+Though commits should be pushed normally on the local branch at the latest at the end of the day (to avoid losses), it is importand when several people work on the same branch to push several commits only after having made sure that the other dependent functions are working (and unit tests are not return errors).
+
 
 
 Good practice syntax:
