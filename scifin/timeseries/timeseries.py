@@ -9,6 +9,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytz
 import scipy.stats as stats
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
@@ -30,6 +31,9 @@ DPOA = {'D': 365, 'B': 252, 'W': 52,
         'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
         'Y': 1, 'A':1}
 
+# Datetimes format
+fmt = "%Y-%m-%d %H:%M:%S"
+fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -46,9 +50,9 @@ class Series:
     ----------
     data : DataFrame
       Contains a time-like index and for each time a single value.
-    start : Pandas.Timestamp
+    start_utc : Pandas.Timestamp
       Starting date.
-    end : Pandas.Timestamp
+    end_utc : Pandas.Timestamp
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
@@ -56,22 +60,26 @@ class Series:
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    timezone : pytz timezone
+      Timezone associated with dates.
     """
     
-    def __init__(self, df=None, name=""):
+    def __init__(self, df=None, tz=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
         
         if (df is None) or (df.empty == True):
-            
             self.data = pd.DataFrame(index=None, data=None)
-            self.start = None
-            self.end = None
+            self.start_utc = None
+            self.end_utc = None
             self.nvalues = 0
             self.freq = None
             self.name = 'Empty TimeSeries'
-            self.timezone = None
+            if tz is None:
+                self.timezone = pytz.utc
+            else:
+                self.timezone = pytz.timezone(tz)
         
         else:
             
@@ -81,13 +89,33 @@ class Series:
             
             # Extract values
             self.data = df
-            self.start = df.index[0]
-            self.end = df.index[-1]
+            self.start_utc = datetime.strptime(str(df.index[0]), fmt)
+            self.end_utc = datetime.strptime(str(df.index[-1]), fmt)
             self.nvalues = df.shape[0]
             self.freq = pd.infer_freq(self.data.index)
             self.name = name
+            if tz is None:
+                self.timezone = pytz.utc
+            else:
+                self.timezone = pytz.timezone(tz)
+                
+                
+        
+    def get_start_date_local(self):
+        """
+        Returns the attribute UTC start date in local time zone defined by attribute timezine.
+        """
+        start_tmp = datetime.strptime(str(self.start_utc), fmt).astimezone(self.timezone)
+        return datetime.strftime(start_tmp, format=fmtz)
     
+    def get_end_date_local(self):
+        """
+        Returns the attribute UTC end date in local time zone defined by attribute timezine.
+        """
+        end_tmp = datetime.strptime(str(self.end_utc), fmt).astimezone(self.timezone)
+        return datetime.strftime(end_tmp, format=fmtz)
 
+    
     def specify_data(self, start, end):
         """
         Returns the appropriate data according to user's specifying
@@ -156,33 +184,34 @@ class TimeSeries(Series):
     ----------
     data : DataFrame
       Contains a time-like index and for each time a single value.
-    start : Pandas.Timestamp
+    start_utc : Pandas.Timestamp
       Starting date.
-    end : Pandas.Timestamp
+    end_utc : Pandas.Timestamp
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
     freq : str or None
       Frequency inferred from index.
-    unit : str or None
-      Unit of the time series values.
     name : str
       Name or nickname of the series.
+    timezone : pytz timezone
+      Timezone associated with dates.
     type : str
       Type of the series.
+    unit : str or None
+      Unit of the time series values.
     """
     
-    def __init__(self, df=None, unit=None, name=""):
+    def __init__(self, df=None, unit=None, tz=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, name=name)
+        super().__init__(df=df, tz=tz, name=name)
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
         self.unit = unit
-    
     
     
     
@@ -924,9 +953,9 @@ class TimeSeries(Series):
           Mean parameter of the noise.
         sigma : float
           Standard deviation of the noise.
-        start : str
+        start_utc : str
           Starting date.
-        end : str
+        end_utc : str
           Ending date.
         name : str
           Name or nickname of the series.
@@ -1061,9 +1090,9 @@ class TimeSeries(Series):
         ----------
         polyn_order : None or int
           Order of the polynomial when fitting a non-linear component.
-        start : str
+        start_utc : str
           Starting date.
-        end : str
+        end_utc : str
           Ending date.
         extract_seasonality : bool
           Option to extract seasonality signal.
@@ -1268,9 +1297,9 @@ class CatTimeSeries(Series):
     ----------
     data : DataFrame
       Contains a time-like index and for each time a single value.
-    start : Pandas.Timestamp
+    start_utc : Pandas.Timestamp
       Starting date.
-    end : Pandas.Timestamp
+    end_utc : Pandas.Timestamp
       Ending date.
     nvalues : int
       Number of values, i.e. also of dates.
@@ -1278,20 +1307,21 @@ class CatTimeSeries(Series):
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    timezone : pytz timezone
+      Timezone associated with dates.
     type : str
       Type of the series.
     """
     
-    def __init__(self, df=None, name=""):
+    def __init__(self, df=None, tz=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, name=name)
+        super().__init__(df=df, tz=tz, name=name)
         
         # Add attributes initialization if needed
         self.type = 'CatTimeSeries'
-    
 
     
     def prepare_cat_plot(self):
