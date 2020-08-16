@@ -1482,6 +1482,56 @@ def build_from_excel(unit="", name="", **kwargs):
     return ts
 
 
+def build_from_list(list_values, unit=None, name="", **kwargs):
+    """
+    Returns a time series or categorical time series from the reading of a list.
+    
+    Parameters
+    ----------
+    list_values : list of float or str
+      List of values to generate either a TimeSeries or a CatTimeSeries.
+    unit : str
+      Unit of the time series values when generating a TimeSeries.
+    name : str
+      Name or nickname of the series.
+    **kwargs
+        Arbitrary keyword arguments for pandas.date_range().
+    
+    Returns
+    -------
+    TimeSeries
+      Time series built from the list of values and dates.
+      
+    Notes
+    -----
+      For pandas.date_range please consult the following page:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.date_range.html
+    """
+   
+    # Generate index
+    data_index = pd.date_range(**kwargs)
+    T = len(data_index)
+    
+    # Making DataFrame
+    df = pd.DataFrame(index=data_index, data=list_values)
+    
+    # Checks
+    try:
+        assert(len(list_values)==T)
+    except IndexError:
+        raise IndexError("Size of the index does not equate the length of list_values.")
+        
+    # If the first value is a string, make a CatTimeSeries
+    if type(list_values[0]) == str:
+        ts = CatTimeSeries(df, name=name)
+    # If the first value isn't a string, make a TimeSeries
+    else:
+        ts = TimeSeries(df, unit=unit, name=name)
+    
+    return ts
+
+
+
     
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
@@ -1551,7 +1601,6 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
     return None
 
 
-
 def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
     """
     Plots multiple time series together and their distributions of values.
@@ -1612,6 +1661,8 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
     plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
 
     return None
+    
+
     
     
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
