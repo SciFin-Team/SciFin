@@ -13,18 +13,18 @@ SciFin is a python package for Science and Finance.
 
 The SciFin package is a Python package designed to gather and develop methods for scientific studies and financial services. It originates from the observation that numerous methods developed in scientific fields (such as mathematics, physics, biology and climate sciences) have direct applicability in finance and that, conversely, multiple methods developed in finance can benefit science.
 
-The development goal of this package is to offer a toolbox that can be used to derive specific applications both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science. Some functions will thus be neutral to any scientific or economic fields, while others will be more specialized for precise tasks. The motivation behind this design is to provide tools that perform advanced tasks without depending on too many parameters.
+The development goal of this package is to offer a toolbox that can be used both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science. Some functions are thus neutral to any scientific or economical fields, while others are more specialized to precise tasks. The motivation behind this design is to provide tools that perform advanced tasks while remaining simple (not depending on too many parameters).
 
 
 ## Table of Contents
 
-**[Development Stage](#development-stage)**<br>
-**[Installation](#installation)**<br>
-**[Usage](#usage)**<br>
-**[Contributing](#contributing)**<br>
-**[Credits](#credits)**<br>
-**[License](#license)**<br>
-**[Contacts](#contacts)**<br>
+- **[Development Stage](#development-stage)**<br>
+- **[Installation](#installation)**<br>
+- **[Usage](#usage)**<br>
+- **[Contributing](#contributing)**<br>
+- **[Credits](#credits)**<br>
+- **[License](#license)**<br>
+- **[Contacts](#contacts)**<br>
 
 
 ## Development Stage
@@ -58,7 +58,7 @@ If you encounter problems during installation or after and think you know how th
 
 Version 0.0.8 may lead to a small problem from pandas. If you get an error message such as:  
 `ImportError: cannot import name 'urlencode' from 'pandas.io.common'`  
-it is advised to install pandas version 1.0.3 using e.g. the command line  
+it is advised to install pandas version 1.0.3 using e.g. the command line:  
 `pip install pandas==1.0.3`.
 
 
@@ -71,14 +71,16 @@ Please refer to the [Wiki page](https://github.com/SciFin-Team/SciFin/wiki).
 
 ## Contributing
 
-The package written tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/). If you find any part of the code unclear, please let me know. As for docstrings, the format we try to follow here is given by the [numpy doc style](https://numpydoc.readthedocs.io/en/latest/format.html).
+The package tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/). If you find any part of the code unclear or departing from this style, please let me know. As for docstrings, the format we try to follow here is given by the [numpy doc style](https://numpydoc.readthedocs.io/en/latest/format.html).
 
-It is strongly advised to have a fair knowledge of Python, or at least a strong motivation to learn, and recommanded to read the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before contributing to the project.
+It is strongly advised to have a fair knowledge of Python to contribute, at least a strong motivation to learn, and recommanded to read the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before joining the project.
+
+To know more about the (evolving) rules that make the project self-consistent and eases interaction between contributors, please refer to details in the [Contributing](https://github.com/SciFin-Team/SciFin/blob/master/CONTRIBUTING) file.
 
 
 ## Credits
 
-All the development up to now has been done by Fabien Nugier.
+All the development up to now has been done by Fabien Nugier. New contributors will join soon.
 
 
 ## License
