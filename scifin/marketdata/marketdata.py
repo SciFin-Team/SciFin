@@ -255,8 +255,7 @@ def market_EWindex(market, name="Market EW Index"):
     """
     
     # Checks
-    for asset in market:
-        assert(asset.values.countna()!=0)
+    assert(asset.count(np.nan)!=0)
     
     df = pd.DataFrame(market.sum(axis=1))
     EWindex_ts = ts.TimeSeries(df, name=name)
