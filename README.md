@@ -16,7 +16,8 @@ The SciFin package is a Python package designed to gather and develop methods fo
 The development goal of this package is to offer a toolbox that can be used to derive specific applications both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science. Some functions will thus be neutral to any scientific or economic fields, while others will be more specialized for precise tasks. The motivation behind this design is to provide tools that perform advanced tasks without depending on too many parameters.
 
 
-### Table of Contents
+## Table of Contents
+
 **[Development Stage](#development-stage)**<br>
 **[Installation](#installation)**<br>
 **[Usage](#usage)**<br>
@@ -32,23 +33,26 @@ The current development is focused on the following topics:
 
 | Subpackage | Short Description | Development Stage |
 | :-----: | :-----: | :-----: |
-| `classifier` | classification techniques | ■ □ □ □ □ |
-| `fouriertrf` | Fourier transforms | ■ □ □ □ □ |
-| `geneticalg` | genetic algorithms | ■ ■ ■ □ □ |
-| `marketdata` | reading market data | ■ □ □ □ □ |
-| `montecarlo` | Monte Carlo simulations | □ □ □ □ □ |
-| `neuralnets` | neural networks | □ □ □ □ □ |
-| `statistics` | basic statistics | ■ □ □ □ □ |
-| `timeseries` | time series analysis | ■ ■ ■ ■ □ |
+| [`classifier`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/classifier) | classification techniques | ■ □ □ □ □ |
+| [`fouriertrf`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/fouriertrf) | Fourier transforms | ■ □ □ □ □ |
+| [`geneticalg`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/geneticalg) | genetic algorithms | ■ ■ ■ □ □ |
+| [`marketdata`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/marketdata) | reading market data | ■ □ □ □ □ |
+| [`montecarlo`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/montecarlo) | Monte Carlo simulations | □ □ □ □ □ |
+| [`neuralnets`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/neuralnets) | neural networks | □ □ □ □ □ |
+| [`statistics`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/statistics) | basic statistics | ■ □ □ □ □ |
+| [`timeseries`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/timeseries) | time series analysis | ■ ■ ■ ■ □ |
 
-The topics already developed are time series analysis, genetic algorithms and statistics. A lot of development still needs to be done. Other topics will also later follow.
+The topics already developed are time series analysis, genetic algorithms and statistics.
+
+A lot of development still needs to be done. Other topics will also later follow.
 
 
 ## Installation
 
 Installing SciFin on Linux or Mac is very easy, you can simply run this on a terminal:  
 `pip install SciFin`  
-You can also access the last version of the package on PyPI by clicking [--> Here <--](https://pypi.org/project/scifin/).
+
+You can also access the last version of the package [on PyPI](https://pypi.org/project/scifin/).
 
 If you encounter problems during installation or after and think you know how the problem can be improved, please share it with me.
 
@@ -61,6 +65,8 @@ it is advised to install pandas version 1.0.3 using e.g. the command line
 ## Usage
 
 To be updated.
+
+Please refer to the [Wiki page](https://github.com/SciFin-Team/SciFin/wiki).
 
 
 ## Contributing
@@ -76,6 +82,8 @@ All the development up to now has been done by Fabien Nugier.
 
 
 ## License
+
+SciFin is currently developed under the MIT license.
 
 Please keep in mind that SciFin and its developers hold no responsibility for any wrong usage or losses related to the package usage.
 
