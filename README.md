@@ -16,20 +16,30 @@ The SciFin package is a Python package designed to gather and develop methods fo
 The development goal of this package is to offer a toolbox that can be used to derive specific applications both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science. Some functions will thus be neutral to any scientific or economic fields, while others will be more specialized for precise tasks. The motivation behind this design is to provide tools that perform advanced tasks without depending on too many parameters.
 
 
-## Contents
+### Table of Contents
+**[Development Stage](#development-stage)**<br>
+**[Installation](#installation)**<br>
+**[Usage](#usage)**<br>
+**[Contributing](#contributing)**<br>
+**[Credits](#credits)**<br>
+**[License](#license)**<br>
+**[Contacts](#contacts)**<br>
+
+
+## Development Stage
 
 The current development is focused on the following topics:
 
 | Subpackage | Short Description | Development Stage |
 | :-----: | :-----: | :-----: |
-| `classifier` | Classification techniques | ■ □ □ □ □ |
+| `classifier` | classification techniques | ■ □ □ □ □ |
 | `fouriertrf` | Fourier transforms | ■ □ □ □ □ |
-| `geneticalg` | Genetic algorithms | ■ ■ ■ □ □ |
-| `marketdata` | Reading market data | ■ □ □ □ □ |
+| `geneticalg` | genetic algorithms | ■ ■ ■ □ □ |
+| `marketdata` | reading market data | ■ □ □ □ □ |
 | `montecarlo` | Monte Carlo simulations | □ □ □ □ □ |
-| `neuralnets` | Neural networks | □ □ □ □ □ |
-| `statistics` | Basic statistics | ■ □ □ □ □ |
-| `timeseries` | Time series analysis | ■ ■ ■ ■ □ |
+| `neuralnets` | neural networks | □ □ □ □ □ |
+| `statistics` | basic statistics | ■ □ □ □ □ |
+| `timeseries` | time series analysis | ■ ■ ■ ■ □ |
 
 The topics already developed are time series analysis, genetic algorithms and statistics. A lot of development still needs to be done. Other topics will also later follow.
 
@@ -48,15 +58,33 @@ it is advised to install pandas version 1.0.3 using e.g. the command line
 `pip install pandas==1.0.3`.
 
 
-## Contact
+## Usage
 
-If you have comments or suggestions, you can reach Fabien Nugier. Thank you very much in advance for your feedback.
+To be updated.
+
+
+## Contributing
 
 The package written tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/). If you find any part of the code unclear, please let me know. As for docstrings, the format we try to follow here is given by the [numpy doc style](https://numpydoc.readthedocs.io/en/latest/format.html).
 
-If you wish to contribute, please contact me through GitHub. I strongly advise to have a fair knowledge of Python and recommand the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) which is a mine of information.
+It is strongly advised to have a fair knowledge of Python, or at least a strong motivation to learn, and recommanded to read the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before contributing to the project.
 
 
+## Credits
+
+All the development up to now has been done by Fabien Nugier.
+
+
+## License
+
+Please keep in mind that SciFin and its developers hold no responsibility for any wrong usage or losses related to the package usage.
+
+For more details, please refer to the [license](https://github.com/SciFin-Team/SciFin/blob/master/LICENSE).
+
+
+## Contacts
+
+If you have comments or suggestions, please reach Fabien Nugier. Thank you very much in advance for your feedback.
 
 
 
