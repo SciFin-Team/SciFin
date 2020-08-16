@@ -75,7 +75,7 @@ The package tries to follow the style guide for Python code [PEP8](https://www.p
 
 It is strongly advised to have a fair knowledge of Python to contribute, at least a strong motivation to learn, and recommanded to read the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before joining the project.
 
-To know more about the (evolving) rules that make the project self-consistent and eases interaction between contributors, please refer to details in the [Contributing](https://github.com/SciFin-Team/SciFin/blob/master/CONTRIBUTING) file.
+To know more about the (evolving) rules that make the project self-consistent and eases interaction between contributors, please refer to details in the [Contributing](https://github.com/SciFin-Team/SciFin/blob/master/CONTRIBUTING.md) file.
 
 
 ## Credits
