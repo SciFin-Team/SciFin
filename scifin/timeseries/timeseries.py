@@ -1550,11 +1550,6 @@ def build_from_lists(list_dates, list_values, unit=None, name=""):
     -------
     TimeSeries
       Time series built from the lists of values and dates.
-      
-    Notes
-    -----
-      For pandas.date_range please consult the following page:
-      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.date_range.html
     """
 
     # Checks

@@ -754,13 +754,13 @@ def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
     assert(isinstance(n_bins, int))
     
     # Initialization
-    Nloops = len(saved_gens)-1
+    nloops = len(saved_gens)-1
     tmp = (saved_gens[step].sum() / saved_gens[step].shape[0]).tolist()
     fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(15,5))
 
     # Assuming the largest allocations are always at the last step (which may not be true)
-    xmin = min((saved_gens[Nloops].sum() / saved_gens[Nloops].shape[0]).tolist()) * 1.2
-    xmax = max((saved_gens[Nloops].sum() / saved_gens[Nloops].shape[0]).tolist()) * 1.2
+    xmin = min((saved_gens[nloops].sum() / saved_gens[nloops].shape[0]).tolist()) * 1.2
+    xmax = max((saved_gens[nloops].sum() / saved_gens[nloops].shape[0]).tolist()) * 1.2
 
     # Plotting
     plt.hist(x=tmp, bins=n_bins, range=[xmin,xmax])
@@ -774,7 +774,7 @@ def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
     return None
 
 
-def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.png"):
+def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.png"):
     """
     Plots the evaluation dates, ndays, mutation rate and fitness lambda
     as computed from the Volatility Index (VIX) and 4 structure numbers.
@@ -791,7 +791,7 @@ def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.p
       Structure parameters.
     market : DataFrame
       Market from which we extract data about assets (i.e. genes).
-    VIX : DataFrame
+    vix : DataFrame
       Values of the VIX over time.
     savefile : bool
       Option to save the plot.
@@ -827,8 +827,8 @@ def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.p
         save_eval_dates.append(next_eval_date)
 
         # Computing the number of days to next date
-        VIX_ateval = 1 + (VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]/n1).astype('int')
-        ndays = n2 - VIX_ateval
+        vix_ateval = 1 + (vix[eval_date.to_timestamp().strftime("%Y-%m-%d")]/n1).astype('int')
+        ndays = n2 - vix_ateval
         save_ndays.append(ndays)
 
         if ndays <= 0:
@@ -842,15 +842,15 @@ def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.p
             next_eval_date = market.index[-1]
         
         # Getting the VIX
-        VIX_tmp = VIX[eval_date.to_timestamp().strftime("%Y-%m-%d")]
+        vix_tmp = vix[eval_date.to_timestamp().strftime("%Y-%m-%d")]
         
         # Computing the mutation rate
-        ng_mutation_rate = (1 + (VIX_tmp/10).astype('int')) * (market.shape[1] / n3)
+        ng_mutation_rate = (1 + (vix_tmp/10).astype('int')) * (market.shape[1] / n3)
         save_mutation_rate.append(ng_mutation_rate)
         
         # Computing the fitness lambda
-        VIX_past_max = VIX[:eval_date.to_timestamp().strftime("%Y-%m-%d")].max()
-        fitness_lambda = 1 - VIX_tmp / (VIX_past_max * n4)
+        vix_past_max = vix[:eval_date.to_timestamp().strftime("%Y-%m-%d")].max()
+        fitness_lambda = 1 - vix_tmp / (vix_past_max * n4)
         save_fitness_lambda.append(100 * fitness_lambda)
         
         # Loop counter update
@@ -873,7 +873,7 @@ def config_4n(n, market, VIX, savefile=False, namefile="VIX_derived_quantities.p
 
     # Plotting quantities
     fig, axis = plt.subplots(nrows=1, ncols=1)
-    VIX.plot(label="VIX")
+    vix.plot(label="VIX")
     df_ndays.plot(figsize=(25,5), ax=axis, color="orange", linewidth=2, legend=True)
     df_mutation_rate.plot(legend=True, ax=axis, color="green", linewidth=2)
     df_fitness_lambda.plot(legend=True, ax=axis, color="purple", linewidth=2)
