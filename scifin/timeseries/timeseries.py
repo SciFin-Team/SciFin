@@ -240,7 +240,7 @@ class TimeSeries(Series):
         Receives a data frame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, tz=tz, name=name)
+        super().__init__(df=df, tz=tz, unit=unit, name=name)
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
@@ -1375,7 +1375,7 @@ class CatTimeSeries(Series):
         Receives a data frame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, tz=tz, name=name)
+        super().__init__(df=df, tz=tz, unit=unit, name=name)
         
         # Add attributes initialization if needed
         self.type = 'CatTimeSeries'
@@ -1529,6 +1529,7 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
     # Return a time series
     if ncols == 1 :
         return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+    
     # or return a list of time series
     else:
         # Checks
@@ -1678,7 +1679,7 @@ def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
         
     # If the first value is a string, make a CatTimeSeries
     if type(list_values[0]) == str:
-        ts = CatTimeSeries(df, tz=tz, name=name)
+        ts = CatTimeSeries(df, tz=tz, unit=unit, name=name)
     # If the first value isn't a string, make a TimeSeries
     else:
         ts = TimeSeries(df, tz=tz, unit=unit, name=name)
@@ -1718,7 +1719,7 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
         
     # If the first value is a string, make a CatTimeSeries
     if type(list_values[0]) == str:
-        ts = CatTimeSeries(df, tz=tz, name=name)
+        ts = CatTimeSeries(df, tz=tz, unit=unit, name=name)
     # If the first value isn't a string, make a TimeSeries
     else:
         ts = TimeSeries(df, tz=tz, unit=unit, name=name)
