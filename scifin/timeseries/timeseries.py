@@ -70,17 +70,20 @@ class Series:
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    unit : str or None
+      Unit of the series values.
     tz : str
       Timezone name.
     timezone : pytz timezone
       Timezone associated with dates.
     """
     
-    def __init__(self, df=None, tz=None, name=""):
+    def __init__(self, df=None, tz=None, unit=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
         
+        # Deal with DataFrame
         if (df is None) or (df.empty == True):
             self.data = pd.DataFrame(index=None, data=None)
             self.start_utc = None
@@ -88,22 +91,14 @@ class Series:
             self.nvalues = 0
             self.freq = None
             self.name = 'Empty TimeSeries'
-            self.tz = tz
-            
-            if tz is None:
-                self.timezone = pytz.utc
-            else:
-                self.timezone = pytz.timezone(tz)
-        
         else:
-            
             # Making sure the dataframe is just
             # an index + 1 value column
             try:
                 assert(df.shape[1]==1)
             except AssertionError:
                 raise AssertionError("Time series must be built from a data frame with only one value column.")
-            
+                         
             # Extract values
             if type(df.index[0]) == 'str':
                 new_index = pd.to_datetime(df.index, format=fmt)
@@ -113,7 +108,6 @@ class Series:
                 self.nvalues = df.shape[0]
                 self.freq = pd.infer_freq(self.data.index)
                 self.name = name
-                self.tz = tz
             else:
                 self.data = df
                 self.start_utc = df.index[0]
@@ -121,13 +115,21 @@ class Series:
                 self.nvalues = df.shape[0]
                 self.freq = pd.infer_freq(self.data.index)
                 self.name = name
-                self.tz = tz
-
-            if tz is None:
-                self.timezone = pytz.utc
-            else:
-                self.timezone = pytz.timezone(tz)
                 
+        # Deal with unit     
+        if unit is None:
+            self.unit = None
+        else:
+            self.unit = unit
+        
+        # Deal with timezone
+        if tz is None:
+            self.tz = 'UTC'
+            self.timezone = pytz.utc
+        else:
+            self.tz = tz
+            self.timezone = pytz.timezone(tz)
+        
         
     def get_start_date_local(self):
         """
@@ -242,7 +244,6 @@ class TimeSeries(Series):
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
-        self.unit = unit
     
     
     
@@ -265,8 +266,13 @@ class TimeSeries(Series):
         plt.plot(self.data.index, self.data.values, color='k')
         
         # Make it cute
-        title = "Time series " + self.name + " from " + str(self.start_utc)[:10] \
+        if self.name is None:
+            tmp_name = " "
+        else:
+            tmp_name = self.name
+        title = "Time series" + tmp_name + "from " + str(self.start_utc)[:10] \
                 + " to " + str(self.end_utc)[:10]
+        print(title)
         if self.unit is None:
             ylabel = 'Value'
         else:
@@ -338,7 +344,11 @@ class TimeSeries(Series):
         # Plot 1 - Time Series simple plot
         f_ax1 = fig.add_subplot(gs[:, 0:3])
         f_ax1.plot(data.index, data.values, color='k')
-        title1 = "Time series " + self.name + " from " + s + " to " + e
+        if self.name is None:
+            tmp_name = " "
+        else:
+            tmp_name = self.name
+        title1 = "Time series" + tmp_name + "from " + s + " to " + e
         if self.unit is None:
             ylabel = 'Value'
         else:
@@ -383,7 +393,11 @@ class TimeSeries(Series):
         pd.plotting.lag_plot(self.data, lag=lag, c='black', alpha=alpha)
         
         # Set title
-        title = "Lag plot of time series " + self.name
+        if self.name is None:
+            tmp_name = " "
+        else:
+            tmp_name = self.name
+        title = "Lag plot of time series" + tmp_name
         plt.gca().set(title=title, xlabel="x(t)", ylabel="x(t+"+str(lag)+")")
         plt.show()
         
@@ -421,7 +435,11 @@ class TimeSeries(Series):
             ax.set_ylabel("x(t+"+str(i+1)+")")
         
         # Set title
-        title = "Multiple lag plots of time series " + self.name
+        if self.name is None:
+            tmp_name = " "
+        else:
+            tmp_name = self.name
+        title = "Multiple lag plots of time series " + tmp_name
         fig.suptitle(title, )
         plt.show()
         
@@ -1338,6 +1356,8 @@ class CatTimeSeries(Series):
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    unit : str or None
+      Unit of the time series values.
     tz : str
       Timezone name.
     timezone : pytz timezone
@@ -1346,7 +1366,7 @@ class CatTimeSeries(Series):
       Type of the series.
     """
     
-    def __init__(self, df=None, tz=None, name=""):
+    def __init__(self, df=None, tz=None, unit=None, name=""):
         """
         Receives a data frame as an argument and initializes the time series.
         """
@@ -1440,7 +1460,24 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-def build_from_csv(tz=None, unit=None, name=None, **kwargs):
+def type_to_series(type):
+    """
+    Returns the class TimeSeries or CatTimeSeries
+    depending on wheter it receives 'TS' or 'CTS' argument.
+    """
+    
+    if type == 'TS':
+        return TimeSeries
+    elif type == 'CTS':
+        return CatTimeSeries
+    
+    if type == None:
+        return TimeSeries
+    else:
+        raise ValueError("Series type not recognized.")
+        
+
+def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
     """
     Returns a time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
@@ -1453,6 +1490,8 @@ def build_from_csv(tz=None, unit=None, name=None, **kwargs):
       Unit name or list of unit names.
     name : str or list of str
       Time series name or list of time series names.
+    type : str or list of str
+      Time series type or list of time series types.
     **kwargs
         Arbitrary keyword arguments for pandas.read_csv().
     
@@ -1473,9 +1512,9 @@ def build_from_csv(tz=None, unit=None, name=None, **kwargs):
         
     # Return a time series
     if ncols == 1 :
-        return TimeSeries(df, tz=tz, unit=unit, name=name)
+        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
     # or return a list of time series
-    else :
+    else:
         # Checks
         if tz is not None:
             assert(isinstance(tz, list))
@@ -1495,16 +1534,22 @@ def build_from_csv(tz=None, unit=None, name=None, **kwargs):
         else:
             name = [None] * ncols
             
+        if type is not None:
+            assert(isinstance(type, list))
+            assert(len(type)==ncols)
+        else:
+            type = ['TS'] * ncols
+            
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( TimeSeries(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
-                                                                   unit=unit[i],
-                                                                   name=name[i]) )
+            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+                                                                                unit=unit[i],
+                                                                                name=name[i]) )
         return ts_list
 
 
-def build_from_excel(tz=None, unit=None, name=None, **kwargs):
+def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
     """
     Returns a time series from the reading of an excel file.
     This function uses the function pandas.read_excel().
@@ -1517,6 +1562,8 @@ def build_from_excel(tz=None, unit=None, name=None, **kwargs):
       Unit name or list of unit names.
     name : str or list of str
       Time series name or list of time series names.
+    type : str or list of str
+      Time series type or list of time series types.
     **kwargs
         Arbitrary keyword arguments for pandas.read_excel().
     
@@ -1531,16 +1578,15 @@ def build_from_excel(tz=None, unit=None, name=None, **kwargs):
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html
     """
    
-   
     # Import data into a DataFrame
     df = pd.read_excel(**kwargs)
     ncols = df.shape[1]
         
     # Return a time series
     if ncols == 1 :
-        return TimeSeries(df, tz=tz, unit=unit, name=name)
+        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
     # or return a list of time series
-    else :
+    else:
         # Checks
         if tz is not None:
             assert(isinstance(tz, list))
@@ -1560,14 +1606,19 @@ def build_from_excel(tz=None, unit=None, name=None, **kwargs):
         else:
             name = [None] * ncols
             
+        if type is not None:
+            assert(isinstance(type, list))
+            assert(len(type)==ncols)
+        else:
+            type = ['TS'] * ncols
+            
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( TimeSeries(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
-                                                                   unit=unit[i],
-                                                                   name=name[i]) )
+            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+                                                                                unit=unit[i],
+                                                                                name=name[i]) )
         return ts_list
-
 
 
 def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
@@ -1708,14 +1759,22 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
             for i in range(1,len(X),1):
                 # For any block
                 if y[i] != current_y:
-                    ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
-                                    [min_val, min_val], [max_val, max_val], color=D[current_y], alpha=0.5)
+                    ax.fill_between([ datetime.fromtimestamp(left_X),
+                                      datetime.fromtimestamp(X[i])],
+                                    [min_val, min_val],
+                                    [max_val, max_val],
+                                    color=D[current_y],
+                                    alpha=0.5)
                     left_X = X[i]
                     current_y = y[i]
                 # For the last block
                 if i == len(X)-1:
-                    ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
-                                    [min_val, min_val], [max_val, max_val], color=D[current_y], alpha=0.5)
+                    ax.fill_between([ datetime.fromtimestamp(left_X),
+                                      datetime.fromtimestamp(X[i])],
+                                    [min_val, min_val],
+                                    [max_val, max_val],
+                                    color=D[current_y],
+                                    alpha=0.5)
             
         # If the series is a TimeSeries
         elif Series[i].type == 'TimeSeries':
