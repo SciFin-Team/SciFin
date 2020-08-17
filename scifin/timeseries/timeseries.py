@@ -1531,6 +1531,52 @@ def build_from_list(list_values, unit=None, name="", **kwargs):
     return ts
 
 
+def build_from_lists(list_dates, list_values, unit=None, name=""):
+    """
+    Returns a time series or categorical time series from the reading of lists.
+    
+    Parameters
+    ----------
+    list_dates : list of timedates or str
+      List of values to generate either a TimeSeries or a CatTimeSeries.
+    list_values : list of float or str
+      List of values to generate either a TimeSeries or a CatTimeSeries.
+    unit : str
+      Unit of the time series values when generating a TimeSeries.
+    name : str
+      Name or nickname of the series.
+    
+    Returns
+    -------
+    TimeSeries
+      Time series built from the lists of values and dates.
+      
+    Notes
+    -----
+      For pandas.date_range please consult the following page:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.date_range.html
+    """
+
+    # Checks
+    try:
+        assert(len(list_dates)==len(list_values))
+    except IndexError:
+        raise IndexError("Lengths of list_dates and list_values should be equal.")
+    
+    # Making DataFrame
+    df = pd.DataFrame(index=list_dates, data=list_values)
+        
+    # If the first value is a string, make a CatTimeSeries
+    if type(list_values[0]) == str:
+        ts = CatTimeSeries(df, name=name)
+    # If the first value isn't a string, make a TimeSeries
+    else:
+        ts = TimeSeries(df, unit=unit, name=name)
+    
+    return ts
+
+
+
 
     
     
