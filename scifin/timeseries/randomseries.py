@@ -23,7 +23,7 @@ from . import TimeSeries
 # Simple models
 
 
-def constant(start_date, end_date, frequency, cst=0., sigma=0., name=""):
+def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, name=""):
     """
     Defines a time series with constant numerical value
     and eventually add a noise to it.
@@ -80,7 +80,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., name=""):
 
     # Make time series
     df = pd.DataFrame(index=data_index, data=data_vals)
-    ts = TimeSeries(df, name=name)
+    ts = TimeSeries(df, tz=tz, name=name)
 
     return ts
 
@@ -91,7 +91,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., name=""):
 # These models describe the evolution of time series.
 
 
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, name=""):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, name=""):
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -170,12 +170,12 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
-def random_walk(start_date, end_date, frequency, start_value, sigma, name=""):
+def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, name=""):
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -234,12 +234,12 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, name=""):
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
-def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, name=""):
+def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, tz=None, name=""):
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -300,12 +300,12 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, name=""):
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, name=""):
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -389,14 +389,14 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, n
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
 
 def arma(start_date, end_date, frequency, start_values,
-         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, name=""):
+         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, tz=None, name=""):
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -483,13 +483,13 @@ def arma(start_date, end_date, frequency, start_values,
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
 
-def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, name=""):
+def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, tz=None, name=""):
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -578,7 +578,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
@@ -588,7 +588,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def arch(start_date, end_date, frequency, cst, order, coeffs, name=""):
+def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, name=""):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -682,12 +682,12 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, name=""):
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
-def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, name=""):
+def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, name=""):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -789,12 +789,12 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
 
-def charma(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
+def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, name=""):
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -872,7 +872,7 @@ def charma(start_date, end_date, frequency, order, cov_matrix, sigma, name=""):
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, name=name)
+    rs = TimeSeries(df, tz=tz, name=name)
     
     return rs
 
