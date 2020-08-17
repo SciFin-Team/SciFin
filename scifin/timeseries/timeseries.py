@@ -70,6 +70,8 @@ class Series:
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    tz : str
+      Timezone name.
     timezone : pytz timezone
       Timezone associated with dates.
     """
@@ -97,7 +99,10 @@ class Series:
             
             # Making sure the dataframe is just
             # an index + 1 value column
-            assert(df.shape[1]==1)
+            try:
+                assert(df.shape[1]==1)
+            except AssertionError:
+                raise AssertionError("Time series must be built from a data frame with only one value column.")
             
             # Extract values
             if type(df.index[0]) == 'str':
@@ -218,6 +223,8 @@ class TimeSeries(Series):
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    tz : str
+      Timezone name.
     timezone : pytz timezone
       Timezone associated with dates.
     type : str
@@ -1331,6 +1338,8 @@ class CatTimeSeries(Series):
       Frequency inferred from index.
     name : str
       Name or nickname of the series.
+    tz : str
+      Timezone name.
     timezone : pytz timezone
       Timezone associated with dates.
     type : str
@@ -1431,13 +1440,19 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-def build_from_csv(tz=None, unit=None, name="", **kwargs):
+def build_from_csv(tz=None, unit=None, name=None, **kwargs):
     """
     Returns a time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
     
     Arguments
     ---------
+    tz : str
+      Timezone name.
+    unit : str or list of str
+      Unit name of list of unit names.
+    name : str or list of str
+      Name of unique time series or list of names for time series.
     **kwargs
         Arbitrary keyword arguments for pandas.read_csv().
     
@@ -1452,10 +1467,27 @@ def build_from_csv(tz=None, unit=None, name="", **kwargs):
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
     """
    
+    # Import data into a DataFrame
     df = pd.read_csv(**kwargs)
-    ts = TimeSeries(df, tz=tz, unit=unit, name=name)
-    
-    return ts
+    ncols = df.shape[1]
+        
+    # Return a time series
+    if ncols == 1 :
+        return TimeSeries(df, tz=tz, unit=unit, name=name)
+    # or return a list of time series
+    else :
+        # Checks
+        if unit is not None:
+            assert(isinstance(unit, list))
+            assert(len(unit)==ncols)
+        if name is not None:
+            assert(isinstance(name, list))
+            assert(len(name)==ncols)
+        # Fill up a list with time series
+        ts_list = []
+        for i in range(ncols):
+            ts_list.append(TimeSeries(pd.DataFrame(df.iloc[:,i]))) # , tz=tz, unit=unit, name=name[i])
+        return ts_list
 
 
 def build_from_excel(tz=None, unit=None, name="", **kwargs):
