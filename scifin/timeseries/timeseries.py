@@ -259,6 +259,11 @@ class TimeSeries(Series):
           Dimensions of the figure.
         dpi : int
           Dots-per-inch definition of the figure.
+          
+        Returns
+        -------
+        None
+          None
         """
         
         # Plot
@@ -272,7 +277,6 @@ class TimeSeries(Series):
             tmp_name = self.name
         title = "Time series" + tmp_name + "from " + str(self.start_utc)[:10] \
                 + " to " + str(self.end_utc)[:10]
-        print(title)
         if self.unit is None:
             ylabel = 'Value'
         else:
@@ -1391,8 +1395,16 @@ class CatTimeSeries(Series):
         except ValueError:
             raise ValueError("Number of categories too large for colors handling.")
         
+        # Dates
         X = [datetime.timestamp(x) for x in self.data.index]
-        y = self.data.values.flatten()
+        # Adding one more step to show last value
+        delta = self.data.index[-1] - self.data.index[-2]
+        X.append(datetime.timestamp(self.data.index[-1] + delta))
+        
+        # Category values
+        y = self.data.values.flatten().tolist()
+        # Copying the last values
+        y.append(y[-1])
             
         # Prepare Colors
         large_color_dict = { 0: 'Red', 1: 'DeepPink', 2: 'DarkOrange', 3: 'Yellow',
@@ -1420,19 +1432,23 @@ class CatTimeSeries(Series):
           Dimensions of the figure.
         dpi : int
           Dots-per-inch definition of the figure.
+          
+        Returns
+        -------
+        None
+          None
         """
         
         # Making the restricted color dictionary
         X, y, D = self.prepare_cat_plot()
         
         # Initiate figure
-        #plt.figure(figsize=figsize, dpi=dpi)
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         
         # Color block
         left_X = X[0]
         current_y = y[0]
-        for i in range(1,self.nvalues,1):
+        for i in range(1,self.nvalues+1,1):
             
             # For any block
             if y[i] != current_y:
@@ -1442,7 +1458,7 @@ class CatTimeSeries(Series):
                 current_y = y[i]
 
             # For the last block
-            if i == self.nvalues-1:
+            if i == self.nvalues:
                 ax.fill_between([datetime.fromtimestamp(left_X), datetime.fromtimestamp(X[i])],
                                 [0,0], [1,1], color=D[current_y], alpha=0.5)
         
