@@ -1447,12 +1447,12 @@ def build_from_csv(tz=None, unit=None, name=None, **kwargs):
     
     Arguments
     ---------
-    tz : str
-      Timezone name.
+    tz : str or list of str.
+      Timezone name or list of timezone names.
     unit : str or list of str
-      Unit name of list of unit names.
+      Unit name or list of unit names.
     name : str or list of str
-      Name of unique time series or list of names for time series.
+      Time series name or list of time series names.
     **kwargs
         Arbitrary keyword arguments for pandas.read_csv().
     
@@ -1477,26 +1477,46 @@ def build_from_csv(tz=None, unit=None, name=None, **kwargs):
     # or return a list of time series
     else :
         # Checks
+        if tz is not None:
+            assert(isinstance(tz, list))
+            assert(len(tz)==ncols)
+        else:
+            tz = [None] * ncols
+            
         if unit is not None:
             assert(isinstance(unit, list))
             assert(len(unit)==ncols)
+        else:
+            unit = [None] * ncols
+            
         if name is not None:
             assert(isinstance(name, list))
             assert(len(name)==ncols)
+        else:
+            name = [None] * ncols
+            
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append(TimeSeries(pd.DataFrame(df.iloc[:,i]))) # , tz=tz, unit=unit, name=name[i])
+            ts_list.append( TimeSeries(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+                                                                   unit=unit[i],
+                                                                   name=name[i]) )
         return ts_list
 
 
-def build_from_excel(tz=None, unit=None, name="", **kwargs):
+def build_from_excel(tz=None, unit=None, name=None, **kwargs):
     """
     Returns a time series from the reading of an excel file.
     This function uses the function pandas.read_excel().
     
     Arguments
     ---------
+    tz : str or list of str.
+      Timezone name or list of timezone names.
+    unit : str or list of str
+      Unit name or list of unit names.
+    name : str or list of str
+      Time series name or list of time series names.
     **kwargs
         Arbitrary keyword arguments for pandas.read_excel().
     
@@ -1511,10 +1531,43 @@ def build_from_excel(tz=None, unit=None, name="", **kwargs):
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html
     """
    
+   
+    # Import data into a DataFrame
     df = pd.read_excel(**kwargs)
-    ts = TimeSeries(df, tz=tz, unit=unit, name=name)
-    
-    return ts
+    ncols = df.shape[1]
+        
+    # Return a time series
+    if ncols == 1 :
+        return TimeSeries(df, tz=tz, unit=unit, name=name)
+    # or return a list of time series
+    else :
+        # Checks
+        if tz is not None:
+            assert(isinstance(tz, list))
+            assert(len(tz)==ncols)
+        else:
+            tz = [None] * ncols
+            
+        if unit is not None:
+            assert(isinstance(unit, list))
+            assert(len(unit)==ncols)
+        else:
+            unit = [None] * ncols
+            
+        if name is not None:
+            assert(isinstance(name, list))
+            assert(len(name)==ncols)
+        else:
+            name = [None] * ncols
+            
+        # Fill up a list with time series
+        ts_list = []
+        for i in range(ncols):
+            ts_list.append( TimeSeries(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+                                                                   unit=unit[i],
+                                                                   name=name[i]) )
+        return ts_list
+
 
 
 def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
