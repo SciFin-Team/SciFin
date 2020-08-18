@@ -1,7 +1,7 @@
 
-For long functions not in a class (Semi-completed):
----------------------------------------------------
+### For long functions (>10 lines of code) not in a class (Semi-completed):
 
+``` python
 def ...(arg1, arg2=1):
     """
     Direct description of the function...
@@ -49,11 +49,10 @@ def ...(arg1, arg2=1):
     
     return ...
     or pass
-    
+```
     
 
-For long functions not in a class (Empty):
-------------------------------------------
+### For long functions (>10 lines of code) not in a class (Empty):
 
 def ...(...):
     """
@@ -92,8 +91,8 @@ def ...(...):
     
     
 
-For shorts functions (<10 lines of code) not in a class (Empty):
-----------------------------------------------------------------
+### For shorts functions (<10 lines of code) not in a class (Empty):
+
 
 def ...(...):
     """
@@ -120,8 +119,7 @@ def ...(...):
     
     
 
-For classes :
--------------
+### For classes :
 
 class ...(...):
     """
