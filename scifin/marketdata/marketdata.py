@@ -254,13 +254,9 @@ def market_EWindex(market, name="Market EW Index"):
       A pandas data frame with the EW index values.
     """
     
-    # Checks
-    assert(asset.count(np.nan)!=0)
-    
     df = pd.DataFrame(market.sum(axis=1))
-    EWindex_ts = ts.TimeSeries(df, name=name)
     
-    return EWindex_ts
+    return df
 
 
 

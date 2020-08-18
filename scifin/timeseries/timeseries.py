@@ -106,14 +106,14 @@ class Series:
                 self.start_utc = datetime.strptime(str(new_index[0]), fmt)
                 self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
                 self.nvalues = df.shape[0]
-                self.freq = pd.infer_freq(self.data.index)
+                self.freq = pd.infer_freq(new_index)
                 self.name = name
             else:
                 self.data = df
                 self.start_utc = df.index[0]
                 self.end_utc = df.index[-1]
                 self.nvalues = df.shape[0]
-                self.freq = pd.infer_freq(self.data.index)
+                self.freq = pd.infer_freq(df.index)
                 self.name = name
                 
         # Deal with unit     

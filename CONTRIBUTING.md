@@ -31,7 +31,7 @@ If dealing with branches is as appealing as eating broccolis, creating unit test
 
 ## Coding conventions
 
-**Generalities:**
+### Generalities:
 
 - Every function or class we write should have at least a docstring with a short description of its purpose. Doctrings start with """ and end with """.
 
@@ -42,12 +42,12 @@ If dealing with branches is as appealing as eating broccolis, creating unit test
 - When returned objects are not obvious, a Returns section should be added. A Notes section can also be used to give precisions about the choices made for development and to give references to the reader.
 
 
-**Templates:**
+### Templates:
 
 To help development and avoid too much typing, some templates for functions and classes are provided in [coding_templates.md](https://github.com/SciFin-Team/SciFin/wiki/docs/coding_templates.md).
 
 
-**Syntax advice:**
+### Syntax advice:
 
 Going more into details, some good practice to keep the code clear are the following:
 
