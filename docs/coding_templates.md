@@ -48,12 +48,12 @@ def ...(arg1, arg2=1):
     
     
     return ...
-    or pass
 ```
     
 
 ### For long functions (>10 lines of code) not in a class (Empty):
 
+``` python
 def ...(...):
     """
     ...
@@ -88,12 +88,12 @@ def ...(...):
     ...
     
     return ...
-    
+```
     
 
 ### For shorts functions (<10 lines of code) not in a class (Empty):
 
-
+``` python
 def ...(...):
     """
     ...
@@ -116,11 +116,12 @@ def ...(...):
     ...
     
     return ...
-    
+```
     
 
 ### For classes :
 
+``` python
 class ...(...):
     """
     ...
@@ -132,11 +133,16 @@ class ...(...):
     
     
     """
+    
+    def __init__(self, arg1, arg2=1):
+        """
+        ...
+        """
+        self.a = ...
+        self.b = ...
+    
+```
 
 
-
-    
-    
-    
     
     
