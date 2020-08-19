@@ -110,6 +110,33 @@ class Market:
             self.timezone = pytz.timezone(tz)
 
 
+            
+    def is_index_valid(self):
+        """
+        Checks if the market has a correct index, meaning no date value is repeated.
+
+        Parameters
+        ----------
+        market : DataFrame
+          The market to be used.
+
+        Returns
+        -------
+        bool
+          Returns True if the index is valid, False otherwise.
+        """
+
+        index = self.data.index.tolist()
+        market_set = set(index)
+
+        for s in market_set:
+            if index.count(s) > 1:
+                return False
+        return True
+            
+            
+            
+            
 
 # GENERAL FUNCTIONS RELATED TO MARKET
 
@@ -267,29 +294,6 @@ def create_market_returns(r_ini, drift, sigma, n_years,
 
 
 
-
-def is_index_valid(market):
-    """
-    Checks if the market has a correct index, meaning no date value is repeated.
-    
-    Parameters
-    ----------
-    market : DataFrame
-      The market to be used.
-    
-    Returns
-    -------
-    bool
-      Returns True if the index is valid, False otherwise.
-    """
-    
-    index = market.index.tolist()
-    market_set = set(index)
-    
-    for s in market_set:
-        if index.count(s) > 1:
-            return False
-    return True
     
 
 def create_market_shares(market, mean=100000, stdv=10000):
