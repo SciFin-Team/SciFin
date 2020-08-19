@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 # Local application imports
 from . import marketdata
+from .. import timeseries
 
 
 # Dictionary of Pandas' Offset Aliases
@@ -110,7 +111,6 @@ class Market:
             self.timezone = pytz.timezone(tz)
 
 
-            
     def is_index_valid(self):
         """
         Checks if the market has a correct index, meaning no date value is repeated.
@@ -152,6 +152,35 @@ class Market:
         return None
 
 
+    def to_list(self, start_date=0, end_date=-1):
+        """
+        Converts the Market data frame into a list of TimeSeries.
+
+        Parameters
+        ----------
+        market : Market
+          Market to convert.
+        start_date : str or datetime
+          Starting date we want for the time series.
+        end_date : str or datetime
+          Ending date we want for the time series.
+
+        Returns
+        -------
+        List of TimeSeries
+          The list of times series extracted from the data frame.
+        """
+
+        # Forming a list of timeseries
+        list_ts = []
+        shared_index = self.data.index
+
+        # Loop over columns
+        for c in self.data.columns:
+            tmp_df = pd.DataFrame(data=self.data[start_date:end_date][c], index=shared_index)
+            list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
+
+        return list_ts
 
 
 # GENERAL FUNCTIONS RELATED TO MARKET

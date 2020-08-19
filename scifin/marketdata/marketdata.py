@@ -13,10 +13,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas_datareader as pdr
+import pandas_datareader.data as web
 
 # Local application imports
 from .. import exceptions
 from .. import timeseries as ts
+from . import simuldata
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -47,7 +49,7 @@ def get_sp500_tickers():
 
 
 
-def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
+def get_assets_from_yahoo(list_assets, feature, start_date, end_date, name=""):
     """
     Extracts values associated to a feature for a list of assets
     between 2 dates, using Yahoo Finance data.
@@ -65,8 +67,8 @@ def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
     
     Returns
     -------
-    DataFrame
-      A list of timeseries all having the same index and distinctive names.
+    Market
+      A market made of timeseries having same index and distinctive names.
     
     Raises
     ------
@@ -101,7 +103,7 @@ def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
     N = len(listassets)
     counter = 1
     
-    # loop
+    # Make DataFrame
     for i in range(N):
         print(i)
         
@@ -116,119 +118,10 @@ def get_assets_from_yahoo_df(list_assets, feature, start_date, end_date):
         except:
             print(listassets[i], " could not be imported.")
 
-    return assets
-
-
-def get_assets_from_yahoo(list_assets, feature, start_date, end_date):
-    """
-    Extracts values associated to a feature for a list of assets
-    between 2 dates, using Yahoo Finance data.
+    # Make Market
+    market = simuldata.Market(df=assets, name=name)
     
-    Parameters
-    ----------
-    list_assets : list of str
-      The list of ticker names we want to extract from Yahoo Finance.
-    feature : str
-      The feature name among 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
-    start_date : str or datetime
-      The start date of extraction.
-    end_date : str or datetime
-      The end date of extraction.
-    
-    Returns
-    -------
-    List of TimeSeries
-      A list of time series representing the assets.
-    
-    Raises
-    ------
-    AssertionError
-      When the chosen feature is not in the allowed list.
-    
-    Notes
-    -----
-      The choices for the feature provided by Yahoo Finance are:
-      'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
-    
-      Learn more about pandas_datareader on:
-      https://pydata.github.io/pandas-datareader/stable/index.html
-    
-    Examples
-    --------
-      None
-    """
-    
-    # Check the feature is right
-    try:
-        assert(feature in ['High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'])
-    except AssertionError:
-        raise AssertionError("Feature must be one of the following: \
-        'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.")
-    
-    # Sort list
-    assets_names = np.sort(list_assets)
-    
-    # Initialization
-    assets = []
-    N = len(assets_names)
-    counter = 1
-    
-    # Loop to obtain the assets data from Yahoo
-    for i in range(N):
-        print(i)
-        
-        # Printing status of execution
-        clear_output(wait=True)
-        display("Running... " + str(int(counter/N*100)) + '%')
-        counter += 1
-        
-        try:
-            assets.append( (pdr.get_data_yahoo(assets_names[i], start=start_date, end=end_date)[feature].to_frame(), assets_names[i]) )
-        except:
-            print(assets_names[i], " could not be imported.")
-
-    # Making a list of TimeSeries with them
-    list_ts = []
-    for a in assets:
-        tmp_ts = ts.TimeSeries(df=a[0], name=str(a[1]))
-        list_ts.append(tmp_ts)
-        
-    return list_ts
-
-
-def convert_multicol_df_tolist(df, start_date, end_date):
-    """
-    Converts the multi-columns data frame obtained
-    from get_assets_from_yahoo() into a list of TimeSeries.
-    
-    Parameters
-    ----------
-    df : DataFrame
-      The data frame obtained from get_assets_from_yahoo() or another method.
-    start_date : str or datetime
-      The starting date we want for the time series.
-    end_date : str or datetime
-      The ending date we want for the time series.
-    
-    Returns
-    -------
-    List of TimeSeries
-      The list of times series extracted from the data frame.
-    """
-    
-    # Forming a list of timeseries
-    list_ts = []
-    shared_index = df.index
-    
-    # Loop over columns
-    for c in df.columns:
-        tmp_df = pd.DataFrame(data=df[start_date:end_date][c], index=shared_index)
-        list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
-    
-    return list_ts
-
-
-
+    return market
 
 
 
@@ -245,7 +138,7 @@ def market_EWindex(market, name="Market EW Index"):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we use to sum values.
     
     Returns
@@ -254,7 +147,7 @@ def market_EWindex(market, name="Market EW Index"):
       A pandas data frame with the EW index values.
     """
     
-    df = pd.DataFrame(market.sum(axis=1))
+    df = pd.DataFrame(market.data.sum(axis=1))
     
     return df
 
@@ -266,7 +159,7 @@ def get_marketcap_today(market):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we extract tickers from.
     
     Returns
@@ -276,7 +169,7 @@ def get_marketcap_today(market):
     """
     
     # Extracting the quotes from the market columns names
-    marketcap_today = pdr.data.get_quote_yahoo(market.columns)['marketCap']
+    marketcap_today = pdr.data.get_quote_yahoo(market.data.columns)['marketCap']
     
     # Creating a Pandas Series from them
     marketcap = pd.Series(index=marketcap_today.index, data=marketcap_today)
@@ -298,7 +191,7 @@ def market_CWindex(market, marketcap):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we use to sum values.
     marketcap : DataFrame
       The market capitalization we use to compute weights.
@@ -310,15 +203,15 @@ def market_CWindex(market, marketcap):
     """
     
     # Initialization
-    if (set(market.columns) != set(marketcap.index)):
-        print(market.columns)
+    if (set(market.data.columns) != set(marketcap.index)):
+        print(market.data.columns)
         print(marketcap.index)
         raise IndexError("Error: the two data sources need to have same columns.")
-    Nassets = market.shape[1]
+    Nassets = market.dims[1]
     
     # Computing weighted returns
-    M = Nassets * (market * marketcap / marketcap.sum()).sum(axis=1)
-    market_index = pd.DataFrame(data=M, index=market.index,
+    M = Nassets * (market.data * marketcap / marketcap.sum()).sum(axis=1)
+    market_index = pd.DataFrame(data=M, index=market.data.index,
                                 columns=["Market CW Index (Cap from last day)"])
     
     return market_index
