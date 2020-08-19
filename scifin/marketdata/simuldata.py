@@ -277,7 +277,6 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     return None
 
 
-
 def create_market_returns(r_ini, drift, sigma, n_years,
                           steps_per_year, n_components,
                           date, date_type, interval_type='D',
@@ -340,7 +339,6 @@ def create_market_returns(r_ini, drift, sigma, n_years,
     return market_returns
 
 
-
 def create_market_shares(market, mean=100000, stdv=10000):
     """
     Creates a list of randomly generated numbers of shares for a market.
@@ -377,8 +375,6 @@ def create_market_shares(market, mean=100000, stdv=10000):
         raise ValueError("A negative market share was generated, please launch again.")
     
     return market_shares
-
-
 
 
 def plot_market_components(market, dims=(10,5), legend=True):
@@ -430,7 +426,7 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     ----------
     individual : Individual
       Individual whose genes will be used.
-    environment : DataFrame
+    environment : Market
       Describes the time evolution of genes composing the individual.
     name_indiv : str
       Name of the individual.
@@ -474,7 +470,7 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     
     Parameters
     ----------
-    environment : DataFrame
+    environment : Market
       Represents the environment, i.e. the time evolution of gene values.
     n_dates : int
       Number of evaluation dates to generate.
@@ -499,16 +495,16 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     assert(n_dates)
     
     # Initialization
-    n_ticks = environment.shape[0]
+    n_ticks = environment.dims[0]
     indices = np.linspace(start = 0, stop = n_ticks-1, num = n_dates+1).astype('int')
     
     # Find the corresponding dates
-    special_dates = environment.index.to_timestamp()[indices].to_period(interval_type)
+    special_dates = environment.data.index.to_timestamp()[indices].to_period(interval_type)
     
-    # Raising exceptions if generated dates aren't satisfactory
-    if special_dates[0] != environment.index[0]:
+    # Raise exceptions if generated dates aren't satisfactory
+    if special_dates[0] != environment.data.index[0]:
         raise IndexError("Generated dates unsatisfactory !")
-    if special_dates[-1] != environment.index[-1]:
+    if special_dates[-1] != environment.data.index[-1]:
         raise IndexError("Generated dates unsatisfactory !")
     
     return special_dates

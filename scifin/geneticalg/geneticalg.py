@@ -39,21 +39,28 @@ class Individual:
         """
         Initializes the Individual.
         """
-        self.genes = np.array(genes)
-        self.ngenes = len(genes)
+        if genes is None:
+            self.genes = None
+            self.ngenes = 0
+        else:
+            self.genes = np.array(genes)
+            self.ngenes = len(genes)
+            
+        # Others
         self.birth_date = birth_date
         self.history = None
         self.name = name
     
-
-    def generate_random_genes(self, number_of_genes, lower_limit, upper_limit, sum_target=None):
+    
+    @classmethod
+    def generate_random_genes(cls, n_genes, lower_limit, upper_limit, sum_target=None, birth_date=None, name="") -> 'Individual' :
         """
         Generates genes values randomly between upper_limit and lower_limit
         (values before normalization), with possibility to impose a target value for their sum.
 
         Parameters
         ----------
-        number_of_genes : int
+        n_genes : int
           Number of genes making up the individual.
         upper_limit : float
           Maximum value taken by the genes, before normalization.
@@ -74,7 +81,7 @@ class Individual:
           If the gene value is positive, it corresponds to a long position,
           if negative, it corresponds to a short position.
 
-          In the case of a portfolio, number_of_genes can be the number of assets
+          In the case of a portfolio, n_genes can be the number of assets
           to consider, upper_limit / lower_limit the respective maximum / minimum
           asset allocations, and sum_target the total investment value after normalization.
 
@@ -86,11 +93,11 @@ class Individual:
         """
 
         # Checks
-        assert(isinstance(number_of_genes, int))
+        assert(isinstance(n_genes, int))
         
         # Generate individual's genes
         genes = [ random.random() * (upper_limit-lower_limit) 
-                       + lower_limit for x in range(number_of_genes) ]
+                       + lower_limit for x in range(n_genes) ]
         
         # Compute normalization (if requested)
         if sum_target is not None:
@@ -99,41 +106,45 @@ class Individual:
                 print("Warning: sum of genes has opposite sign than sum_target.")
                 print("         Normalization with thus flip sign of all genes.")
             normalization = sum_genes / sum_target
-            self.genes = np.array(genes) / normalization
+            cls_genes = np.array(genes) / normalization
             
         # Otherwise just set the genes
         else:
-            self.genes = np.array(genes)
-        
-        # Update the number of genes
-        self.ngenes = number_of_genes
-            
-        return None
+            cls_genes = np.array(genes)
 
+        return cls(genes=cls_genes, birth_date=birth_date, name=name)
 
     
     
-    
-# >>>>> SOME FUNCTIONS TO GET RID OFF AFTER:
-    
-    
-    
-    
-    
-
-
-
-
-def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
-               sum_target, birth_date, name_indiv="Indiv"):
+class Population:
     """
-    Creates a population of individuals from the function `individual`.
+    Creates a population, i.e. a table of individuals
+    with there respective genes values.
+    """
+    
+    def __init__(self, df=None, name=""):
+        if (df is None) or (df.empty == True):
+            self.data = None
+            self.n_indiv = None
+            self.n_genes = None
+            self.name = "Empty population"
+        else:
+            self.data = df
+            self.n_indiv = df.shape[0]
+            self.n_genes = df.shape[1]
+            self.name = name
+    
+
+def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
+                               sum_target, birth_date, name_indiv="Indiv"):
+    """
+    Creates a population of individuals from random values.
     
     Parameters
     ----------
-    number_of_individuals : int
+    n_indiv : int
       Number of individuals we want in this creation of a population.
-    number_of_genes : int
+    n_genes : int
       Number of genes each of these individuals have.
     upper_limit : float
       Maximum value taken by the genes, before normalization.
@@ -148,30 +159,38 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
       
     Returns
     -------
-    DataFrame
-      Pandas data frame containing the individuals of the populations as rows
+    Population
+      Population containing the individuals of the populations as rows
       and genes composing them as columns.
     """
     
     # Checks
-    assert(isinstance(number_of_individuals,int))
-    assert(isinstance(number_of_genes,int))
+    assert(isinstance(n_indiv,int))
+    assert(isinstance(n_genes,int))
     
     # Building a data frame of individuals
-    pop = pd.DataFrame([ individual(number_of_genes, upper_limit, lower_limit, sum_target)
-                         for _ in range(number_of_individuals) ])
-    pop.columns = ["Asset " + str(i) for i in range(number_of_genes)]
+    pop_df = pd.DataFrame([ Individual.generate_random_genes(n_genes, upper_limit, lower_limit, sum_target).genes
+                            for _ in range(n_indiv) ])
+    pop_df.columns = ["Asset " + str(i) for i in range(n_genes)]
     
     # Setting the birth date of the individuals
-    pop["Born"] = [birth_date for _ in range(number_of_individuals)]
+    pop_df["Born"] = [birth_date for _ in range(n_indiv)]
     
     # Setting the row names
-    pop.index = [name_indiv + str(i+1) for i in range(number_of_individuals)]
-    pop.index.names = ["Individuals"]
+    pop_df.index = [name_indiv + str(i+1) for i in range(n_indiv)]
+    pop_df.index.names = ["Individuals"]
+    
+    # Generate Population
+    pop = Population(df=pop_df)
     
     return pop
-
-
+    
+    
+    
+    
+# >>>>> SOME FUNCTIONS TO GET RID OFF AFTER:
+    
+    
 def get_generation(population, environment, current_eval_date, next_eval_date,
                    lamb=0.5, fitness_method="Last Return and Vol",
                    return_propag=False, date_format="%Y-%m"):
