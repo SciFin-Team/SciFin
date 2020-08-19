@@ -110,6 +110,7 @@ class Individual:
             
         return None
 
+
     
     
     

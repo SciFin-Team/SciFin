@@ -133,9 +133,24 @@ class Market:
             if index.count(s) > 1:
                 return False
         return True
-            
-            
-            
+    
+    
+    def reset_index(self, new_index):
+        """
+        Resets the index with a new one given in argument.
+        """
+        
+        # Checks
+        try:
+            assert(len(new_index) == self.data.shape[0])
+        except AssertionError:
+            AssertionEror("New index should have same dimension as current index.")
+    
+        # Replacing index
+        self.data.index = new_index
+        
+        return None
+    
             
 
 # GENERAL FUNCTIONS RELATED TO MARKET
