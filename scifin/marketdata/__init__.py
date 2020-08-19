@@ -13,7 +13,7 @@ from .marketdata import get_sp500_tickers, get_assets_from_yahoo_df, get_assets_
                         get_marketcap_today, market_EWindex, market_CWindex
 
 from .simuldata  import Market, \
-                        create_market_returns, set_market_names, is_index_valid, create_market_shares, \
+                        set_market_names, create_market_returns, create_market_shares, \
                         plot_market_components, propagate_individual, evaluation_dates, \
                         find_tick_before_eval, limited_propagation, portfolio_vol, \
                         fitness_calculation, \

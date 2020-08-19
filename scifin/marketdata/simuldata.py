@@ -150,8 +150,9 @@ class Market:
         self.data.index = new_index
         
         return None
-    
-            
+
+
+
 
 # GENERAL FUNCTIONS RELATED TO MARKET
 
@@ -245,6 +246,7 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     return None
 
 
+
 def create_market_returns(r_ini, drift, sigma, n_years,
                           steps_per_year, n_components,
                           date, date_type, interval_type='D',
@@ -308,9 +310,6 @@ def create_market_returns(r_ini, drift, sigma, n_years,
 
 
 
-
-    
-
 def create_market_shares(market, mean=100000, stdv=10000):
     """
     Creates a list of randomly generated numbers of shares for a market.
@@ -318,7 +317,7 @@ def create_market_shares(market, mean=100000, stdv=10000):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we want to create shares for.
     mean : float
       The average value of a market share.
@@ -327,21 +326,28 @@ def create_market_shares(market, mean=100000, stdv=10000):
       
     Returns
     -------
-    DataFrame
-      The data frame containing the market shares.
+    Pandas Series
+      The pandas series containing the market shares.
     """
     
-    # number of shares we want
-    n_assets = market.shape[1]
+    # Checks
+    assert(isinstance(market, Market))
     
+    # Get number of assets
+    n_assets = market.data.shape[1]
+    
+    # Create market shares
     market_shares = pd.Series( [int(np.random.normal(loc=mean, scale=stdv, size=1)) 
                                 for _ in range(n_assets)] )
-    market_shares.index = market.columns
+    market_shares.index = market.data.columns
     
+    # Checks
     if market_shares.min() < 0:
         raise ValueError("A negative market share was generated, please launch again.")
     
     return market_shares
+
+
 
 
 def plot_market_components(market, dims=(10,5), legend=True):
@@ -350,7 +356,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we take values from.
     dims : (int,int)
       Dimensions of the plot.
@@ -364,17 +370,17 @@ def plot_market_components(market, dims=(10,5), legend=True):
     """
     
     # Computing the EW portfolio
-    market_EW = marketdata.market_EWindex(market)
+    market_EW = marketdata.market_EWindex(market.data)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims, color='k', lw=3, legend=legend)
     
     # Plotting individual portfolios
-    x = market.index.values.tolist()
-    y = market.to_numpy().transpose()
+    x = market.data.index.values.tolist()
+    y = market.data.to_numpy().transpose()
 
     # Stack plot
-    axis.stackplot(x, y, labels=market.columns.tolist())
+    axis.stackplot(x, y, labels=market.data.columns.tolist())
     if legend:
         axis.legend(loc='upper left')
 
