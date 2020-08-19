@@ -6,7 +6,8 @@ __author__ = "Fabien Nugier"
 The :mod:`scifin.geneticalg` module includes methods for genetic algorithms.
 """
 
-from .geneticalg import individual, population, get_generation, roulette, selection, \
+from .geneticalg import Individual, \
+                        individual, population, get_generation, roulette, selection, \
                         pairing, non_adjacent_random_list, mating_pair, get_offsprings, \
                         mutate_individual, mutation_set, mutate_population, \
                         next_generation, get_elite_and_individuals, \

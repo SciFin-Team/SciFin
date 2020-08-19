@@ -19,6 +19,36 @@ from .. import marketdata
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
+class Individual:
+    """
+    Defines an individual.
+    
+    Attributes
+    ----------
+    genes : list of floats or list of str
+      Genes defining the nature of the individual.
+    birth : datetime or str
+      Date of birth.
+    death : datetime or str
+      Date of death.
+    name : str
+      Name of the individual.
+    """
+
+    def __init__(self, genes=None, birth=None, death=None, name=""):
+        """
+        Initializes the Individual.
+        """
+        self.genes = genes
+        self.ngenes = len(genes)
+        self.birth = birth
+        self.death = death
+        self.name = name
+    
+
+    
+    
+
 def individual(number_of_genes, upper_limit, lower_limit, sum_target):
     """
     Creates an individual from random values called genes.    
