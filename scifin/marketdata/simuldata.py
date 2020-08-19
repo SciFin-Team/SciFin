@@ -399,7 +399,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
     """
     
     # Computing the EW portfolio
-    market_EW = marketdata.market_EWindex(market.data)
+    market_EW = marketdata.market_EWindex(market)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims, color='k', lw=3, legend=legend)

@@ -148,6 +148,7 @@ def market_EWindex(market, name="Market EW Index"):
     """
     
     df = pd.DataFrame(market.data.sum(axis=1))
+    df.columns = ['EW sum of assets']
     
     return df
 
@@ -211,10 +212,11 @@ def market_CWindex(market, marketcap):
     
     # Computing weighted returns
     M = Nassets * (market.data * marketcap / marketcap.sum()).sum(axis=1)
-    market_index = pd.DataFrame(data=M, index=market.data.index,
+    market_index_df = pd.DataFrame(data=M, index=market.data.index,
                                 columns=["Market CW Index (Cap from last day)"])
+    market_index_df.columns = ['CW sum of assets']
     
-    return market_index
+    return market_index_df
 
 
 
