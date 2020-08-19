@@ -10,13 +10,99 @@ import random as random
 # Third party imports
 import numpy as np
 import pandas as pd
+import pytz
 import matplotlib.pyplot as plt
 
 # Local application imports
 from . import marketdata
 
 
+# Dictionary of Pandas' Offset Aliases
+# and their numbers of appearance in a year.
+DPOA = {'D': 365, 'B': 252, 'W': 52,
+        'SM': 24, 'SMS': 24, 
+        'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
+        'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
+        'Y': 1, 'A':1}
+
+# Datetimes format
+fmt = "%Y-%m-%d %H:%M:%S"
+fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
+
+
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
+# CLASS FOR MARKET
+
+class Market:
+    """
+    Creates a market.
+    
+    Attributes
+    ----------
+    data : DataFrame
+      Contains a time-like index and columns of values for each market component.
+    start_utc : Pandas.Timestamp
+      Starting date.
+    end_utc : Pandas.Timestamp
+      Ending date.
+    dims : 2-tuple (int,int)
+      Dimensions of the market data.
+    freq : str or None
+      Frequency inferred from index.
+    name : str
+      Name or nickname of the series.
+    tz : str
+      Timezone name.
+    timezone : pytz timezone
+      Timezone associated with dates.
+    unit : str or None
+      Unit of the time series values.
+    """
+    
+    def __init__(self, df=None, tz=None, unit=None, name=""):
+        # Deal with DataFrame
+        if (df is None) or (df.empty == True):
+            self.data = pd.DataFrame(index=None, data=None)
+            self.start_utc = None
+            self.end_utc = None
+            self.dims = (0,0)
+            self.freq = None
+            self.name = 'Empty Market'
+        else:         
+            # Extract values
+            if type(df.index[0]) == 'str':
+                new_index = pd.to_datetime(df.index, format=fmt)
+                self.data = pd.DataFrame(index=new_index, data=df.values)
+                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
+                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.dims = df.shape
+                self.freq = pd.infer_freq(new_index)
+                self.name = name
+            else:
+                self.data = df
+                self.start_utc = df.index[0]
+                self.end_utc = df.index[-1]
+                self.dims = df.shape
+                self.freq = pd.infer_freq(df.index)
+                self.name = name
+                
+        # Deal with unit     
+        if unit is None:
+            self.unit = None
+        else:
+            self.unit = unit
+        
+        # Deal with timezone
+        if tz is None:
+            self.tz = 'UTC'
+            self.timezone = pytz.utc
+        else:
+            self.tz = tz
+            self.timezone = pytz.timezone(tz)
+
+
+
 
 
 # GENERAL FUNCTIONS RELATED TO MARKET
