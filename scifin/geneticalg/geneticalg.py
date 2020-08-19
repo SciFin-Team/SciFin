@@ -113,6 +113,7 @@ class Individual:
     
     
     
+# >>>>> SOME FUNCTIONS TO GET RID OFF AFTER:
     
     
     

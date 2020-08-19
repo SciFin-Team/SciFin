@@ -51,16 +51,17 @@ class Market:
     freq : str or None
       Frequency inferred from index.
     name : str
-      Name or nickname of the series.
+      Name or nickname of the market.
     tz : str
       Timezone name.
     timezone : pytz timezone
       Timezone associated with dates.
-    unit : str or None
-      Unit of the time series values.
+    units : List of str
+      Unit of the market data columns.
     """
     
-    def __init__(self, df=None, tz=None, unit=None, name=""):
+    def __init__(self, df=None, tz=None, units=None, name=""):
+
         # Deal with DataFrame
         if (df is None) or (df.empty == True):
             self.data = pd.DataFrame(index=None, data=None)
@@ -77,21 +78,28 @@ class Market:
                 self.start_utc = datetime.strptime(str(new_index[0]), fmt)
                 self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
                 self.dims = df.shape
-                self.freq = pd.infer_freq(new_index)
+                try:
+                    self.freq = pd.infer_freq(new_index)
+                except:
+                    self.freq = 'Unknown'
                 self.name = name
             else:
                 self.data = df
                 self.start_utc = df.index[0]
                 self.end_utc = df.index[-1]
                 self.dims = df.shape
-                self.freq = pd.infer_freq(df.index)
+                try:
+                    self.freq = pd.infer_freq(df.index)
+                except:
+                    self.freq = 'Unknown'
                 self.name = name
                 
         # Deal with unit     
-        if unit is None:
-            self.unit = None
+        if units is None:
+            self.units = None
         else:
-            self.unit = unit
+            assert(len(units) == len(self.data.columns))
+            self.units = units
         
         # Deal with timezone
         if tz is None:
@@ -103,58 +111,7 @@ class Market:
 
 
 
-
-
 # GENERAL FUNCTIONS RELATED TO MARKET
-
-def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
-                  steps_per_year=12, n_scenarios=1000):
-    """
-    Creates a market from a Geometric Brownian process for each stock.
-    
-    The model is of the form:
-    r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
-    where r_t is the return series, mu is a drift (annualized),
-    sigma is the volatility (annualised).
-    
-    Parameters
-    ----------
-    r_ini : float
-      Initial value of the stock.
-    drift : float
-      Value of the drift.
-    sigma : float
-      Volatility of the process.
-    n_years : int
-      Number of years to generate.
-    step_per_year : int
-      Number of steps per year.
-    n_scenarios : int
-      Number of scenarios.
-    
-    Returns
-    -------
-    DataFrame
-      Data frame of returns for the market.
-    """
-    
-    # Checks
-    assert(isinstance(n_years, int))
-    assert(isinstance(steps_per_year, int))
-    assert(isinstance(n_scenarios, int))
-    
-    # Initialization
-    dt = 1/steps_per_year
-    n_steps = int(n_years * steps_per_year) + 1
-    
-    # Computing r_t + 1
-    rets_plus_1 = np.random.normal(loc=(1+drift)**dt,
-                                   scale=(sigma*np.sqrt(dt)),
-                                   size=(n_steps, n_scenarios))
-    rets_plus_1[0] = 1
-    market_returns = r_ini * pd.DataFrame(rets_plus_1).cumprod()
-    
-    return market_returns
 
 
 def set_market_names(data, date, date_type="end", interval_type='D'):
@@ -244,6 +201,71 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     data.index = date_series.to_period(interval_type)
     
     return None
+
+
+def create_market_returns(r_ini, drift, sigma, n_years,
+                          steps_per_year, n_components,
+                          date, date_type, interval_type='D',
+                          tz=None, units=None, name=""):
+    """
+    Creates a market from a Geometric Brownian process for each stock.
+    
+    The model for each stock is of the form:
+    r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
+    where r_t is the return series, mu is a drift (annualized),
+    sigma is the volatility (annualised).
+    
+    Parameters
+    ----------
+    r_ini : float
+      Initial value of the stock.
+    drift : float
+      Value of the drift.
+    sigma : float
+      Volatility of the process.
+    n_years : int
+      Number of years to generate.
+    step_per_year : int
+      Number of steps per year.
+    n_components : int
+      Number of components of the market.
+    
+    Notes
+    -----
+      All stocks are assumed to be in the same time zone.
+    
+    Returns
+    -------
+    Market
+      Market of returns for the market.
+    """
+    
+    # Checks
+    assert(isinstance(n_years, int))
+    assert(isinstance(steps_per_year, int))
+    assert(isinstance(n_components, int))
+    
+    # Initialization
+    dt = 1/steps_per_year
+    n_steps = int(n_years * steps_per_year) + 1
+    
+    # Compute r_t + 1
+    rets_plus_1 = np.random.normal(loc=(1+drift)**dt,
+                                   scale=(sigma*np.sqrt(dt)),
+                                   size=(n_steps, n_components))
+    rets_plus_1[0] = 1
+    df_returns = r_ini * pd.DataFrame(rets_plus_1).cumprod()
+
+    # Set market index and column names
+    set_market_names(df_returns, date=date, date_type=date_type, interval_type=interval_type)
+    
+    # Make a market
+    market_returns = Market(df=df_returns, tz=tz, units=units, name=name)
+    
+    return market_returns
+
+
+
 
 
 def is_index_valid(market):
