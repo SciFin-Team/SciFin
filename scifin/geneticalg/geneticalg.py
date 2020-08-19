@@ -25,7 +25,7 @@ class Individual:
     
     Attributes
     ----------
-    genes : list of floats or list of str
+    genes : list/array of floats or list/array of str
       Genes defining the nature of the individual.
     birth : datetime or str
       Date of birth.
@@ -39,13 +39,83 @@ class Individual:
         """
         Initializes the Individual.
         """
-        self.genes = genes
+        self.genes = np.array(genes)
         self.ngenes = len(genes)
         self.birth = birth
         self.death = death
         self.name = name
     
 
+    def generate_random_genes(self, number_of_genes, lower_limit, upper_limit, sum_target=None):
+        """
+        Generates genes values randomly between upper_limit and lower_limit
+        (values before normalization), with possibility to impose a target value for their sum.
+
+        Parameters
+        ----------
+        number_of_genes : int
+          Number of genes making up the individual.
+        upper_limit : float
+          Maximum value taken by the genes, before normalization.
+        lower_limit : float
+          Minimum value taken by the genes, before normalization. Can be negative.
+        sum_target : float  
+          Target value for the sum of the genes after normalization.
+
+        Returns
+        -------
+        None
+          None
+
+        Notes
+        -----
+          These genes can represent the investment into a market
+          or any other value in a pool of possible values.
+          If the gene value is positive, it corresponds to a long position,
+          if negative, it corresponds to a short position.
+
+          In the case of a portfolio, number_of_genes can be the number of assets
+          to consider, upper_limit / lower_limit the respective maximum / minimum
+          asset allocations, and sum_target the total investment value after normalization.
+
+          If the sum of all the values is negative, and sum_target is positive (or vice versa),
+          then the normalization will reverse sign for all genes. A warning is raised in that case.
+
+          For a portfolio application, this means long positions become short, and conversely.
+          To prevent this from happening, an exception is raised.
+        """
+
+        # Checks
+        assert(isinstance(number_of_genes, int))
+        
+        # Generate individual's genes
+        genes = [ random.random() * (upper_limit-lower_limit) 
+                       + lower_limit for x in range(number_of_genes) ]
+        
+        # Compute normalization (if requested)
+        if sum_target is not None:
+            sum_genes = sum(genes)
+            if np.sign(sum_genes) != np.sign(sum_target):
+                print("Warning: sum of genes has opposite sign than sum_target.")
+                print("         Normalization with thus flip sign of all genes.")
+            normalization = sum_genes / sum_target
+            self.genes = np.array(genes) / normalization
+            
+        # Otherwise just set the genes
+        else:
+            self.genes = np.array(genes)
+        
+        # Update the number of genes
+        self.ngenes = number_of_genes
+            
+        return None
+
+    
+    
+    
+    
+    
+    
     
     
 
