@@ -27,22 +27,22 @@ class Individual:
     ----------
     genes : list/array of floats or list/array of str
       Genes defining the nature of the individual.
-    birth : datetime or str
+    birth_date : datetime or str
       Date of birth.
-    death : datetime or str
-      Date of death.
+    history : TimeSeries
+      History of a value built from genes and environment.
     name : str
       Name of the individual.
     """
 
-    def __init__(self, genes=None, birth=None, death=None, name=""):
+    def __init__(self, genes=None, birth_date=None, name=""):
         """
         Initializes the Individual.
         """
         self.genes = np.array(genes)
         self.ngenes = len(genes)
-        self.birth = birth
-        self.death = death
+        self.birth_date = birth_date
+        self.history = None
         self.name = name
     
 
@@ -121,60 +121,6 @@ class Individual:
     
     
 
-def individual(number_of_genes, upper_limit, lower_limit, sum_target):
-    """
-    Creates an individual from random values called genes.    
-    
-    Parameters
-    ----------
-    number_of_genes : int
-      Number of genes making up the individual.
-    upper_limit : float
-      Maximum value taken by the genes, before normalization.
-    lower_limit : float
-      Minimum value taken by the genes, before normalization. Can be negative.
-    sum_target : float  
-      Target value for the sum of the genes after normalization.
-    
-    Returns
-    -------
-    Numpy Array
-      Array containing the values of the genes making up the individual.
-      
-    Notes
-    -----
-      These genes can represent the investment into a market
-      or any other value in a pool of possible values.
-      If the gene value is positive, it corresponds to a long position,
-      if negative, it corresponds to a short position.
-      
-      In the case of a portfolio, number_of_genes can be the number of assets
-      to consider, upper_limit / lower_limit the respective maximum / minimum
-      asset allocations, and sum_target the total investment value after normalization.
-      
-      This function has a little bug that turns out to be funny.
-      If the sum of all the values is negative, then the normalization will
-      reverse the sign and we will end up having a genes which have flipped signs.
-      
-      For a portfolio application, this means long positions become short, and conversely.
-      To prevent this from happening, an exception is raised.
-    """
-    
-    # Checks
-    assert(isinstance(number_of_genes, int))
-    
-    # Generating an individual and computing normalization
-    individual = [ random.random() * (upper_limit-lower_limit) 
-                   + lower_limit for x in range(number_of_genes) ]
-    normalization = sum(individual) / sum_target
-    
-    # Check the normalization is positive
-    if normalization < 0:
-        raise ValueError("Negative normalization not allowed.")
-        
-    normalized_individual = np.array(individual) / normalization
-    
-    return normalized_individual
 
 
 

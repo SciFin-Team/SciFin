@@ -183,6 +183,8 @@ class Market:
         return list_ts
 
 
+    
+    
 # GENERAL FUNCTIONS RELATED TO MARKET
 
 
@@ -416,7 +418,8 @@ def plot_market_components(market, dims=(10,5), legend=True):
     return None
 
         
-
+    
+    
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
 def propagate_individual(individual, environment, name_indiv="Portfolio"):
@@ -425,8 +428,8 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     
     Parameters
     ----------
-    individual : list of floats
-      List of Ngenes elements that represent our initial individual.
+    individual : Individual
+      Individual whose genes will be used.
     environment : DataFrame
       Describes the time evolution of genes composing the individual.
     name_indiv : str
@@ -434,8 +437,8 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     
     Returns
     -------
-    DataFrame
-      Pandas data frame containing the sum value of genes.
+    None
+      None
     
     Notes
     -----
@@ -445,7 +448,7 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     """
     
     # Checks
-    first_row = environment.iloc[0]
+    first_row = environment.data.iloc[0]
     is_uniform = True
     first_value = first_row[0]
     for x in first_row:
@@ -453,15 +456,15 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
             raise ValueError("First row of environment must be uniform in value.")
     
     # Initializations
-    Ngenes = len(individual)
+    Ngenes = individual.ngenes
     
     # Propagating individuals
-    portfolio = environment / first_value * individual
+    portfolio = environment.data / first_value * individual.genes
     
     # Summing contributions
-    portfolio_total = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
+    individual.history = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
     
-    return portfolio_total
+    return None
 
 
 def evaluation_dates(environment, n_dates=10, interval_type='M'):
