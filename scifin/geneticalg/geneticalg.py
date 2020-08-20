@@ -3,6 +3,7 @@
 # This module is for importing, transforming and visualizing market data.
 
 # Standard library imports
+import copy
 from datetime import datetime
 from datetime import timedelta
 import random as random
@@ -198,8 +199,7 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
     
     
 def get_generation(population, environment, current_eval_date, next_eval_date,
-                   lamb=0.5, fitness_method="Last Return and Vol",
-                   return_propag=False, date_format="%Y-%m"):
+                   lamb=0.5, fitness_method="Last Return and Vol", date_format="%Y-%m"):
     """
     Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
     A generation is defined as a population with computed fitness and ranked by it.
@@ -228,18 +228,14 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     fitness_method : str
       Name of the fitness method chosen among:
       {"Last Return", "Last Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
-    return_propag : bool
-      An option to return or not the propagations.
     date_format : str
       Format of the dates in the data frames.
     
     Returns
     -------
-    DataFrame
-      Pandas data frame represented the propagated population, i.e. the generation
+    Population
+      Propagated population, i.e. the generation,
       with individuals as rows and {genes, birth date, fitness} as columns.
-    DataFrame
-      Eventually returns also the propagation of the individuals.
     
     Raises
     ------
@@ -256,8 +252,8 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
      In the context of portfolios, a 'population' has rows which are the names
      of the portfolio and columns which are the assets.
      
-     The function can also return 'propagation' that has rows which are the time stamps
-     and columns which are the names of the portfolios.
+     The function can also store a 'propagation' that has rows which are the time stamps
+     and columns which are the names of the portfolios, this is done in attribute 'history'.
      
      For date formats please refer to the following:
      https://pandas.pydata.org/pandas-docs/version/0.23.4/generated/pandas.DatetimeIndex.strftime.html
@@ -272,6 +268,7 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     for birth_date in population.data['Born']:
         if birth_date >= next_eval_date:
             raise ValueError("Individuals can't be born at/after the evaluation date.")
+            
     # Make sure the next evaluation date is later than the current date:
     if current_eval_date >= next_eval_date:
         raise ValueError("Current date can't be after the evaluation date.")
@@ -281,28 +278,20 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     date_before_eval = marketdata.find_tick_before_eval(environment.data.index, next_eval_date)
     
     # Propagate individuals
-    propagation = marketdata.limited_propagation(population, environment,
-                                                 current_eval_date, date_before_eval)
+    marketdata.limited_propagation(population, environment, current_eval_date, date_before_eval)
 
     # Create the generation from the population copy
-    try:
-        generation = population.data.copy()
-    except:
-        print(population.data)
+    generation = copy.copy(population)
         
     # Compute the fitness of individuals
     fitness_name = "Fitness " + date_before_eval.strftime(date_format)
-    generation[fitness_name] = marketdata.fitness_calculation(population, environment,
-                                                              current_eval_date, next_eval_date,
-                                                              lamb, fitness_method)
+    generation.data[fitness_name] = marketdata.fitness_calculation(population, environment,
+                                                                   current_eval_date, next_eval_date,
+                                                                   lamb, fitness_method)
     # Sort individuals by fitness
-    generation.sort_values(by=[fitness_name], ascending=False, inplace=True)
+    generation.data.sort_values(by=[fitness_name], ascending=False, inplace=True)
     
-    # Return generation (and eventually propagation)
-    if return_propag == True:
-        return generation, propagation
-    else:
-        return generation
+    return generation
 
     
 def roulette(cum_sum, chance):
@@ -335,6 +324,7 @@ def roulette(cum_sum, chance):
     return variable.index(chance)
 
 
+
 def selection(generation, method='Fittest Half'):
     """
     Operates the selection among a generation based on the last fitness.
@@ -347,7 +337,7 @@ def selection(generation, method='Fittest Half'):
                         
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation to do the selection form.
     method : str
       Method of selection.
@@ -359,48 +349,51 @@ def selection(generation, method='Fittest Half'):
     """
     
     # Initialization
-    N = generation.shape[0]
+    N = generation.n_indiv
     
     # Sorting:
     # We use the last fitness column and normalize it
-    last_fitness = generation.filter(regex='Fit').columns[-1]
-    generation['Normalized Fitness'] = [ generation[last_fitness][x]/sum(generation[last_fitness])
-                                         for x in range(len(generation[last_fitness])) ]
+    last_fitness = generation.data.filter(regex='Fit').columns[-1]
+    generation.data['Normalized Fitness'] = [ generation.data[last_fitness][x]/sum(generation.data[last_fitness])
+                                         for x in range(len(generation.data[last_fitness])) ]
 
     # We sort the values from smallest to highest for computing the cumulative sum
-    generation.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
+    generation.data.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
     
     # Computing the cumulative sum
     cumsum_name = "CumSum " + last_fitness.split(" ")[1]
-    generation[cumsum_name] = np.array(generation['Normalized Fitness']).cumsum()
+    generation.data[cumsum_name] = np.array(generation.data['Normalized Fitness']).cumsum()
     
     # We sort the values back, from highest fitness to lowest
-    generation.sort_values(by=cumsum_name, ascending=False, inplace=True)
+    generation.data.sort_values(by=cumsum_name, ascending=False, inplace=True)
     
     # We get rid of the normalized fitness and just use the cumulative sum
-    generation.drop(columns=["Normalized Fitness"], inplace=True)
+    generation.data.drop(columns=["Normalized Fitness"], inplace=True)
     
     
     # Doing the selection:
     if method == 'Fittest Half':
         select_rows = [x for x in range(N//2)]
-        selected_individuals = generation.iloc[select_rows,:]
+        selected_individuals = generation.data.iloc[select_rows,:]
         
     elif method == 'Random':
         select_rows = [x for x in range(N)]
         random.shuffle(select_rows)
-        selected_individuals = generation.iloc[select_rows[:N//2],:]
+        selected_individuals = generation.data.iloc[select_rows[:N//2],:]
         
     elif method == 'Roulette Wheel':
         selected = []
         for x in range(N//2):
-            selected.append(roulette(generation[cumsum_name], random.random()))
+            selected.append(roulette(generation.data[cumsum_name], random.random()))
             while len(set(selected)) != len(selected):
-                selected[x] = roulette(generation[cumsum_name], random.random())
+                selected[x] = roulette(generation.data[cumsum_name], random.random())
         select_rows = [int(selected[x]) for x in range(N//2)]
-        selected_individuals = generation.iloc[select_rows,:]
+        selected_individuals = generation.data.iloc[select_rows,:]
 
-    return pd.DataFrame(selected_individuals)
+    # Make a new population with selected individuals
+    new_pop = Population(df=pd.DataFrame(selected_individuals), n_genes=generation.n_genes)
+    
+    return new_pop
 
 
 
