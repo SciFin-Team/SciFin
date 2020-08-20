@@ -36,14 +36,16 @@ class Individual:
       Name of the individual.
     """
 
-    def __init__(self, genes=None, birth_date=None, name=""):
+    def __init__(self, genes_names=None, genes=None, birth_date=None, name=""):
         """
         Initializes the Individual.
         """
         if genes is None:
+            self.genes_names = None
             self.genes = None
             self.ngenes = 0
         else:
+            self.genes_names = genes_names
             self.genes = np.array(genes)
             self.ngenes = len(genes)
             
@@ -96,6 +98,9 @@ class Individual:
         # Checks
         assert(isinstance(n_genes, int))
         
+        # Generate gene names
+        genes_names = [str('Asset ' + str(x)) for x in range(n_genes)]
+        
         # Generate individual's genes
         genes = [ random.random() * (upper_limit-lower_limit) 
                        + lower_limit for x in range(n_genes) ]
@@ -113,7 +118,7 @@ class Individual:
         else:
             cls_genes = np.array(genes)
 
-        return cls(genes=cls_genes, birth_date=birth_date, name=name)
+        return cls(genes_names=genes_names, genes=cls_genes, birth_date=birth_date, name=name)
 
     
     
@@ -191,11 +196,7 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
     pop = Population(df=pop_df, n_genes=n_genes)
     
     return pop
-    
-    
-    
-    
-# >>>>> SOME FUNCTIONS TO GET RID OFF AFTER:
+
     
     
 def get_generation(population, environment, current_eval_date, next_eval_date,
@@ -293,7 +294,8 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     return generation
 
-    
+
+
 def roulette(cum_sum, chance):
     """
     Takes the cumulative sums and the randomly generated value for the selection process
@@ -344,8 +346,8 @@ def selection(generation, method='Fittest Half'):
     
     Returns
     -------
-    DataFrame
-      Data frame of selected individuals.    
+    Population
+      Population of selected individuals.    
     """
     
     # Initialization
@@ -413,9 +415,9 @@ def pairing(elite, selected, method = 'Fittest'):
 
     Parameters
     ----------
-    elite : DataFrame
+    elite : Population
       Elite population.
-    selected : DataFrame
+    selected : Population
       Selected population.
     method : str
       Method to be used.
@@ -429,12 +431,12 @@ def pairing(elite, selected, method = 'Fittest'):
     """
     
     # Combining elite and previously selected individuals
-    cumsumcols_toremove = selected.filter(regex="CumSum").columns
-    individuals = pd.concat([elite, selected.drop(columns=cumsumcols_toremove)])
+    cumsumcols_toremove = selected.data.filter(regex="CumSum").columns
+    individuals = pd.concat([elite.data, selected.data.drop(columns=cumsumcols_toremove)])
     individuals.reindex(np.random.permutation(individuals.index))
     
     # Getting the fitness of all of them (not necessarily ordered)
-    last_fitness = selected.filter(regex="Fit").columns[-1]
+    last_fitness = selected.data.filter(regex="Fit").columns[-1]
     Fitness = individuals[last_fitness]
 
     # Initialization for pairing
