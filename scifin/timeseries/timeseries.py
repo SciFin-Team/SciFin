@@ -1501,7 +1501,7 @@ def type_to_series(type):
 
 def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
     """
-    Returns a time series from the reading of a .csv file.
+    Returns a list of time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
     
     Arguments
@@ -1519,7 +1519,7 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
     
     Returns
     -------
-    TimeSeries
+    List of TimeSeries
       Time series built from the .csv file.
       
     Notes
@@ -1574,7 +1574,7 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
 
 def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
     """
-    Returns a time series from the reading of an excel file.
+    Returns a list of time series from the reading of an excel file.
     This function uses the function pandas.read_excel().
     
     Arguments
@@ -1592,7 +1592,7 @@ def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
     
     Returns
     -------
-    TimeSeries
+    List of TimeSeries
       Time series built from the excel file.
       
     Notes
@@ -1608,6 +1608,73 @@ def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
     # Return a time series
     if ncols == 1 :
         return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+    # or return a list of time series
+    else:
+        # Checks
+        if tz is not None:
+            assert(isinstance(tz, list))
+            assert(len(tz)==ncols)
+        else:
+            tz = [None] * ncols
+            
+        if unit is not None:
+            assert(isinstance(unit, list))
+            assert(len(unit)==ncols)
+        else:
+            unit = [None] * ncols
+            
+        if name is not None:
+            assert(isinstance(name, list))
+            assert(len(name)==ncols)
+        else:
+            name = [None] * ncols
+            
+        if type is not None:
+            assert(isinstance(type, list))
+            assert(len(type)==ncols)
+        else:
+            type = ['TS'] * ncols
+            
+        # Fill up a list with time series
+        ts_list = []
+        for i in range(ncols):
+            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+                                                                                unit=unit[i],
+                                                                                name=name[i]) )
+        return ts_list
+
+
+    
+def build_from_dataframe(df, tz=None, unit=None, name=None, type=None):
+    """
+    Returns a list of time series from the reading of Pandas DataFrame.
+    
+    Arguments
+    ---------
+    tz : str or list of str.
+      Timezone name or list of timezone names.
+    unit : str or list of str
+      Unit name or list of unit names.
+    name : str or list of str
+      Time series name or list of time series names.
+    type : str or list of str
+      Time series type or list of time series types.
+    **kwargs
+        Arbitrary keyword arguments for pandas.read_csv().
+    
+    Returns
+    -------
+    List of TimeSeries
+      Time series built from the Pandas DataFrame.
+    """
+   
+    # Import data into a DataFrame
+    ncols = df.shape[1]
+        
+    # Return a time series
+    if ncols == 1 :
+        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+    
     # or return a list of time series
     else:
         # Checks
