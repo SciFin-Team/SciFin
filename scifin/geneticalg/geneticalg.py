@@ -146,6 +146,35 @@ class Population:
         self.history = None
         
         
+    def get_individual(self, num=None, name=None):
+        """
+        Returns an individual from a position in the population.
+        """
+        
+        # Checks
+        if (num is None and name is None):
+            raise ArgumentsError("Arguments 'num' and 'name' cannot be both None.")
+            
+        else:
+            # Obtain individual from index number
+            if num is not None:
+                select_cols = self.data.columns.tolist()
+                select_cols.remove("Born")
+                indiv = Individual(genes_names=select_cols,
+                                   genes=self.data.iloc[num].values.tolist()[:-1],
+                                   birth_date=self.data.iloc[num]["Born"],
+                                   name=self.data.index[num])
+            # Obtain individual from index name
+            elif name is not None:
+                select_cols = self.data.columns.tolist()
+                select_cols.remove("Born")
+                indiv = Individual(genes_names=select_cols,
+                                   genes=self.data.loc[name].values.tolist()[:-1],
+                                   birth_date=self.data.loc[name]["Born"],
+                                   name=name)
+        return indiv
+        
+        
 
 def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
                                sum_target, birth_date, name_indiv="Indiv"):

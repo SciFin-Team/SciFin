@@ -13,3 +13,8 @@ class SamplingError(Exception):
     pass
 
 
+class ArgumentsError(Exception):
+    """Raised when provided arguments of a function are not satisfactory."""
+    pass
+
+
