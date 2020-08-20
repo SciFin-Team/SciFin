@@ -789,7 +789,7 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
     
     Parameters
     ----------
-    input_individual : DataFrame
+    input_individual : Individual
       Individual we want to mutate.
     upper_limit : float
       Upper limit of the gene (asset allocation), before renormalization.
@@ -810,19 +810,21 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
       
     Returns
     -------
-    DataFrame
-      Data frame of the mutated individual.
+    Individual
+      Mutated individual.
     """
     
     # Checks
     assert(isinstance(mutation_rate, int))
     
     # Initialization
-    individual = input_individual.filter(regex="Asset")
-    birth_date = input_individual["Born"]
-    Ngene = len(individual)
-    gene = []
+    individual = pd.DataFrame(columns=input_individual.genes_names)
+    individual.loc[0] = input_individual.genes
+    birth_date = input_individual.birth_date
     
+    # Build positions for mutated genes
+    Ngene = len(individual.columns)
+    gene = []
     for x in range(mutation_rate):
         gene.append(random.randint(0, Ngene-1))
         while len(set(gene)) < len(gene):
@@ -830,27 +832,34 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
     mutated_individual = individual.copy()
     
     # Saving the sum of assets
-    sum_genes = mutated_individual.sum()
+    sum_genes = sum(mutated_individual.values.flatten())
     
     # Generate the mutations:
     if method == 'Gauss':
         for x in gene:
-            mutated_individual[x] = individual[x] + random.gauss(0, standard_deviation)
-        normalization = sum_genes / mutated_individual.sum()
+            mutated_individual[x] = individual.loc[0].tolist()[x] + random.gauss(0, standard_deviation)
+        normalization = sum_genes / sum(mutated_individual.values.flatten())
         for x in range(Ngene):
-            mutated_individual[x] *= normalization
+            mutated_individual.values.flatten()[x] *= normalization
     
     if method == 'Reset':
         for x in gene:
             mutated_individual[x] = random.random() * (upper_limit-lower_limit) + lower_limit
-        normalization = sum_target / mutated_individual.sum()
+        normalization = sum_target / sum(mutated_individual.values.flatten())
         for x in range(Ngene):
-            mutated_individual[x] *= normalization
+            mutated_individual.values.flatten()[x] *= normalization
     
     # Adding back the birth date
-    mutated_individual["Born"] = birth_date
+    # mutated_individual["Born"] = birth_date
     
-    return mutated_individual
+    # Making an individual
+    mutated_indiv = Individual(genes_names=input_individual.genes_names,
+                               genes=mutated_individual.values.flatten(),
+                               birth_date=birth_date,
+                               name="Mutated " + input_individual.name)
+    
+    return mutated_indiv
+
 
 
 def mutation_set(num_indiv, num_genes, num_mut=0):
@@ -883,6 +892,7 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
         mutated_genes.append(tmp_set)
 
     return mutated_genes
+
 
 
 def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
