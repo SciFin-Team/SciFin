@@ -275,7 +275,7 @@ class TimeSeries(Series):
             tmp_name = " "
         else:
             tmp_name = self.name
-        title = "Time series" + tmp_name + "from " + str(self.start_utc)[:10] \
+        title = "Time series " + tmp_name + " from " + str(self.start_utc)[:10] \
                 + " to " + str(self.end_utc)[:10]
         if self.unit is None:
             ylabel = 'Value'
@@ -352,7 +352,7 @@ class TimeSeries(Series):
             tmp_name = " "
         else:
             tmp_name = self.name
-        title1 = "Time series" + tmp_name + "from " + s + " to " + e
+        title1 = "Time series " + tmp_name + " from " + s + " to " + e
         if self.unit is None:
             ylabel = 'Value'
         else:
