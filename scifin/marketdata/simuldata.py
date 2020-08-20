@@ -552,9 +552,9 @@ def limited_propagation(population, environment, start, end):
     
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population made of different individuals.
-    environment : DataFrame
+    environment : Market
       Represents the environment, i.e. the time evolution of gene values.
     start : Period date
       Starting date for the evolution.
@@ -615,7 +615,7 @@ def portfolio_vol(weights, cov_matrix):
     return (weights.T @ cov_matrix @ weights)**0.5
 
 
-def fitness_calculation(population, propagation, environment, current_eval_date, next_eval_date,
+def fitness_calculation(population, environment, current_eval_date, next_eval_date,
                         lamb=0.5, fitness_method="Last Return and Vol"):
     """
     Computes the fitness of each individual in a population.
@@ -631,10 +631,8 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population to evolve.
-    propagation : DataFrame
-      Time evolution of individuals.
     environment : DataFrame
       Environment which serves as a basis for propagation.
     current_eval_date : Period date
@@ -662,7 +660,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
      Population has rows which are the names of the individuals (e.g. portfolios)
      and columns which are the genes (e.g. assets).
     
-     Propagation has rows which are the time stamps,
+     The propagation, i.e. population.history, has rows which are the time stamps,
      and columns which are the names of the individuals (e.g. portfolios).
     
     Examples
@@ -672,23 +670,23 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
         
     # Method of last return
     if fitness_method == "Last Return":
-        fitness_value = [propagation[x][-1] for x in propagation.columns]
+        fitness_value = [population.history[x][-1] for x in population.history.columns]
         
         
     # Method combining last return and average volatility
     elif fitness_method == "Last Return and Vol":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [propagation[x][-1] for x in propagation.columns]
+        fitness_from_return = [population.history[x][-1] for x in population.history.columns]
 
         # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -708,17 +706,17 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     elif fitness_method == "Avg Return and Vol":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
-                                for x in propagation.columns ]
+        fitness_from_return = [ population.history[x].pct_change()[1:].mean()
+                                for x in population.history.columns ]
 
         # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -735,17 +733,17 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     elif fitness_method == "Sharpe Ratio":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
-                                for x in propagation.columns ]
+        fitness_from_return = [ population.history[x].pct_change()[1:].mean()
+                                for x in population.history.columns ]
 
         # Defining the environment correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -765,7 +763,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
 
 # VISUALIZATION METHODS
 
-def visualize_portfolios_1(market, list_individuals, evaluation_dates,
+def visualize_portfolios_1(market, propagation, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None):
     """
     Allows a quick visualization of the market,
@@ -775,7 +773,7 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     ----------
     market : DataFrame
       Market from which we extract data about genes (i.e. assets)
-    list_individuals : DataFrame
+    propagation : DataFrame
       Propagation of individuals over time.
     evaluation_dates : List of Period dates
       Dates at which we want to evaluate the individuals.
@@ -799,8 +797,8 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     axis = market_EW.plot(figsize=dims)
     
     # Plotting individual portfolios
-    for name in list_individuals.columns:
-        list_individuals[name].plot(ax=axis)
+    for name in propagation.columns:
+        propagation[name].plot(ax=axis)
         
     # Plotting evaluation dates
     for ed in evaluation_dates:
@@ -813,7 +811,7 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     return None
 
 
-def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates,
+def visualize_portfolios_2(market, marketcap, propagation, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None, savefile=False,
                            namefile="Result.png"):
     """
@@ -826,7 +824,7 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
       Market from which we extract data about assets (i.e. genes).
     marketcap : Panda.Series
       Market capitalization of the assets.
-    list_individuals : DataFrame
+    propagation : DataFrame
       Propagation of individuals over time.
     evaluation_dates : List of Period dates
       Dates at which we want to evaluate the individuals.
@@ -869,8 +867,8 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     # market_PW.plot(ax=axis, color='k', linestyle='-', linewidth=2)
     
     # Plotting individual portfolios
-    for name in list_individuals.columns:
-        list_individuals[name].plot(ax=axis)
+    for name in propagation.columns:
+        propagation[name].plot(ax=axis)
 
     # Re-Plotting market to appear on top
     market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis)
