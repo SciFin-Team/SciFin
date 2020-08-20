@@ -122,7 +122,9 @@ class Population:
     with there respective genes values.
     """
     
-    def __init__(self, df=None, name=""):
+    def __init__(self, df=None, n_genes=None, name=""):
+
+        # Basic features of a population
         if (df is None) or (df.empty == True):
             self.data = None
             self.n_indiv = None
@@ -131,9 +133,13 @@ class Population:
         else:
             self.data = df
             self.n_indiv = df.shape[0]
-            self.n_genes = df.shape[1]
+            self.n_genes = n_genes
             self.name = name
     
+        # Others
+        self.history = None
+        
+        
 
 def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
                                sum_target, birth_date, name_indiv="Indiv"):
@@ -181,7 +187,7 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
     pop_df.index.names = ["Individuals"]
     
     # Generate Population
-    pop = Population(df=pop_df)
+    pop = Population(df=pop_df, n_genes=n_genes)
     
     return pop
     

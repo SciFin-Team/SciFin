@@ -421,6 +421,9 @@ def plot_market_components(market, dims=(10,5), legend=True):
 def propagate_individual(individual, environment, name_indiv="Portfolio"):
     """
     Propagates the initial individual over time by computing its sum of gene values.
+
+    The series of values is then stored in the attribute Individual.history through
+    a pandas DataFrame.
     
     Parameters
     ----------
@@ -543,6 +546,10 @@ def limited_propagation(population, environment, start, end):
     Propagates the population over time, like `propagate_individual`,
     but only for a limited period of time and several individuals.
 
+    It stores a pandas DataFrame in the attribute Population.history,
+    this DataFrame contains the individuals of the populations as columns
+    and their evolution is given along the time index.
+    
     Parameters
     ----------
     population : DataFrame
@@ -557,8 +564,7 @@ def limited_propagation(population, environment, start, end):
     Returns
     -------
     DataFrame
-      Pandas data frame containing the individuals of the populations as columns
-      and whose evolution is given along the time index.
+      
     
     Notes
     -----
@@ -570,21 +576,24 @@ def limited_propagation(population, environment, start, end):
     """
     
     # Initialization
-    n_indiv = population.shape[0]
-    n_genes = environment.shape[1]
+    n_indiv = population.n_indiv
+    n_genes = population.n_genes
     
     # Propagating individuals and adding them to a data frame
     list_portfolios = pd.DataFrame()
     
     for x in range(n_indiv):
-        portfolio_name = population.index[x]
+        portfolio_name = population.data.index[x]
         
         # Computing (price of asset) x (asset allocation)
-        portfolio = environment[start:end] * population.iloc[x][:n_genes] \
-                                           * ( n_genes / population.iloc[x][:n_genes].sum())
+        portfolio = environment.data[start:end] * population.data.iloc[x][:n_genes] \
+                                                * ( n_genes / population.data.iloc[x][:n_genes].sum())
         list_portfolios[portfolio_name] = portfolio.sum(axis=1)
 
-    return pd.DataFrame(list_portfolios)
+    # Store the data frame into Population.history
+    population.history = pd.DataFrame(list_portfolios)
+        
+    return None
 
 
 def portfolio_vol(weights, cov_matrix):
