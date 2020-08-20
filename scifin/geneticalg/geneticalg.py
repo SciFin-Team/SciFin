@@ -215,9 +215,9 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population to evolve.
-    environment : DataFrame
+    environment : Market
       Environment which serves as a basis for propagation.
     current_eval_date : Period date
       Present date on which we evaluate the individuals.
@@ -269,7 +269,7 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     # Checks
     # Make sure all the individual portfolios were born before the current date:
-    for birth_date in population['Born']:
+    for birth_date in population.data['Born']:
         if birth_date >= next_eval_date:
             raise ValueError("Individuals can't be born at/after the evaluation date.")
     # Make sure the next evaluation date is later than the current date:
@@ -278,7 +278,7 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     # Getting the date just before the next evaluation date
     # (date at which reproduction will happen)
-    date_before_eval = marketdata.find_tick_before_eval(environment.index, next_eval_date)
+    date_before_eval = marketdata.find_tick_before_eval(environment.data.index, next_eval_date)
     
     # Propagate individuals
     propagation = marketdata.limited_propagation(population, environment,
@@ -286,13 +286,13 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
 
     # Create the generation from the population copy
     try:
-        generation = population.copy()
+        generation = population.data.copy()
     except:
-        print(population)
+        print(population.data)
         
     # Compute the fitness of individuals
     fitness_name = "Fitness " + date_before_eval.strftime(date_format)
-    generation[fitness_name] = marketdata.fitness_calculation(population, propagation, environment,
+    generation[fitness_name] = marketdata.fitness_calculation(population, environment,
                                                               current_eval_date, next_eval_date,
                                                               lamb, fitness_method)
     # Sort individuals by fitness
