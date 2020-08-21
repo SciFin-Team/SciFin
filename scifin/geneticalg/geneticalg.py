@@ -395,12 +395,11 @@ def selection(generation, method='Fittest Half'):
     cumsum_name = "CumSum " + last_fitness.split(" ")[1]
     generation.data[cumsum_name] = np.array(generation.data['Normalized Fitness']).cumsum()
     
-    # We sort the values back, from highest fitness to lowest
+    # Sort the values back, from highest fitness to lowest
     generation.data.sort_values(by=cumsum_name, ascending=False, inplace=True)
     
-    # We get rid of the normalized fitness and just use the cumulative sum
+    # Get rid of the normalized fitness and just use the cumulative sum
     generation.data.drop(columns=["Normalized Fitness"], inplace=True)
-    
     
     # Do the selection:
     if method == 'Fittest Half':
@@ -421,6 +420,9 @@ def selection(generation, method='Fittest Half'):
         select_rows = [int(selected[x]) for x in range(N//2)]
         selected_individuals = generation.data.iloc[select_rows,:]
 
+    # Get rid of the CumSum column
+    generation.data.drop(columns=[cumsum_name], inplace=True)
+    
     # Make a new population with selected individuals
     new_pop = Population(df=pd.DataFrame(selected_individuals), n_genes=generation.n_genes)
     
@@ -974,13 +976,12 @@ def mutate_population(input_pop, upper_limit, lower_limit, sum_target,
     return mutated_pop
 
 
-
 def next_generation(elite, gen, market, current_eval_date, next_eval_date,
                     upper_limit, lower_limit, sum_target, mutation_rate, standard_deviation,
                     fitness_lambda=0.5, fitness_method="Last Return and Vol",
                     pairing_method="Fittest", mating_method="Single Point", n_points=None,
                     mutation_method="Gauss", selection_method="Fittest Half",
-                    return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
+                    name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
 
     """
     Computes the next generation of individuals from selection, forming groups
@@ -989,11 +990,11 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     
     Parameters
     ----------
-    elite : DataFrame
+    elite : Population
       Generation of elites we start with.
-    gen : DataFrame
+    gen : Population
       Generation of individuals we start with.
-    market : DataFrame
+    market : Market
       Market which serves as a basis for propagation.
     current_eval_date : DataFrame
       Present date on which we evaluate the individuals.
@@ -1049,8 +1050,6 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
         - 'Random': rows are picked up at random, but can't be the same.
         - 'Roulette Wheel': rows are picked up at random, but with a preference
                             for high cumulative sum (high fitness).
-    return_propag : bool
-      Option to return the propagations or not.
     name_indiv : str
       String to set the name of the offsprings.
     date_format : str
@@ -1060,8 +1059,8 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     
     Returns
     -------
-    DataFrame
-      Data frame with the next generation, including parents and offsprings.
+    Population
+      Population with the next generation, including parents and offsprings.
     
     Raises
     ------
@@ -1086,25 +1085,25 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     assert(mutation_method in ["Gauss", "Reset"])
     assert(selection_method in ["Fittest Half", "Random", "Roulette Wheel"])
     
-    # Check columns are the same:
-    if elite.columns.tolist() != gen.columns.tolist():
+    # Check columns are the same
+    if elite.data.columns.tolist() != gen.data.columns.tolist():
         raise ValueError("Elite and current generation must have the same columns!")
     
     # Next generation empty dataframe
-    next_gen = pd.DataFrame(data=None, columns=gen.columns)
+    next_gen = pd.DataFrame(data=None, columns=gen.data.columns)
     
     # Select the population allowed to reproduce
     if Verbose: print(".... doing selection")
     selected = selection(gen, method=selection_method)
-    if Verbose: print("    ", selected.index.values)
+    if Verbose: print("    ", selected.data.index.values)
 
     # Combine them with the elite
     if Verbose: print(".... forming pairs")
-    testM = elite.shape[0] + selected.shape[0]
+    testM = elite.data.shape[0] + selected.data.shape[0]
     
     if testM % 2 != 0:
-        name_of_indiv_to_remove = selected.index[-1]
-        selected.drop([name_of_indiv_to_remove], axis=0, inplace=True)
+        name_of_indiv_to_remove = selected.data.index[-1]
+        selected.data.drop([name_of_indiv_to_remove], axis=0, inplace=True)
         print(name_of_indiv_to_remove, " has been removed as it was the last \
               element of a selection with odd number of individuals to pair.")
         
@@ -1119,12 +1118,13 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     if Verbose: print("    ", offsprings.index.values)
     
     # Mutate selected individuals and offsprings, but not the elite
-    name_col_to_drop = selected.filter(regex="CumSum").columns
-    selected.drop(columns=name_col_to_drop, inplace=True)
+    name_col_to_drop = selected.data.filter(regex="CumSum").columns
+    selected.data.drop(columns=name_col_to_drop, inplace=True)
     
     if Verbose: print(".... appending offsprings to selection")
-    unmutated = selected.append(offsprings)
-    if Verbose: print("    ", unmutated.index.values)
+    unmutated_df = selected.data.copy().append(offsprings.data)
+    unmutated = Population(df=unmutated_df, n_genes=selected.n_genes)
+    if Verbose: print("    ", unmutated.data.index.values)
         
     if Verbose: print(".... mutating offsprings")
     mutated = mutate_population(unmutated, upper_limit, lower_limit, sum_target,
@@ -1133,29 +1133,25 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     if Verbose: print(".... forming mutated generation")
     mutated_gen = get_generation(mutated, market, current_eval_date, next_eval_date,
                                  lamb=fitness_lambda, fitness_method=fitness_method,
-                                 return_propag=False, date_format=date_format)
-    if Verbose: print("    ", mutated_gen.index.values)
+                                 date_format=date_format)
+    if Verbose: print("    ", mutated_gen.data.index.values)
     
     # Combine mutated population with the elite
     if Verbose: print(".... recombining elite with mutated individuals")
-    unsorted_individuals = elite.append(mutated_gen)
-    if Verbose: print("    ", unsorted_individuals.index.values)
+    unsorted_individuals_df = elite.data.copy().append(mutated_gen.data)
+    unsorted_individuals = Population(df=unsorted_individuals_df, n_genes=elite.n_genes)
+    if Verbose: print("    ", unsorted_individuals.data.index.values)
     
     # Compute fitness of that new generation
     # get generation also sorts the individuals by fitness
     if Verbose: print(".... getting the generation of combined elite and mutated individuals")
-    if return_propag == True:
-        sorted_next_gen, propagation = get_generation(unsorted_individuals, market,
-                                                      current_eval_date, next_eval_date,
-                                                      lamb=fitness_lambda, return_propag=True,
-                                                      date_format=date_format)
-        return sorted_next_gen, propagation
-    else:
-        sorted_next_gen = get_generation(unsorted_individuals, market,
-                                         current_eval_date, next_eval_date,
-                                         lamb=fitness_lambda, return_propag=False,
-                                         date_format=date_format)
-        return sorted_next_gen
+    
+    sorted_next_gen = get_generation(unsorted_individuals, market,
+                                     current_eval_date, next_eval_date,
+                                     lamb=fitness_lambda,
+                                     date_format=date_format)
+    return sorted_next_gen
+
 
 
 def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
