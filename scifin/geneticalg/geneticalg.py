@@ -1115,7 +1115,7 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     offsprings = get_offsprings(parents_values, current_eval_date,
                                 method=mating_method, n_points=n_points,
                                 name_indiv=name_indiv)
-    if Verbose: print("    ", offsprings.index.values)
+    if Verbose: print("    ", offsprings.data.index.values)
     
     # Mutate selected individuals and offsprings, but not the elite
     name_col_to_drop = selected.data.filter(regex="CumSum").columns

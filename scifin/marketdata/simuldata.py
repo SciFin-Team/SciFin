@@ -957,7 +957,7 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
     ----------
     n : 4-tuple of int
       Structure parameters.
-    market : DataFrame
+    market : Market
       Market from which we extract data about assets (i.e. genes).
     vix : DataFrame
       Values of the VIX over time.
@@ -977,7 +977,7 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
     
     # Initializations
     n1, n2, n3, n4 = n
-    market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
+    market_dates = market.data.index.to_timestamp().strftime("%Y-%m-%d").tolist()
     save_eval_dates = []
     save_mutation_rate = []
     save_ndays = []
@@ -985,10 +985,10 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
 
     # Loop
     loop = 0
-    eval_date = market.index[0]
-    next_eval_date = market.index[10]
+    eval_date = market.data.index[0]
+    next_eval_date = market.data.index[10]
 
-    while next_eval_date < market.index[-1]:
+    while next_eval_date < market.data.index[-1]:
 
         # Updating
         eval_date = next_eval_date
@@ -1004,16 +1004,16 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
 
         # Computing next date of evaluation
         current_date_index = market_dates.index(eval_date.to_timestamp().strftime("%Y-%m-%d"))
-        if current_date_index + ndays < market.shape[0]:
-            next_eval_date = market.index[current_date_index + ndays]
+        if current_date_index + ndays < market.data.shape[0]:
+            next_eval_date = market.data.index[current_date_index + ndays]
         else:
-            next_eval_date = market.index[-1]
+            next_eval_date = market.data.index[-1]
         
         # Getting the VIX
         vix_tmp = vix[eval_date.to_timestamp().strftime("%Y-%m-%d")]
         
         # Computing the mutation rate
-        ng_mutation_rate = (1 + (vix_tmp/10).astype('int')) * (market.shape[1] / n3)
+        ng_mutation_rate = (1 + (vix_tmp/10).astype('int')) * (market.data.shape[1] / n3)
         save_mutation_rate.append(ng_mutation_rate)
         
         # Computing the fitness lambda
