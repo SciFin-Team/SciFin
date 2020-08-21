@@ -1164,7 +1164,7 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation we want to build new elite and non-elite from.
     elite_rate : float in [0,1]
       Rate of individuals going into the elite.
@@ -1173,9 +1173,9 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     
     Returns
     -------
-    DataFrame
+    Population
       Data Frame of the new elite population.
-    DataFrame
+    Population
       Data Frame of the new non-elite population.
     """
     
@@ -1183,26 +1183,28 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     assert(elite_rate>=0 and elite_rate <=1)
     
     # Initialization
-    M = generation.shape[0]
-    fitness_cols = generation.filter(regex="Fit").columns
+    M = generation.data.shape[0]
+    fitness_cols = generation.data.filter(regex="Fit").columns
     
     # Just to make sure that the generation is sorted
-    generation.sort_values(by=fitness_cols[-1], ascending=False, inplace=True)
+    generation.data.sort_values(by=fitness_cols[-1], ascending=False, inplace=True)
     
     # Decide for a cut in the top fitness individuals
     cut = int(M * elite_rate)
     
     # Apply the cut - Form the elite
-    new_elite = generation.iloc[:cut]
+    new_elite_df = generation.data.copy().iloc[:cut]
     if renaming:
         new_elite_names = ["New Elite " + str(x) for x in range(cut)]
-        new_elite.index = new_elite_names
+        new_elite_df.index = new_elite_names
+    new_elite = Population(df=new_elite_df, n_genes=generation.n_genes)
 
     # Apply the cut - Form the "non-elite" individuals
-    new_individuals = generation.iloc[cut:]
+    new_individuals_df = generation.data.copy().iloc[cut:]
     if renaming:
         new_individuals_names = ["New Individual " + str(x) for x in range(M-cut)]
-        new_individuals.index = new_individuals_names
+        new_individuals_df.index = new_individuals_names
+    new_individuals = Population(df=new_individuals_df, n_genes=generation.n_genes)
     
     return new_elite, new_individuals
 

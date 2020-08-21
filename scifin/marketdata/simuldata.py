@@ -771,7 +771,7 @@ def visualize_portfolios_1(market, propagation, evaluation_dates,
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       Market from which we extract data about genes (i.e. assets)
     propagation : DataFrame
       Propagation of individuals over time.
