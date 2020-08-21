@@ -895,7 +895,7 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
 
 
 
-def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
+def mutate_population(input_pop, upper_limit, lower_limit, sum_target,
                       mutation_rate=2, method='Reset', standard_deviation = 0.001):
     """
     Makes the mutation of a population of individuals.
@@ -906,7 +906,7 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
     
     Parameters
     ----------
-    input_individuals : DataFrame
+    input_pop : Population
       Population of individuals we want to mutate.
     upper_limit : float
       Upper limit of the gene (asset allocation), before renormalization.
@@ -935,39 +935,43 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
     assert(isinstance(mutation_rate, int))
     
     # Initialization
-    individuals = input_individuals.filter(regex="Asset")
-    birth_dates = input_individuals["Born"]
-    fitness_cols = input_individuals.filter(regex="Fit")
-    M = individuals.shape[0]
-    Ngene = individuals.shape[1]
-    mutated_genes = mutation_set(num_indiv=M, num_genes=Ngene, num_mut=mutation_rate)
-    mutated_individuals = individuals.copy()
+    pop = input_pop.data.filter(regex="Asset")
+    birth_dates = input_pop.data["Born"]
+    fitness_cols = input_pop.data.filter(regex="Fit")
+    M = pop.shape[0]
+    Ngenes = pop.shape[1]
+    assert(Ngenes == input_pop.n_genes)
+    mutated_genes = mutation_set(num_indiv=M, num_genes=Ngenes, num_mut=mutation_rate)
+    mutated_pop_df = pop.copy()
     
-    # Making mutations happen and renormalizing assets allocation to keep their sum constant
+    # Make mutations happen and renormalize assets allocation to keep their sum constant
     for i in range(M):
         if method == 'Gauss':
-            sum_genes = mutated_individuals.iloc[i].sum()
+            sum_genes = mutated_pop_df.iloc[i].sum()
             for x in mutated_genes[i]:
-                mutated_individuals.iloc[i,x] = mutated_individuals.iloc[i,x] + random.gauss(0, standard_deviation)
-            normalization = sum_genes / mutated_individuals.iloc[i].sum()
-            for x in range(Ngene):
-                mutated_individuals.iloc[i,x] *= normalization
+                mutated_pop_df.iloc[i,x] = mutated_pop_df.iloc[i,x] + random.gauss(0, standard_deviation)
+            normalization = sum_genes / mutated_pop_df.iloc[i].sum()
+            for x in range(Ngenes):
+                mutated_pop_df.iloc[i,x] *= normalization
 
         if method == 'Reset':
             for x in mutated_genes[i]:
-                mutated_individuals.iloc[i,x] = random.random() * (upper_limit-lower_limit) + lower_limit
-            normalization = sum_target / mutated_individuals.iloc[i].sum()
-            for x in range(Ngene):
-                mutated_individuals.iloc[i,x] *= normalization
+                mutated_pop_df.iloc[i,x] = random.random() * (upper_limit-lower_limit) + lower_limit
+            normalization = sum_target / mutated_pop_df.iloc[i].sum()
+            for x in range(Ngenes):
+                mutated_pop_df.iloc[i,x] *= normalization
 
-    # Adding back the birth date
-    mutated_individuals["Born"] = birth_dates
+    # Add back the birth date
+    mutated_pop_df["Born"] = birth_dates
     
-    # Adding back the earlier Fitness columns
+    # Add back the earlier Fitness columns
     for col in fitness_cols.columns:
-        mutated_individuals[col] = fitness_cols[col]
+        mutated_pop_df[col] = fitness_cols[col]
     
-    return mutated_individuals
+    # Make a population from the DataFrame
+    mutated_pop = Population(df=mutated_pop_df, n_genes=Ngenes, name="Mutated " + input_pop.name)
+    
+    return mutated_pop
 
 
 
