@@ -10,13 +10,12 @@ Please always keep in mind that SciFin serves a certain purpose, and as such its
 
 ## Reporting bugs
 
-If you find any bug, please let us know! Here is the proceedure to [report an issue](https://docs.github.com/en/github/managing-your-work-on-github/creating-an-issue).
+If you find any bug, please let us know! Here is the procedure to [report an issue](https://docs.github.com/en/github/managing-your-work-on-github/creating-an-issue).
 
 
 ## Suggesting ideas
 
 If you think some idea or feature could fit well within SciFin, please do not hesitate to send us an email.
-
 
 
 ## Branches, commits and tests
@@ -28,9 +27,9 @@ There would be no branches without commits, so let's say a few words about them.
 If dealing with branches is as appealing as eating broccolis, creating unit tests is probably as boring as washing the dishes! But that also is a necessity! **Every function that can have a unit test should see a unit test being written.** The best moment to write that test is right after writing the function, preferably in a new commit. One should keep in mind that unit testing is like a safeguard and a guarantee of solidity for the future code, hence big saving of time and energy.
 
 Here are important and useful readings:
-- about [creating a pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request)
-- about [creating a branch and managing it](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches).
-
+- about [managing branches and merging your branch into master](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) (very clear article).
+- about [basic git commands for branches management](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches).
+- about [creating a pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
 
 ## Coding conventions
@@ -71,5 +70,7 @@ Going more into details, some good practice to keep the code clear are the follo
 ## Submitting changes
 
 
-...
+Please discuss with Fabien Nugier and the team of developers whose work may be affected by your changes before you proceed. Good communication is an essential aspect of developing a package together.
+
+
 
