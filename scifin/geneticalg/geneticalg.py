@@ -1209,6 +1209,7 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     return new_elite, new_individuals
 
 
+
 def fitness_similarity_check(generation, number_of_similarity, precision_decimals=1):
     """
     Checks the fitness similarity based on the last fitness calculation.
@@ -1217,7 +1218,7 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation that we consider.
     number_of_similarity : int
       Number of individuals to consider for similarity check.
@@ -1242,7 +1243,7 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
     # Initialization
     result = False
     similarity = 0
-    max_fitness = generation.filter(regex="Fit").iloc[:,-1]
+    max_fitness = generation.data.filter(regex="Fit").iloc[:,-1]
     
     for n in range(len(max_fitness)-1):
         if round(max_fitness[n], precision_decimals) == round(max_fitness[n+1], precision_decimals):
@@ -1261,7 +1262,7 @@ def sum_top_fitness(generation, num_elements=4):
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation that we consider.
     num_elements : int
       Number of elements to consider from the top.
@@ -1272,7 +1273,7 @@ def sum_top_fitness(generation, num_elements=4):
       The sum of fitness from the top elements.
     """
     
-    gen = generation.filter(regex="Fit").iloc[:,-1]
+    gen = generation.data.filter(regex="Fit").iloc[:,-1]
     
     if num_elements <= gen.shape[0]:
         sum_top_fitness = gen[0:num_elements].sum()
