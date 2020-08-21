@@ -927,8 +927,8 @@ def mutate_population(input_pop, upper_limit, lower_limit, sum_target,
       
     Returns
     -------
-    DataFrame
-      Data frame of the mutated individuals.
+    Population
+      Population of mutated individuals.
     """
     
     # Checks
@@ -1307,17 +1307,16 @@ def plot_compare_genomes(indiv1, indiv2, names=("Indiv1", "Indiv2")):
     """
 
     # Checks
-    if "Born" in indiv1.index:
-        indiv1.drop(index="Born", inplace=True)
-    if "Born" in indiv2.index:
-        indiv2.drop(index="Born", inplace=True)
-    assert(indiv1.index.tolist() == indiv2.index.tolist())
+    try:
+        assert(indiv1.genes_names == indiv2.genes_names)
+    except:
+        raise AssertionError("indiv1 and indiv2 must have the name names for genes.")
         
     # Build a data frame
-    tmp = pd.DataFrame(columns=indiv1.index.tolist())
+    tmp = pd.DataFrame(columns=indiv1.genes_names)
     tmp.index.names = ["Individuals"]
-    tmp.loc[names[0]] = indiv1
-    tmp.loc[names[1]] = indiv2
+    tmp.loc[names[0]] = indiv1.genes
+    tmp.loc[names[1]] = indiv2.genes
 
     # Plotting
     tmp.transpose().plot.bar(figsize=(10,5))
