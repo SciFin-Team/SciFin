@@ -41,6 +41,8 @@ If dealing with branches is as appealing as eating broccolis, creating unit test
 
 - When returned objects are not obvious, a Returns section should be added. A Notes section can also be used to give precisions about the choices made for development and to give references to the reader.
 
+- Do not take any function from someone else, rewrite your methods in your own way. Obviously, for small functions (less than 10 lines) it will be difficult to write a different function, but at least make the function your own. If having no choice but to use someone's else function, give a reliable reference in the "Notes" section.
+
 
 ### Templates:
 
@@ -52,11 +54,12 @@ To help development and avoid too much typing, some templates for functions and 
 Going more into details, some good practice to keep the code clear are the following:
 
 - When deciding the name of a function, try to follow the pattern method_quantity, for example "historical_variance". Functions should not have capital letters, but classes should (like "TimeSeries").
+- Make the name of functions explicit. It is better to lose a bit of time than not being understood.
 - For arguments of a function, place most important first and least important last so that from left to write we go from most important to least important arguments.
 - Avoid starting description of a function with "Function that ..." or "Method that ...". No need for that.
 - Avoid starting description of parameters with "The" or "A".
 - Use 'DataFrame' to refer to the pandas object and 'data frame' to refer to it in a more general context. Same for classes like 'TimeSeries' with 'time series' or 'CatTimeSeries' with 'categorical time series'.
-- Try to use the base form of verbs in your comments, e.g. 'Create a variable' instead of 'Creates a variable' or (worth) 'Creating a variable'. Imagine you are writing a recipe.
+- Use the base form of verbs in your comments, e.g. 'Create a variable' instead of 'Creates a variable' or (worth) 'Creating a variable'. Imagine you are writing a recipe. Don't put ":" at the end of comments.
 - Cite only reliable sources, preferentially in the "Notes" sections.
 - Keep small caps for variables, except for a one-letter variable name where it matters less (e.g. N, T).
 

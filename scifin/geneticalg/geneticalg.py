@@ -209,15 +209,15 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
     assert(isinstance(n_indiv,int))
     assert(isinstance(n_genes,int))
     
-    # Building a data frame of individuals
+    # Build a data frame of individuals
     pop_df = pd.DataFrame([ Individual.generate_random_genes(n_genes, upper_limit, lower_limit, sum_target).genes
                             for _ in range(n_indiv) ])
     pop_df.columns = ["Asset " + str(i) for i in range(n_genes)]
     
-    # Setting the birth date of the individuals
+    # Set the birth date of the individuals
     pop_df["Born"] = [birth_date for _ in range(n_indiv)]
     
-    # Setting the row names
+    # Set the row names
     pop_df.index = [name_indiv + str(i+1) for i in range(n_indiv)]
     pop_df.index.names = ["Individuals"]
     
@@ -303,7 +303,7 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     if current_eval_date >= next_eval_date:
         raise ValueError("Current date can't be after the evaluation date.")
     
-    # Getting the date just before the next evaluation date
+    # Get the date just before the next evaluation date
     # (date at which reproduction will happen)
     date_before_eval = marketdata.find_tick_before_eval(environment.data.index, next_eval_date)
     
@@ -382,16 +382,16 @@ def selection(generation, method='Fittest Half'):
     # Initialization
     N = generation.n_indiv
     
-    # Sorting:
+    # Sort:
     # We use the last fitness column and normalize it
     last_fitness = generation.data.filter(regex='Fit').columns[-1]
     generation.data['Normalized Fitness'] = [ generation.data[last_fitness][x]/sum(generation.data[last_fitness])
                                          for x in range(len(generation.data[last_fitness])) ]
 
-    # We sort the values from smallest to highest for computing the cumulative sum
+    # Sort the values from smallest to highest for computing the cumulative sum
     generation.data.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
     
-    # Computing the cumulative sum
+    # Compute the cumulative sum
     cumsum_name = "CumSum " + last_fitness.split(" ")[1]
     generation.data[cumsum_name] = np.array(generation.data['Normalized Fitness']).cumsum()
     
@@ -402,7 +402,7 @@ def selection(generation, method='Fittest Half'):
     generation.data.drop(columns=["Normalized Fitness"], inplace=True)
     
     
-    # Doing the selection:
+    # Do the selection:
     if method == 'Fittest Half':
         select_rows = [x for x in range(N//2)]
         selected_individuals = generation.data.iloc[select_rows,:]
@@ -459,12 +459,12 @@ def pairing(elite, selected, method = 'Fittest'):
       List of the parents genes.
     """
     
-    # Combining elite and previously selected individuals
+    # Combine elite and previously selected individuals
     cumsumcols_toremove = selected.data.filter(regex="CumSum").columns
     individuals = pd.concat([elite.data, selected.data.drop(columns=cumsumcols_toremove)])
     individuals.reindex(np.random.permutation(individuals.index))
     
-    # Getting the fitness of all of them (not necessarily ordered)
+    # Get the fitness of all of them (not necessarily ordered)
     last_fitness = selected.data.filter(regex="Fit").columns[-1]
     Fitness = individuals[last_fitness]
 
@@ -610,7 +610,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     if len(pair_of_parents) != 2:
         raise ValueError("Only a pair of parents allowed here!")
     
-    # Selecting only the columns with Asset allocations, i.e. the genes
+    # Select only the columns with Asset allocations, i.e. the genes
     parents = pd.DataFrame(pair_of_parents).filter(regex="Asset")
     Ngene = parents.shape[1]
     
@@ -620,7 +620,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         raise ValueError("Parents must have the same sum of assets allocations.")
     parents_sum = parents.iloc[0].sum()
         
-    # Creating offsprings - Method 1
+    # Create offsprings - Method 1
     if method == 'Single Point':
         pivot_point = random.randint(1, Ngene-2)
         
@@ -637,7 +637,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         offsprings.append(offspring2_renorm)
     
     
-    # Creating offsprings - Method 2
+    # Create offsprings - Method 2
     if method == 'Two Points':
         pivot_point_1 = random.randint(1, Ngene-1)
         pivot_point_2 = random.randint(1, Ngene)
@@ -662,7 +662,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         offsprings.append(offspring2_renorm)
     
     
-    # Creating offsprings - Method 3
+    # Create offsprings - Method 3
     if method == 'Multi Points':
         if (n_points is None) or (n_points == 0):
             raise ValueError("n_points must be specified.")
@@ -725,7 +725,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
         raise ValueError("Offsprings and parents must have the same sum of assets allocations.")
         
-    # Adding the mating date, which is also the birth date of the offsprings (no gestation period here).
+    # Add the mating date, which is also the birth date of the offsprings (no gestation period here).
     offsprings[0]["Born"] = mating_date
     offsprings[1]["Born"] = mating_date
     
@@ -762,12 +762,12 @@ def get_offsprings(parents_values, mating_date, method='Single Point', n_points=
       Population of offsprings.
     """
     
-    # Selecting only the columns with Asset allocations, i.e. the genes
+    # Select only the columns with Asset allocations, i.e. the genes
     Npairs = len(parents_values)
     asset_columns = pd.DataFrame(parents_values[0]).filter(regex="Asset").columns.tolist() + ["Born"]
     Ngenes = len(asset_columns)-1
     
-    # Creating the offsprings
+    # Create the offsprings
     offsprings_pop = pd.DataFrame(columns=asset_columns)
     for x in range(Npairs):
         offsprings = mating_pair(parents_values[x], mating_date, method=method, n_points=n_points) # 2 offspring
@@ -831,7 +831,7 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
             gene[x] = random.randint(0, Ngene-1)
     mutated_individual = individual.copy()
     
-    # Saving the sum of assets
+    # Save the sum of assets
     sum_genes = sum(mutated_individual.values.flatten())
     
     # Generate the mutations:
@@ -849,10 +849,10 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
         for x in range(Ngene):
             mutated_individual.values.flatten()[x] *= normalization
     
-    # Adding back the birth date
+    # Add back the birth date
     # mutated_individual["Born"] = birth_date
     
-    # Making an individual
+    # Make an individual
     mutated_indiv = Individual(genes_names=input_individual.genes_names,
                                genes=mutated_individual.values.flatten(),
                                birth_date=birth_date,
@@ -1111,14 +1111,14 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     parents_pairs, parents_values = pairing(elite, selected, method=pairing_method)
     if Verbose: print("    ", parents_pairs)
     
-    # Generating offsprings
+    # Generate offsprings
     if Verbose: print(".... generating offsprings")
     offsprings = get_offsprings(parents_values, current_eval_date,
                                 method=mating_method, n_points=n_points,
                                 name_indiv=name_indiv)
     if Verbose: print("    ", offsprings.index.values)
     
-    # Mutating selected individuals and offsprings, but not the elite
+    # Mutate selected individuals and offsprings, but not the elite
     name_col_to_drop = selected.filter(regex="CumSum").columns
     selected.drop(columns=name_col_to_drop, inplace=True)
     
@@ -1196,13 +1196,13 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     # Decide for a cut in the top fitness individuals
     cut = int(M * elite_rate)
     
-    # Applying the cut - Form the elite
+    # Apply the cut - Form the elite
     new_elite = generation.iloc[:cut]
     if renaming:
         new_elite_names = ["New Elite " + str(x) for x in range(cut)]
         new_elite.index = new_elite_names
 
-    # Applying the cut - Form the "non-elite" individuals
+    # Apply the cut - Form the "non-elite" individuals
     new_individuals = generation.iloc[cut:]
     if renaming:
         new_individuals_names = ["New Individual " + str(x) for x in range(M-cut)]
@@ -1313,7 +1313,7 @@ def plot_compare_genomes(indiv1, indiv2, names=("Indiv1", "Indiv2")):
         indiv2.drop(index="Born", inplace=True)
     assert(indiv1.index.tolist() == indiv2.index.tolist())
         
-    # Building a data frame
+    # Build a data frame
     tmp = pd.DataFrame(columns=indiv1.index.tolist())
     tmp.index.names = ["Individuals"]
     tmp.loc[names[0]] = indiv1
