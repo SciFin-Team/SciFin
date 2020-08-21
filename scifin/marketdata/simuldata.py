@@ -10,65 +10,182 @@ import random as random
 # Third party imports
 import numpy as np
 import pandas as pd
+import pytz
 import matplotlib.pyplot as plt
 
 # Local application imports
 from . import marketdata
+from .. import timeseries
+
+
+# Dictionary of Pandas' Offset Aliases
+# and their numbers of appearance in a year.
+DPOA = {'D': 365, 'B': 252, 'W': 52,
+        'SM': 24, 'SMS': 24, 
+        'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
+        'BQ': 4, 'BQS': 4, 'Q': 4, 'QS': 4,
+        'Y': 1, 'A':1}
+
+# Datetimes format
+fmt = "%Y-%m-%d %H:%M:%S"
+fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
+# CLASS FOR MARKET
 
-# GENERAL FUNCTIONS RELATED TO MARKET
-
-def create_market(r_ini=100.0, drift=0.07, sigma=0.15, n_years=10,
-                  steps_per_year=12, n_scenarios=1000):
+class Market:
     """
-    Creates a market from a Geometric Brownian process for each stock.
+    Creates a market.
     
-    The model is of the form:
-    r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
-    where r_t is the return series, mu is a drift (annualized),
-    sigma is the volatility (annualised).
-    
-    Parameters
+    Attributes
     ----------
-    r_ini : float
-      Initial value of the stock.
-    drift : float
-      Value of the drift.
-    sigma : float
-      Volatility of the process.
-    n_years : int
-      Number of years to generate.
-    step_per_year : int
-      Number of steps per year.
-    n_scenarios : int
-      Number of scenarios.
-    
-    Returns
-    -------
-    DataFrame
-      Data frame of returns for the market.
+    data : DataFrame
+      Contains a time-like index and columns of values for each market component.
+    start_utc : Pandas.Timestamp
+      Starting date.
+    end_utc : Pandas.Timestamp
+      Ending date.
+    dims : 2-tuple (int,int)
+      Dimensions of the market data.
+    freq : str or None
+      Frequency inferred from index.
+    name : str
+      Name or nickname of the market.
+    tz : str
+      Timezone name.
+    timezone : pytz timezone
+      Timezone associated with dates.
+    units : List of str
+      Unit of the market data columns.
     """
     
-    # Checks
-    assert(isinstance(n_years, int))
-    assert(isinstance(steps_per_year, int))
-    assert(isinstance(n_scenarios, int))
+    def __init__(self, df=None, tz=None, units=None, name=""):
+
+        # Deal with DataFrame
+        if (df is None) or (df.empty == True):
+            self.data = pd.DataFrame(index=None, data=None)
+            self.start_utc = None
+            self.end_utc = None
+            self.dims = (0,0)
+            self.freq = None
+            self.name = 'Empty Market'
+        else:         
+            # Extract values
+            if type(df.index[0]) == 'str':
+                new_index = pd.to_datetime(df.index, format=fmt)
+                self.data = pd.DataFrame(index=new_index, data=df.values)
+                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
+                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.dims = df.shape
+                try:
+                    self.freq = pd.infer_freq(new_index)
+                except:
+                    self.freq = 'Unknown'
+                self.name = name
+            else:
+                self.data = df
+                self.start_utc = df.index[0]
+                self.end_utc = df.index[-1]
+                self.dims = df.shape
+                try:
+                    self.freq = pd.infer_freq(df.index)
+                except:
+                    self.freq = 'Unknown'
+                self.name = name
+                
+        # Deal with unit     
+        if units is None:
+            self.units = None
+        else:
+            assert(len(units) == len(self.data.columns))
+            self.units = units
+        
+        # Deal with timezone
+        if tz is None:
+            self.tz = 'UTC'
+            self.timezone = pytz.utc
+        else:
+            self.tz = tz
+            self.timezone = pytz.timezone(tz)
+
+
+    def is_index_valid(self):
+        """
+        Checks if the market has a correct index, meaning no date value is repeated.
+
+        Parameters
+        ----------
+        market : DataFrame
+          The market to be used.
+
+        Returns
+        -------
+        bool
+          Returns True if the index is valid, False otherwise.
+        """
+
+        index = self.data.index.tolist()
+        market_set = set(index)
+
+        for s in market_set:
+            if index.count(s) > 1:
+                return False
+        return True
     
-    # Initialization
-    dt = 1/steps_per_year
-    n_steps = int(n_years * steps_per_year) + 1
     
-    # Computing r_t + 1
-    rets_plus_1 = np.random.normal(loc=(1+drift)**dt,
-                                   scale=(sigma*np.sqrt(dt)),
-                                   size=(n_steps, n_scenarios))
-    rets_plus_1[0] = 1
-    market_returns = r_ini * pd.DataFrame(rets_plus_1).cumprod()
+    def reset_index(self, new_index):
+        """
+        Resets the index with a new one given in argument.
+        """
+        
+        # Checks
+        try:
+            assert(len(new_index) == self.data.shape[0])
+        except AssertionError:
+            AssertionEror("New index should have same dimension as current index.")
     
-    return market_returns
+        # Replacing index
+        self.data.index = new_index
+        
+        return None
+
+
+    def to_list(self, start_date=0, end_date=-1):
+        """
+        Converts the Market data frame into a list of TimeSeries.
+
+        Parameters
+        ----------
+        market : Market
+          Market to convert.
+        start_date : str or datetime
+          Starting date we want for the time series.
+        end_date : str or datetime
+          Ending date we want for the time series.
+
+        Returns
+        -------
+        List of TimeSeries
+          The list of times series extracted from the data frame.
+        """
+
+        # Forming a list of timeseries
+        list_ts = []
+        shared_index = self.data.index
+
+        # Loop over columns
+        for c in self.data.columns:
+            tmp_df = pd.DataFrame(data=self.data[start_date:end_date][c], index=shared_index)
+            list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
+
+        return list_ts
+
+
+    
+    
+# GENERAL FUNCTIONS RELATED TO MARKET
 
 
 def set_market_names(data, date, date_type="end", interval_type='D'):
@@ -160,29 +277,67 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     return None
 
 
-def is_index_valid(market):
+def create_market_returns(r_ini, drift, sigma, n_years,
+                          steps_per_year, n_components,
+                          date, date_type, interval_type='D',
+                          tz=None, units=None, name=""):
     """
-    Checks if the market has a correct index, meaning no date value is repeated.
+    Creates a market from a Geometric Brownian process for each stock.
+    
+    The model for each stock is of the form:
+    r_t = drift * dt + sigma * \sqrt(dt) * \eps_t
+    where r_t is the return series, mu is a drift (annualized),
+    sigma is the volatility (annualised).
     
     Parameters
     ----------
-    market : DataFrame
-      The market to be used.
+    r_ini : float
+      Initial value of the stock.
+    drift : float
+      Value of the drift.
+    sigma : float
+      Volatility of the process.
+    n_years : int
+      Number of years to generate.
+    step_per_year : int
+      Number of steps per year.
+    n_components : int
+      Number of components of the market.
+    
+    Notes
+    -----
+      All stocks are assumed to be in the same time zone.
     
     Returns
     -------
-    bool
-      Returns True if the index is valid, False otherwise.
+    Market
+      Market of returns for the market.
     """
     
-    index = market.index.tolist()
-    market_set = set(index)
+    # Checks
+    assert(isinstance(n_years, int))
+    assert(isinstance(steps_per_year, int))
+    assert(isinstance(n_components, int))
     
-    for s in market_set:
-        if index.count(s) > 1:
-            return False
-    return True
+    # Initialization
+    dt = 1/steps_per_year
+    n_steps = int(n_years * steps_per_year) + 1
     
+    # Compute r_t + 1
+    rets_plus_1 = np.random.normal(loc=(1+drift)**dt,
+                                   scale=(sigma*np.sqrt(dt)),
+                                   size=(n_steps, n_components))
+    rets_plus_1[0] = 1
+    df_returns = r_ini * pd.DataFrame(rets_plus_1).cumprod()
+
+    # Set market index and column names
+    set_market_names(df_returns, date=date, date_type=date_type, interval_type=interval_type)
+    
+    # Make a market
+    market_returns = Market(df=df_returns, tz=tz, units=units, name=name)
+    
+    return market_returns
+
 
 def create_market_shares(market, mean=100000, stdv=10000):
     """
@@ -191,7 +346,7 @@ def create_market_shares(market, mean=100000, stdv=10000):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we want to create shares for.
     mean : float
       The average value of a market share.
@@ -200,17 +355,22 @@ def create_market_shares(market, mean=100000, stdv=10000):
       
     Returns
     -------
-    DataFrame
-      The data frame containing the market shares.
+    Pandas Series
+      The pandas series containing the market shares.
     """
     
-    # number of shares we want
-    n_assets = market.shape[1]
+    # Checks
+    assert(isinstance(market, Market))
     
+    # Get number of assets
+    n_assets = market.data.shape[1]
+    
+    # Create market shares
     market_shares = pd.Series( [int(np.random.normal(loc=mean, scale=stdv, size=1)) 
                                 for _ in range(n_assets)] )
-    market_shares.index = market.columns
+    market_shares.index = market.data.columns
     
+    # Checks
     if market_shares.min() < 0:
         raise ValueError("A negative market share was generated, please launch again.")
     
@@ -223,7 +383,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       The market we take values from.
     dims : (int,int)
       Dimensions of the plot.
@@ -243,37 +403,41 @@ def plot_market_components(market, dims=(10,5), legend=True):
     axis = market_EW.plot(figsize=dims, color='k', lw=3, legend=legend)
     
     # Plotting individual portfolios
-    x = market.index.values.tolist()
-    y = market.to_numpy().transpose()
+    x = market.data.index.values.tolist()
+    y = market.data.to_numpy().transpose()
 
     # Stack plot
-    axis.stackplot(x, y, labels=market.columns.tolist())
+    axis.stackplot(x, y, labels=market.data.columns.tolist())
     if legend:
         axis.legend(loc='upper left')
 
     return None
 
         
-
+    
+    
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
 def propagate_individual(individual, environment, name_indiv="Portfolio"):
     """
     Propagates the initial individual over time by computing its sum of gene values.
+
+    The series of values is then stored in the attribute Individual.history through
+    a pandas DataFrame.
     
     Parameters
     ----------
-    individual : list of floats
-      List of Ngenes elements that represent our initial individual.
-    environment : DataFrame
+    individual : Individual
+      Individual whose genes will be used.
+    environment : Market
       Describes the time evolution of genes composing the individual.
     name_indiv : str
       Name of the individual.
     
     Returns
     -------
-    DataFrame
-      Pandas data frame containing the sum value of genes.
+    None
+      None
     
     Notes
     -----
@@ -283,7 +447,7 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     """
     
     # Checks
-    first_row = environment.iloc[0]
+    first_row = environment.data.iloc[0]
     is_uniform = True
     first_value = first_row[0]
     for x in first_row:
@@ -291,15 +455,15 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
             raise ValueError("First row of environment must be uniform in value.")
     
     # Initializations
-    Ngenes = len(individual)
+    Ngenes = individual.ngenes
     
     # Propagating individuals
-    portfolio = environment / first_value * individual
+    portfolio = environment.data / first_value * individual.genes
     
     # Summing contributions
-    portfolio_total = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
+    individual.history = pd.DataFrame(portfolio.sum(axis=1), columns=[name_indiv])
     
-    return portfolio_total
+    return None
 
 
 def evaluation_dates(environment, n_dates=10, interval_type='M'):
@@ -309,7 +473,7 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     
     Parameters
     ----------
-    environment : DataFrame
+    environment : Market
       Represents the environment, i.e. the time evolution of gene values.
     n_dates : int
       Number of evaluation dates to generate.
@@ -334,16 +498,16 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     assert(n_dates)
     
     # Initialization
-    n_ticks = environment.shape[0]
+    n_ticks = environment.dims[0]
     indices = np.linspace(start = 0, stop = n_ticks-1, num = n_dates+1).astype('int')
     
     # Find the corresponding dates
-    special_dates = environment.index.to_timestamp()[indices].to_period(interval_type)
+    special_dates = environment.data.index.to_timestamp()[indices].to_period(interval_type)
     
-    # Raising exceptions if generated dates aren't satisfactory
-    if special_dates[0] != environment.index[0]:
+    # Raise exceptions if generated dates aren't satisfactory
+    if special_dates[0] != environment.data.index[0]:
         raise IndexError("Generated dates unsatisfactory !")
-    if special_dates[-1] != environment.index[-1]:
+    if special_dates[-1] != environment.data.index[-1]:
         raise IndexError("Generated dates unsatisfactory !")
     
     return special_dates
@@ -382,11 +546,15 @@ def limited_propagation(population, environment, start, end):
     Propagates the population over time, like `propagate_individual`,
     but only for a limited period of time and several individuals.
 
+    It stores a pandas DataFrame in the attribute Population.history,
+    this DataFrame contains the individuals of the populations as columns
+    and their evolution is given along the time index.
+    
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population made of different individuals.
-    environment : DataFrame
+    environment : Market
       Represents the environment, i.e. the time evolution of gene values.
     start : Period date
       Starting date for the evolution.
@@ -396,8 +564,7 @@ def limited_propagation(population, environment, start, end):
     Returns
     -------
     DataFrame
-      Pandas data frame containing the individuals of the populations as columns
-      and whose evolution is given along the time index.
+      
     
     Notes
     -----
@@ -409,21 +576,24 @@ def limited_propagation(population, environment, start, end):
     """
     
     # Initialization
-    n_indiv = population.shape[0]
-    n_genes = environment.shape[1]
+    n_indiv = population.n_indiv
+    n_genes = population.n_genes
     
     # Propagating individuals and adding them to a data frame
     list_portfolios = pd.DataFrame()
     
     for x in range(n_indiv):
-        portfolio_name = population.index[x]
+        portfolio_name = population.data.index[x]
         
         # Computing (price of asset) x (asset allocation)
-        portfolio = environment[start:end] * population.iloc[x][:n_genes] \
-                                           * ( n_genes / population.iloc[x][:n_genes].sum())
+        portfolio = environment.data[start:end] * population.data.iloc[x][:n_genes] \
+                                                * ( n_genes / population.data.iloc[x][:n_genes].sum())
         list_portfolios[portfolio_name] = portfolio.sum(axis=1)
 
-    return pd.DataFrame(list_portfolios)
+    # Store the data frame into Population.history
+    population.history = pd.DataFrame(list_portfolios)
+        
+    return None
 
 
 def portfolio_vol(weights, cov_matrix):
@@ -445,7 +615,7 @@ def portfolio_vol(weights, cov_matrix):
     return (weights.T @ cov_matrix @ weights)**0.5
 
 
-def fitness_calculation(population, propagation, environment, current_eval_date, next_eval_date,
+def fitness_calculation(population, environment, current_eval_date, next_eval_date,
                         lamb=0.5, fitness_method="Last Return and Vol"):
     """
     Computes the fitness of each individual in a population.
@@ -461,10 +631,8 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population to evolve.
-    propagation : DataFrame
-      Time evolution of individuals.
     environment : DataFrame
       Environment which serves as a basis for propagation.
     current_eval_date : Period date
@@ -492,7 +660,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
      Population has rows which are the names of the individuals (e.g. portfolios)
      and columns which are the genes (e.g. assets).
     
-     Propagation has rows which are the time stamps,
+     The propagation, i.e. population.history, has rows which are the time stamps,
      and columns which are the names of the individuals (e.g. portfolios).
     
     Examples
@@ -502,23 +670,23 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
         
     # Method of last return
     if fitness_method == "Last Return":
-        fitness_value = [propagation[x][-1] for x in propagation.columns]
+        fitness_value = [population.history[x][-1] for x in population.history.columns]
         
         
     # Method combining last return and average volatility
     elif fitness_method == "Last Return and Vol":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [propagation[x][-1] for x in propagation.columns]
+        fitness_from_return = [population.history[x][-1] for x in population.history.columns]
 
         # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -538,17 +706,17 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     elif fitness_method == "Avg Return and Vol":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
-                                for x in propagation.columns ]
+        fitness_from_return = [ population.history[x].pct_change()[1:].mean()
+                                for x in population.history.columns ]
 
         # Defining the environment (i.e. market) correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -565,17 +733,17 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
     elif fitness_method == "Sharpe Ratio":
         # Computing fitness from returns,
         # taking the last row value of each columns (i.e. each portfolio)
-        fitness_from_return = [ propagation[x].pct_change()[1:].mean()
-                                for x in propagation.columns ]
+        fitness_from_return = [ population.history[x].pct_change()[1:].mean()
+                                for x in population.history.columns ]
 
         # Defining the environment correlation over a period of time
         # (here it does not really matter which one)
-        covmat = environment.loc[current_eval_date : next_eval_date].corr()
+        covmat = environment.data.loc[current_eval_date : next_eval_date].corr()
 
         # Loop over portfolios
-        pop = population.filter(regex="Asset")
+        pop = population.data.filter(regex="Asset")
         fitness_from_vol = []
-        for x in propagation.columns:
+        for x in population.history.columns:
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
@@ -595,7 +763,7 @@ def fitness_calculation(population, propagation, environment, current_eval_date,
 
 # VISUALIZATION METHODS
 
-def visualize_portfolios_1(market, list_individuals, evaluation_dates,
+def visualize_portfolios_1(market, propagation, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None):
     """
     Allows a quick visualization of the market,
@@ -603,9 +771,9 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     
     Parameters
     ----------
-    market : DataFrame
+    market : Market
       Market from which we extract data about genes (i.e. assets)
-    list_individuals : DataFrame
+    propagation : DataFrame
       Propagation of individuals over time.
     evaluation_dates : List of Period dates
       Dates at which we want to evaluate the individuals.
@@ -629,8 +797,8 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     axis = market_EW.plot(figsize=dims)
     
     # Plotting individual portfolios
-    for name in list_individuals.columns:
-        list_individuals[name].plot(ax=axis)
+    for name in propagation.columns:
+        propagation[name].plot(ax=axis)
         
     # Plotting evaluation dates
     for ed in evaluation_dates:
@@ -643,7 +811,7 @@ def visualize_portfolios_1(market, list_individuals, evaluation_dates,
     return None
 
 
-def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates,
+def visualize_portfolios_2(market, marketcap, propagation, evaluation_dates,
                            dims=(10,5), xlim=None, ylim=None, savefile=False,
                            namefile="Result.png"):
     """
@@ -656,7 +824,7 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
       Market from which we extract data about assets (i.e. genes).
     marketcap : Panda.Series
       Market capitalization of the assets.
-    list_individuals : DataFrame
+    propagation : DataFrame
       Propagation of individuals over time.
     evaluation_dates : List of Period dates
       Dates at which we want to evaluate the individuals.
@@ -699,8 +867,8 @@ def visualize_portfolios_2(market, marketcap, list_individuals, evaluation_dates
     # market_PW.plot(ax=axis, color='k', linestyle='-', linewidth=2)
     
     # Plotting individual portfolios
-    for name in list_individuals.columns:
-        list_individuals[name].plot(ax=axis)
+    for name in propagation.columns:
+        propagation[name].plot(ax=axis)
 
     # Re-Plotting market to appear on top
     market_EW.plot(figsize=dims, color='black', linestyle='--', linewidth=1, ax=axis)
@@ -789,7 +957,7 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
     ----------
     n : 4-tuple of int
       Structure parameters.
-    market : DataFrame
+    market : Market
       Market from which we extract data about assets (i.e. genes).
     vix : DataFrame
       Values of the VIX over time.
@@ -809,7 +977,7 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
     
     # Initializations
     n1, n2, n3, n4 = n
-    market_dates = market.index.to_timestamp().strftime("%Y-%m-%d").tolist()
+    market_dates = market.data.index.to_timestamp().strftime("%Y-%m-%d").tolist()
     save_eval_dates = []
     save_mutation_rate = []
     save_ndays = []
@@ -817,10 +985,10 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
 
     # Loop
     loop = 0
-    eval_date = market.index[0]
-    next_eval_date = market.index[10]
+    eval_date = market.data.index[0]
+    next_eval_date = market.data.index[10]
 
-    while next_eval_date < market.index[-1]:
+    while next_eval_date < market.data.index[-1]:
 
         # Updating
         eval_date = next_eval_date
@@ -836,16 +1004,16 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
 
         # Computing next date of evaluation
         current_date_index = market_dates.index(eval_date.to_timestamp().strftime("%Y-%m-%d"))
-        if current_date_index + ndays < market.shape[0]:
-            next_eval_date = market.index[current_date_index + ndays]
+        if current_date_index + ndays < market.data.shape[0]:
+            next_eval_date = market.data.index[current_date_index + ndays]
         else:
-            next_eval_date = market.index[-1]
+            next_eval_date = market.data.index[-1]
         
         # Getting the VIX
         vix_tmp = vix[eval_date.to_timestamp().strftime("%Y-%m-%d")]
         
         # Computing the mutation rate
-        ng_mutation_rate = (1 + (vix_tmp/10).astype('int')) * (market.shape[1] / n3)
+        ng_mutation_rate = (1 + (vix_tmp/10).astype('int')) * (market.data.shape[1] / n3)
         save_mutation_rate.append(ng_mutation_rate)
         
         # Computing the fitness lambda

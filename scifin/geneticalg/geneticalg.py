@@ -3,6 +3,7 @@
 # This module is for importing, transforming and visualizing market data.
 
 # Standard library imports
+import copy
 from datetime import datetime
 from datetime import timedelta
 import random as random
@@ -19,73 +20,172 @@ from .. import marketdata
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
-def individual(number_of_genes, upper_limit, lower_limit, sum_target):
+class Individual:
     """
-    Creates an individual from random values called genes.    
+    Defines an individual.
     
-    Parameters
+    Attributes
     ----------
-    number_of_genes : int
-      Number of genes making up the individual.
-    upper_limit : float
-      Maximum value taken by the genes, before normalization.
-    lower_limit : float
-      Minimum value taken by the genes, before normalization. Can be negative.
-    sum_target : float  
-      Target value for the sum of the genes after normalization.
-    
-    Returns
-    -------
-    Numpy Array
-      Array containing the values of the genes making up the individual.
-      
-    Notes
-    -----
-      These genes can represent the investment into a market
-      or any other value in a pool of possible values.
-      If the gene value is positive, it corresponds to a long position,
-      if negative, it corresponds to a short position.
-      
-      In the case of a portfolio, number_of_genes can be the number of assets
-      to consider, upper_limit / lower_limit the respective maximum / minimum
-      asset allocations, and sum_target the total investment value after normalization.
-      
-      This function has a little bug that turns out to be funny.
-      If the sum of all the values is negative, then the normalization will
-      reverse the sign and we will end up having a genes which have flipped signs.
-      
-      For a portfolio application, this means long positions become short, and conversely.
-      To prevent this from happening, an exception is raised.
+    genes : list/array of floats or list/array of str
+      Genes defining the nature of the individual.
+    birth_date : datetime or str
+      Date of birth.
+    history : TimeSeries
+      History of a value built from genes and environment.
+    name : str
+      Name of the individual.
     """
+
+    def __init__(self, genes_names=None, genes=None, birth_date=None, name=""):
+        """
+        Initializes the Individual.
+        """
+        if genes is None:
+            self.genes_names = None
+            self.genes = None
+            self.ngenes = 0
+        else:
+            self.genes_names = genes_names
+            self.genes = np.array(genes)
+            self.ngenes = len(genes)
+            
+        # Others
+        self.birth_date = birth_date
+        self.history = None
+        self.name = name
     
-    # Checks
-    assert(isinstance(number_of_genes, int))
     
-    # Generating an individual and computing normalization
-    individual = [ random.random() * (upper_limit-lower_limit) 
-                   + lower_limit for x in range(number_of_genes) ]
-    normalization = sum(individual) / sum_target
-    
-    # Check the normalization is positive
-    if normalization < 0:
-        raise ValueError("Negative normalization not allowed.")
+    @classmethod
+    def generate_random_genes(cls, n_genes, lower_limit, upper_limit, sum_target=None, birth_date=None, name="") -> 'Individual' :
+        """
+        Generates genes values randomly between upper_limit and lower_limit
+        (values before normalization), with possibility to impose a target value for their sum.
+
+        Parameters
+        ----------
+        n_genes : int
+          Number of genes making up the individual.
+        upper_limit : float
+          Maximum value taken by the genes, before normalization.
+        lower_limit : float
+          Minimum value taken by the genes, before normalization. Can be negative.
+        sum_target : float  
+          Target value for the sum of the genes after normalization.
+
+        Returns
+        -------
+        None
+          None
+
+        Notes
+        -----
+          These genes can represent the investment into a market
+          or any other value in a pool of possible values.
+          If the gene value is positive, it corresponds to a long position,
+          if negative, it corresponds to a short position.
+
+          In the case of a portfolio, n_genes can be the number of assets
+          to consider, upper_limit / lower_limit the respective maximum / minimum
+          asset allocations, and sum_target the total investment value after normalization.
+
+          If the sum of all the values is negative, and sum_target is positive (or vice versa),
+          then the normalization will reverse sign for all genes. A warning is raised in that case.
+
+          For a portfolio application, this means long positions become short, and conversely.
+          To prevent this from happening, an exception is raised.
+        """
+
+        # Checks
+        assert(isinstance(n_genes, int))
         
-    normalized_individual = np.array(individual) / normalization
+        # Generate gene names
+        genes_names = [str('Asset ' + str(x)) for x in range(n_genes)]
+        
+        # Generate individual's genes
+        genes = [ random.random() * (upper_limit-lower_limit) 
+                       + lower_limit for x in range(n_genes) ]
+        
+        # Compute normalization (if requested)
+        if sum_target is not None:
+            sum_genes = sum(genes)
+            if np.sign(sum_genes) != np.sign(sum_target):
+                print("Warning: sum of genes has opposite sign than sum_target.")
+                print("         Normalization with thus flip sign of all genes.")
+            normalization = sum_genes / sum_target
+            cls_genes = np.array(genes) / normalization
+            
+        # Otherwise just set the genes
+        else:
+            cls_genes = np.array(genes)
+
+        return cls(genes_names=genes_names, genes=cls_genes, birth_date=birth_date, name=name)
+
     
-    return normalized_individual
-
-
-
-def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
-               sum_target, birth_date, name_indiv="Indiv"):
+    
+class Population:
     """
-    Creates a population of individuals from the function `individual`.
+    Creates a population, i.e. a table of individuals
+    with there respective genes values.
+    """
+    
+    def __init__(self, df=None, n_genes=None, name=""):
+
+        # Basic features of a population
+        if (df is None) or (df.empty == True):
+            self.data = None
+            self.n_indiv = None
+            self.n_genes = None
+            self.name = "Empty population"
+        else:
+            self.data = df
+            self.n_indiv = df.shape[0]
+            self.n_genes = n_genes
+            self.name = name
+    
+        # Others
+        self.history = None
+        
+        
+    def get_individual(self, num=None, name=None):
+        """
+        Returns an individual from a position in the population.
+        """
+        
+        # Checks
+        if (num is None and name is None):
+            raise ArgumentsError("Arguments 'num' and 'name' cannot be both None.")
+            
+        else:
+            # Obtain individual from index number
+            if num is not None:
+                select_cols = self.data.columns.tolist()
+                select_cols.remove("Born")
+                indiv = Individual(genes_names=select_cols,
+                                   genes=self.data.iloc[num].values.tolist()[:-1],
+                                   birth_date=self.data.iloc[num]["Born"],
+                                   name=self.data.index[num])
+            # Obtain individual from index name
+            elif name is not None:
+                select_cols = self.data.columns.tolist()
+                select_cols.remove("Born")
+                indiv = Individual(genes_names=select_cols,
+                                   genes=self.data.loc[name].values.tolist()[:-1],
+                                   birth_date=self.data.loc[name]["Born"],
+                                   name=name)
+        return indiv
+        
+        
+
+def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
+                               sum_target, birth_date, name_indiv="Indiv"):
+    """
+    Creates a population of individuals from random values.
     
     Parameters
     ----------
-    number_of_individuals : int
+    n_indiv : int
       Number of individuals we want in this creation of a population.
-    number_of_genes : int
+    n_genes : int
       Number of genes each of these individuals have.
     upper_limit : float
       Maximum value taken by the genes, before normalization.
@@ -100,33 +200,36 @@ def population(number_of_individuals, number_of_genes, upper_limit, lower_limit,
       
     Returns
     -------
-    DataFrame
-      Pandas data frame containing the individuals of the populations as rows
+    Population
+      Population containing the individuals of the populations as rows
       and genes composing them as columns.
     """
     
     # Checks
-    assert(isinstance(number_of_individuals,int))
-    assert(isinstance(number_of_genes,int))
+    assert(isinstance(n_indiv,int))
+    assert(isinstance(n_genes,int))
     
-    # Building a data frame of individuals
-    pop = pd.DataFrame([ individual(number_of_genes, upper_limit, lower_limit, sum_target)
-                         for _ in range(number_of_individuals) ])
-    pop.columns = ["Asset " + str(i) for i in range(number_of_genes)]
+    # Build a data frame of individuals
+    pop_df = pd.DataFrame([ Individual.generate_random_genes(n_genes, upper_limit, lower_limit, sum_target).genes
+                            for _ in range(n_indiv) ])
+    pop_df.columns = ["Asset " + str(i) for i in range(n_genes)]
     
-    # Setting the birth date of the individuals
-    pop["Born"] = [birth_date for _ in range(number_of_individuals)]
+    # Set the birth date of the individuals
+    pop_df["Born"] = [birth_date for _ in range(n_indiv)]
     
-    # Setting the row names
-    pop.index = [name_indiv + str(i+1) for i in range(number_of_individuals)]
-    pop.index.names = ["Individuals"]
+    # Set the row names
+    pop_df.index = [name_indiv + str(i+1) for i in range(n_indiv)]
+    pop_df.index.names = ["Individuals"]
+    
+    # Generate Population
+    pop = Population(df=pop_df, n_genes=n_genes)
     
     return pop
 
-
+    
+    
 def get_generation(population, environment, current_eval_date, next_eval_date,
-                   lamb=0.5, fitness_method="Last Return and Vol",
-                   return_propag=False, date_format="%Y-%m"):
+                   lamb=0.5, fitness_method="Last Return and Vol", date_format="%Y-%m"):
     """
     Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
     A generation is defined as a population with computed fitness and ranked by it.
@@ -142,9 +245,9 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     Parameters
     ----------
-    population : DataFrame
+    population : Population
       Population to evolve.
-    environment : DataFrame
+    environment : Market
       Environment which serves as a basis for propagation.
     current_eval_date : Period date
       Present date on which we evaluate the individuals.
@@ -155,18 +258,14 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     fitness_method : str
       Name of the fitness method chosen among:
       {"Last Return", "Last Return and Vol", "Avg Return and Vol", "Sharpe Ratio"}
-    return_propag : bool
-      An option to return or not the propagations.
     date_format : str
       Format of the dates in the data frames.
     
     Returns
     -------
-    DataFrame
-      Pandas data frame represented the propagated population, i.e. the generation
+    Population
+      Propagated population, i.e. the generation,
       with individuals as rows and {genes, birth date, fitness} as columns.
-    DataFrame
-      Eventually returns also the propagation of the individuals.
     
     Raises
     ------
@@ -183,8 +282,8 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
      In the context of portfolios, a 'population' has rows which are the names
      of the portfolio and columns which are the assets.
      
-     The function can also return 'propagation' that has rows which are the time stamps
-     and columns which are the names of the portfolios.
+     The function can also store a 'propagation' that has rows which are the time stamps
+     and columns which are the names of the portfolios, this is done in attribute 'history'.
      
      For date formats please refer to the following:
      https://pandas.pydata.org/pandas-docs/version/0.23.4/generated/pandas.DatetimeIndex.strftime.html
@@ -196,42 +295,36 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     
     # Checks
     # Make sure all the individual portfolios were born before the current date:
-    for birth_date in population['Born']:
+    for birth_date in population.data['Born']:
         if birth_date >= next_eval_date:
             raise ValueError("Individuals can't be born at/after the evaluation date.")
+            
     # Make sure the next evaluation date is later than the current date:
     if current_eval_date >= next_eval_date:
         raise ValueError("Current date can't be after the evaluation date.")
     
-    # Getting the date just before the next evaluation date
+    # Get the date just before the next evaluation date
     # (date at which reproduction will happen)
-    date_before_eval = marketdata.find_tick_before_eval(environment.index, next_eval_date)
+    date_before_eval = marketdata.find_tick_before_eval(environment.data.index, next_eval_date)
     
     # Propagate individuals
-    propagation = marketdata.limited_propagation(population, environment,
-                                                 current_eval_date, date_before_eval)
+    marketdata.limited_propagation(population, environment, current_eval_date, date_before_eval)
 
     # Create the generation from the population copy
-    try:
-        generation = population.copy()
-    except:
-        print(population)
+    generation = copy.copy(population)
         
     # Compute the fitness of individuals
     fitness_name = "Fitness " + date_before_eval.strftime(date_format)
-    generation[fitness_name] = marketdata.fitness_calculation(population, propagation, environment,
-                                                              current_eval_date, next_eval_date,
-                                                              lamb, fitness_method)
+    generation.data[fitness_name] = marketdata.fitness_calculation(population, environment,
+                                                                   current_eval_date, next_eval_date,
+                                                                   lamb, fitness_method)
     # Sort individuals by fitness
-    generation.sort_values(by=[fitness_name], ascending=False, inplace=True)
+    generation.data.sort_values(by=[fitness_name], ascending=False, inplace=True)
     
-    # Return generation (and eventually propagation)
-    if return_propag == True:
-        return generation, propagation
-    else:
-        return generation
+    return generation
 
-    
+
+
 def roulette(cum_sum, chance):
     """
     Takes the cumulative sums and the randomly generated value for the selection process
@@ -262,6 +355,7 @@ def roulette(cum_sum, chance):
     return variable.index(chance)
 
 
+
 def selection(generation, method='Fittest Half'):
     """
     Operates the selection among a generation based on the last fitness.
@@ -274,60 +368,65 @@ def selection(generation, method='Fittest Half'):
                         
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation to do the selection form.
     method : str
       Method of selection.
     
     Returns
     -------
-    DataFrame
-      Data frame of selected individuals.    
+    Population
+      Population of selected individuals.    
     """
     
     # Initialization
-    N = generation.shape[0]
+    N = generation.n_indiv
     
-    # Sorting:
+    # Sort:
     # We use the last fitness column and normalize it
-    last_fitness = generation.filter(regex='Fit').columns[-1]
-    generation['Normalized Fitness'] = [ generation[last_fitness][x]/sum(generation[last_fitness])
-                                         for x in range(len(generation[last_fitness])) ]
+    last_fitness = generation.data.filter(regex='Fit').columns[-1]
+    generation.data['Normalized Fitness'] = [ generation.data[last_fitness][x]/sum(generation.data[last_fitness])
+                                         for x in range(len(generation.data[last_fitness])) ]
 
-    # We sort the values from smallest to highest for computing the cumulative sum
-    generation.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
+    # Sort the values from smallest to highest for computing the cumulative sum
+    generation.data.sort_values(by='Normalized Fitness', ascending=True, inplace=True)
     
-    # Computing the cumulative sum
+    # Compute the cumulative sum
     cumsum_name = "CumSum " + last_fitness.split(" ")[1]
-    generation[cumsum_name] = np.array(generation['Normalized Fitness']).cumsum()
+    generation.data[cumsum_name] = np.array(generation.data['Normalized Fitness']).cumsum()
     
-    # We sort the values back, from highest fitness to lowest
-    generation.sort_values(by=cumsum_name, ascending=False, inplace=True)
+    # Sort the values back, from highest fitness to lowest
+    generation.data.sort_values(by=cumsum_name, ascending=False, inplace=True)
     
-    # We get rid of the normalized fitness and just use the cumulative sum
-    generation.drop(columns=["Normalized Fitness"], inplace=True)
+    # Get rid of the normalized fitness and just use the cumulative sum
+    generation.data.drop(columns=["Normalized Fitness"], inplace=True)
     
-    
-    # Doing the selection:
+    # Do the selection:
     if method == 'Fittest Half':
         select_rows = [x for x in range(N//2)]
-        selected_individuals = generation.iloc[select_rows,:]
+        selected_individuals = generation.data.iloc[select_rows,:]
         
     elif method == 'Random':
         select_rows = [x for x in range(N)]
         random.shuffle(select_rows)
-        selected_individuals = generation.iloc[select_rows[:N//2],:]
+        selected_individuals = generation.data.iloc[select_rows[:N//2],:]
         
     elif method == 'Roulette Wheel':
         selected = []
         for x in range(N//2):
-            selected.append(roulette(generation[cumsum_name], random.random()))
+            selected.append(roulette(generation.data[cumsum_name], random.random()))
             while len(set(selected)) != len(selected):
-                selected[x] = roulette(generation[cumsum_name], random.random())
+                selected[x] = roulette(generation.data[cumsum_name], random.random())
         select_rows = [int(selected[x]) for x in range(N//2)]
-        selected_individuals = generation.iloc[select_rows,:]
+        selected_individuals = generation.data.iloc[select_rows,:]
 
-    return pd.DataFrame(selected_individuals)
+    # Get rid of the CumSum column
+    generation.data.drop(columns=[cumsum_name], inplace=True)
+    
+    # Make a new population with selected individuals
+    new_pop = Population(df=pd.DataFrame(selected_individuals), n_genes=generation.n_genes)
+    
+    return new_pop
 
 
 
@@ -347,9 +446,9 @@ def pairing(elite, selected, method = 'Fittest'):
 
     Parameters
     ----------
-    elite : DataFrame
+    elite : Population
       Elite population.
-    selected : DataFrame
+    selected : Population
       Selected population.
     method : str
       Method to be used.
@@ -362,13 +461,13 @@ def pairing(elite, selected, method = 'Fittest'):
       List of the parents genes.
     """
     
-    # Combining elite and previously selected individuals
-    cumsumcols_toremove = selected.filter(regex="CumSum").columns
-    individuals = pd.concat([elite, selected.drop(columns=cumsumcols_toremove)])
+    # Combine elite and previously selected individuals
+    cumsumcols_toremove = selected.data.filter(regex="CumSum").columns
+    individuals = pd.concat([elite.data, selected.data.drop(columns=cumsumcols_toremove)])
     individuals.reindex(np.random.permutation(individuals.index))
     
-    # Getting the fitness of all of them (not necessarily ordered)
-    last_fitness = selected.filter(regex="Fit").columns[-1]
+    # Get the fitness of all of them (not necessarily ordered)
+    last_fitness = selected.data.filter(regex="Fit").columns[-1]
     Fitness = individuals[last_fitness]
 
     # Initialization for pairing
@@ -513,7 +612,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     if len(pair_of_parents) != 2:
         raise ValueError("Only a pair of parents allowed here!")
     
-    # Selecting only the columns with Asset allocations, i.e. the genes
+    # Select only the columns with Asset allocations, i.e. the genes
     parents = pd.DataFrame(pair_of_parents).filter(regex="Asset")
     Ngene = parents.shape[1]
     
@@ -523,7 +622,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         raise ValueError("Parents must have the same sum of assets allocations.")
     parents_sum = parents.iloc[0].sum()
         
-    # Creating offsprings - Method 1
+    # Create offsprings - Method 1
     if method == 'Single Point':
         pivot_point = random.randint(1, Ngene-2)
         
@@ -540,7 +639,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         offsprings.append(offspring2_renorm)
     
     
-    # Creating offsprings - Method 2
+    # Create offsprings - Method 2
     if method == 'Two Points':
         pivot_point_1 = random.randint(1, Ngene-1)
         pivot_point_2 = random.randint(1, Ngene)
@@ -565,7 +664,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         offsprings.append(offspring2_renorm)
     
     
-    # Creating offsprings - Method 3
+    # Create offsprings - Method 3
     if method == 'Multi Points':
         if (n_points is None) or (n_points == 0):
             raise ValueError("n_points must be specified.")
@@ -628,7 +727,7 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
         print(parents.iloc[0].sum(), parents.iloc[1].sum(), offsprings[0].sum(), offsprings[1].sum())
         raise ValueError("Offsprings and parents must have the same sum of assets allocations.")
         
-    # Adding the mating date, which is also the birth date of the offsprings (no gestation period here).
+    # Add the mating date, which is also the birth date of the offsprings (no gestation period here).
     offsprings[0]["Born"] = mating_date
     offsprings[1]["Born"] = mating_date
     
@@ -638,8 +737,8 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
 
 def get_offsprings(parents_values, mating_date, method='Single Point', n_points=None, name_indiv="Offspring"):
     """
-    Takes all the pairs of parents and proceeds to their mating in order
-    to produce two offsprings for each, putting all of them in a dataframe.
+    Takes all the pairs of parents values and proceeds to their mating in order
+    to produce two offsprings for each, putting all of them in a Population.
     
     Different methods can be used:
     - 'Single Point': using only one pivot value for exchange of genes.
@@ -661,22 +760,23 @@ def get_offsprings(parents_values, mating_date, method='Single Point', n_points=
       
     Returns
     -------
-    DataFrame
-      Data frame of offsprings.
+    Population
+      Population of offsprings.
     """
     
-    # Selecting only the columns with Asset allocations, i.e. the genes
+    # Select only the columns with Asset allocations, i.e. the genes
     Npairs = len(parents_values)
     asset_columns = pd.DataFrame(parents_values[0]).filter(regex="Asset").columns.tolist() + ["Born"]
+    Ngenes = len(asset_columns)-1
     
-    # Creating the offsprings
+    # Create the offsprings
     offsprings_pop = pd.DataFrame(columns=asset_columns)
     for x in range(Npairs):
         offsprings = mating_pair(parents_values[x], mating_date, method=method, n_points=n_points) # 2 offspring
         offsprings_pop.loc[name_indiv + str(x*2)] = offsprings[0]
         offsprings_pop.loc[name_indiv + str(x*2 + 1)] = offsprings[1]
-        
-    return offsprings_pop
+    
+    return Population(df=offsprings_pop, n_genes=Ngenes)
 
 
 
@@ -691,7 +791,7 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
     
     Parameters
     ----------
-    input_individual : DataFrame
+    input_individual : Individual
       Individual we want to mutate.
     upper_limit : float
       Upper limit of the gene (asset allocation), before renormalization.
@@ -712,47 +812,56 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
       
     Returns
     -------
-    DataFrame
-      Data frame of the mutated individual.
+    Individual
+      Mutated individual.
     """
     
     # Checks
     assert(isinstance(mutation_rate, int))
     
     # Initialization
-    individual = input_individual.filter(regex="Asset")
-    birth_date = input_individual["Born"]
-    Ngene = len(individual)
-    gene = []
+    individual = pd.DataFrame(columns=input_individual.genes_names)
+    individual.loc[0] = input_individual.genes
+    birth_date = input_individual.birth_date
     
+    # Build positions for mutated genes
+    Ngene = len(individual.columns)
+    gene = []
     for x in range(mutation_rate):
         gene.append(random.randint(0, Ngene-1))
         while len(set(gene)) < len(gene):
             gene[x] = random.randint(0, Ngene-1)
     mutated_individual = individual.copy()
     
-    # Saving the sum of assets
-    sum_genes = mutated_individual.sum()
+    # Save the sum of assets
+    sum_genes = sum(mutated_individual.values.flatten())
     
     # Generate the mutations:
     if method == 'Gauss':
         for x in gene:
-            mutated_individual[x] = individual[x] + random.gauss(0, standard_deviation)
-        normalization = sum_genes / mutated_individual.sum()
+            mutated_individual[x] = individual.loc[0].tolist()[x] + random.gauss(0, standard_deviation)
+        normalization = sum_genes / sum(mutated_individual.values.flatten())
         for x in range(Ngene):
-            mutated_individual[x] *= normalization
+            mutated_individual.values.flatten()[x] *= normalization
     
     if method == 'Reset':
         for x in gene:
             mutated_individual[x] = random.random() * (upper_limit-lower_limit) + lower_limit
-        normalization = sum_target / mutated_individual.sum()
+        normalization = sum_target / sum(mutated_individual.values.flatten())
         for x in range(Ngene):
-            mutated_individual[x] *= normalization
+            mutated_individual.values.flatten()[x] *= normalization
     
-    # Adding back the birth date
-    mutated_individual["Born"] = birth_date
+    # Add back the birth date
+    # mutated_individual["Born"] = birth_date
     
-    return mutated_individual
+    # Make an individual
+    mutated_indiv = Individual(genes_names=input_individual.genes_names,
+                               genes=mutated_individual.values.flatten(),
+                               birth_date=birth_date,
+                               name="Mutated " + input_individual.name)
+    
+    return mutated_indiv
+
 
 
 def mutation_set(num_indiv, num_genes, num_mut=0):
@@ -787,7 +896,8 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
     return mutated_genes
 
 
-def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
+
+def mutate_population(input_pop, upper_limit, lower_limit, sum_target,
                       mutation_rate=2, method='Reset', standard_deviation = 0.001):
     """
     Makes the mutation of a population of individuals.
@@ -798,7 +908,7 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
     
     Parameters
     ----------
-    input_individuals : DataFrame
+    input_pop : Population
       Population of individuals we want to mutate.
     upper_limit : float
       Upper limit of the gene (asset allocation), before renormalization.
@@ -819,48 +929,51 @@ def mutate_population(input_individuals, upper_limit, lower_limit, sum_target,
       
     Returns
     -------
-    DataFrame
-      Data frame of the mutated individuals.
+    Population
+      Population of mutated individuals.
     """
     
     # Checks
     assert(isinstance(mutation_rate, int))
     
     # Initialization
-    individuals = input_individuals.filter(regex="Asset")
-    birth_dates = input_individuals["Born"]
-    fitness_cols = input_individuals.filter(regex="Fit")
-    M = individuals.shape[0]
-    Ngene = individuals.shape[1]
-    mutated_genes = mutation_set(num_indiv=M, num_genes=Ngene, num_mut=mutation_rate)
-    mutated_individuals = individuals.copy()
+    pop = input_pop.data.filter(regex="Asset")
+    birth_dates = input_pop.data["Born"]
+    fitness_cols = input_pop.data.filter(regex="Fit")
+    M = pop.shape[0]
+    Ngenes = pop.shape[1]
+    assert(Ngenes == input_pop.n_genes)
+    mutated_genes = mutation_set(num_indiv=M, num_genes=Ngenes, num_mut=mutation_rate)
+    mutated_pop_df = pop.copy()
     
-    # Making mutations happen and renormalizing assets allocation to keep their sum constant
+    # Make mutations happen and renormalize assets allocation to keep their sum constant
     for i in range(M):
         if method == 'Gauss':
-            sum_genes = mutated_individuals.iloc[i].sum()
+            sum_genes = mutated_pop_df.iloc[i].sum()
             for x in mutated_genes[i]:
-                mutated_individuals.iloc[i,x] = mutated_individuals.iloc[i,x] + random.gauss(0, standard_deviation)
-            normalization = sum_genes / mutated_individuals.iloc[i].sum()
-            for x in range(Ngene):
-                mutated_individuals.iloc[i,x] *= normalization
+                mutated_pop_df.iloc[i,x] = mutated_pop_df.iloc[i,x] + random.gauss(0, standard_deviation)
+            normalization = sum_genes / mutated_pop_df.iloc[i].sum()
+            for x in range(Ngenes):
+                mutated_pop_df.iloc[i,x] *= normalization
 
         if method == 'Reset':
             for x in mutated_genes[i]:
-                mutated_individuals.iloc[i,x] = random.random() * (upper_limit-lower_limit) + lower_limit
-            normalization = sum_target / mutated_individuals.iloc[i].sum()
-            for x in range(Ngene):
-                mutated_individuals.iloc[i,x] *= normalization
+                mutated_pop_df.iloc[i,x] = random.random() * (upper_limit-lower_limit) + lower_limit
+            normalization = sum_target / mutated_pop_df.iloc[i].sum()
+            for x in range(Ngenes):
+                mutated_pop_df.iloc[i,x] *= normalization
 
-    # Adding back the birth date
-    mutated_individuals["Born"] = birth_dates
+    # Add back the birth date
+    mutated_pop_df["Born"] = birth_dates
     
-    # Adding back the earlier Fitness columns
+    # Add back the earlier Fitness columns
     for col in fitness_cols.columns:
-        mutated_individuals[col] = fitness_cols[col]
+        mutated_pop_df[col] = fitness_cols[col]
     
-    return mutated_individuals
-
+    # Make a population from the DataFrame
+    mutated_pop = Population(df=mutated_pop_df, n_genes=Ngenes, name="Mutated " + input_pop.name)
+    
+    return mutated_pop
 
 
 def next_generation(elite, gen, market, current_eval_date, next_eval_date,
@@ -868,7 +981,7 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
                     fitness_lambda=0.5, fitness_method="Last Return and Vol",
                     pairing_method="Fittest", mating_method="Single Point", n_points=None,
                     mutation_method="Gauss", selection_method="Fittest Half",
-                    return_propag=False, name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
+                    name_indiv="Offspring", date_format="%Y-%m", Verbose=False):
 
     """
     Computes the next generation of individuals from selection, forming groups
@@ -877,11 +990,11 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     
     Parameters
     ----------
-    elite : DataFrame
+    elite : Population
       Generation of elites we start with.
-    gen : DataFrame
+    gen : Population
       Generation of individuals we start with.
-    market : DataFrame
+    market : Market
       Market which serves as a basis for propagation.
     current_eval_date : DataFrame
       Present date on which we evaluate the individuals.
@@ -937,8 +1050,6 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
         - 'Random': rows are picked up at random, but can't be the same.
         - 'Roulette Wheel': rows are picked up at random, but with a preference
                             for high cumulative sum (high fitness).
-    return_propag : bool
-      Option to return the propagations or not.
     name_indiv : str
       String to set the name of the offsprings.
     date_format : str
@@ -948,8 +1059,8 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     
     Returns
     -------
-    DataFrame
-      Data frame with the next generation, including parents and offsprings.
+    Population
+      Population with the next generation, including parents and offsprings.
     
     Raises
     ------
@@ -974,45 +1085,46 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     assert(mutation_method in ["Gauss", "Reset"])
     assert(selection_method in ["Fittest Half", "Random", "Roulette Wheel"])
     
-    # Check columns are the same:
-    if elite.columns.tolist() != gen.columns.tolist():
+    # Check columns are the same
+    if elite.data.columns.tolist() != gen.data.columns.tolist():
         raise ValueError("Elite and current generation must have the same columns!")
     
     # Next generation empty dataframe
-    next_gen = pd.DataFrame(data=None, columns=gen.columns)
+    next_gen = pd.DataFrame(data=None, columns=gen.data.columns)
     
     # Select the population allowed to reproduce
     if Verbose: print(".... doing selection")
     selected = selection(gen, method=selection_method)
-    if Verbose: print("    ", selected.index.values)
+    if Verbose: print("    ", selected.data.index.values)
 
     # Combine them with the elite
     if Verbose: print(".... forming pairs")
-    testM = elite.shape[0] + selected.shape[0]
+    testM = elite.data.shape[0] + selected.data.shape[0]
     
     if testM % 2 != 0:
-        name_of_indiv_to_remove = selected.index[-1]
-        selected.drop([name_of_indiv_to_remove], axis=0, inplace=True)
+        name_of_indiv_to_remove = selected.data.index[-1]
+        selected.data.drop([name_of_indiv_to_remove], axis=0, inplace=True)
         print(name_of_indiv_to_remove, " has been removed as it was the last \
               element of a selection with odd number of individuals to pair.")
         
     parents_pairs, parents_values = pairing(elite, selected, method=pairing_method)
     if Verbose: print("    ", parents_pairs)
     
-    # Generating offsprings
+    # Generate offsprings
     if Verbose: print(".... generating offsprings")
     offsprings = get_offsprings(parents_values, current_eval_date,
                                 method=mating_method, n_points=n_points,
                                 name_indiv=name_indiv)
-    if Verbose: print("    ", offsprings.index.values)
+    if Verbose: print("    ", offsprings.data.index.values)
     
-    # Mutating selected individuals and offsprings, but not the elite
-    name_col_to_drop = selected.filter(regex="CumSum").columns
-    selected.drop(columns=name_col_to_drop, inplace=True)
+    # Mutate selected individuals and offsprings, but not the elite
+    name_col_to_drop = selected.data.filter(regex="CumSum").columns
+    selected.data.drop(columns=name_col_to_drop, inplace=True)
     
     if Verbose: print(".... appending offsprings to selection")
-    unmutated = selected.append(offsprings)
-    if Verbose: print("    ", unmutated.index.values)
+    unmutated_df = selected.data.copy().append(offsprings.data)
+    unmutated = Population(df=unmutated_df, n_genes=selected.n_genes)
+    if Verbose: print("    ", unmutated.data.index.values)
         
     if Verbose: print(".... mutating offsprings")
     mutated = mutate_population(unmutated, upper_limit, lower_limit, sum_target,
@@ -1021,29 +1133,25 @@ def next_generation(elite, gen, market, current_eval_date, next_eval_date,
     if Verbose: print(".... forming mutated generation")
     mutated_gen = get_generation(mutated, market, current_eval_date, next_eval_date,
                                  lamb=fitness_lambda, fitness_method=fitness_method,
-                                 return_propag=False, date_format=date_format)
-    if Verbose: print("    ", mutated_gen.index.values)
+                                 date_format=date_format)
+    if Verbose: print("    ", mutated_gen.data.index.values)
     
     # Combine mutated population with the elite
     if Verbose: print(".... recombining elite with mutated individuals")
-    unsorted_individuals = elite.append(mutated_gen)
-    if Verbose: print("    ", unsorted_individuals.index.values)
+    unsorted_individuals_df = elite.data.copy().append(mutated_gen.data)
+    unsorted_individuals = Population(df=unsorted_individuals_df, n_genes=elite.n_genes)
+    if Verbose: print("    ", unsorted_individuals.data.index.values)
     
     # Compute fitness of that new generation
     # get generation also sorts the individuals by fitness
     if Verbose: print(".... getting the generation of combined elite and mutated individuals")
-    if return_propag == True:
-        sorted_next_gen, propagation = get_generation(unsorted_individuals, market,
-                                                      current_eval_date, next_eval_date,
-                                                      lamb=fitness_lambda, return_propag=True,
-                                                      date_format=date_format)
-        return sorted_next_gen, propagation
-    else:
-        sorted_next_gen = get_generation(unsorted_individuals, market,
-                                         current_eval_date, next_eval_date,
-                                         lamb=fitness_lambda, return_propag=False,
-                                         date_format=date_format)
-        return sorted_next_gen
+    
+    sorted_next_gen = get_generation(unsorted_individuals, market,
+                                     current_eval_date, next_eval_date,
+                                     lamb=fitness_lambda,
+                                     date_format=date_format)
+    return sorted_next_gen
+
 
 
 def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
@@ -1056,7 +1164,7 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation we want to build new elite and non-elite from.
     elite_rate : float in [0,1]
       Rate of individuals going into the elite.
@@ -1065,9 +1173,9 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     
     Returns
     -------
-    DataFrame
+    Population
       Data Frame of the new elite population.
-    DataFrame
+    Population
       Data Frame of the new non-elite population.
     """
     
@@ -1075,28 +1183,31 @@ def get_elite_and_individuals(generation, elite_rate=0.2, renaming=True):
     assert(elite_rate>=0 and elite_rate <=1)
     
     # Initialization
-    M = generation.shape[0]
-    fitness_cols = generation.filter(regex="Fit").columns
+    M = generation.data.shape[0]
+    fitness_cols = generation.data.filter(regex="Fit").columns
     
     # Just to make sure that the generation is sorted
-    generation.sort_values(by=fitness_cols[-1], ascending=False, inplace=True)
+    generation.data.sort_values(by=fitness_cols[-1], ascending=False, inplace=True)
     
     # Decide for a cut in the top fitness individuals
     cut = int(M * elite_rate)
     
-    # Applying the cut - Form the elite
-    new_elite = generation.iloc[:cut]
+    # Apply the cut - Form the elite
+    new_elite_df = generation.data.copy().iloc[:cut]
     if renaming:
         new_elite_names = ["New Elite " + str(x) for x in range(cut)]
-        new_elite.index = new_elite_names
+        new_elite_df.index = new_elite_names
+    new_elite = Population(df=new_elite_df, n_genes=generation.n_genes)
 
-    # Applying the cut - Form the "non-elite" individuals
-    new_individuals = generation.iloc[cut:]
+    # Apply the cut - Form the "non-elite" individuals
+    new_individuals_df = generation.data.copy().iloc[cut:]
     if renaming:
         new_individuals_names = ["New Individual " + str(x) for x in range(M-cut)]
-        new_individuals.index = new_individuals_names
+        new_individuals_df.index = new_individuals_names
+    new_individuals = Population(df=new_individuals_df, n_genes=generation.n_genes)
     
     return new_elite, new_individuals
+
 
 
 def fitness_similarity_check(generation, number_of_similarity, precision_decimals=1):
@@ -1107,7 +1218,7 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation that we consider.
     number_of_similarity : int
       Number of individuals to consider for similarity check.
@@ -1132,7 +1243,7 @@ def fitness_similarity_check(generation, number_of_similarity, precision_decimal
     # Initialization
     result = False
     similarity = 0
-    max_fitness = generation.filter(regex="Fit").iloc[:,-1]
+    max_fitness = generation.data.filter(regex="Fit").iloc[:,-1]
     
     for n in range(len(max_fitness)-1):
         if round(max_fitness[n], precision_decimals) == round(max_fitness[n+1], precision_decimals):
@@ -1151,7 +1262,7 @@ def sum_top_fitness(generation, num_elements=4):
     
     Parameters
     ----------
-    generation : DataFrame
+    generation : Population
       Generation that we consider.
     num_elements : int
       Number of elements to consider from the top.
@@ -1162,7 +1273,7 @@ def sum_top_fitness(generation, num_elements=4):
       The sum of fitness from the top elements.
     """
     
-    gen = generation.filter(regex="Fit").iloc[:,-1]
+    gen = generation.data.filter(regex="Fit").iloc[:,-1]
     
     if num_elements <= gen.shape[0]:
         sum_top_fitness = gen[0:num_elements].sum()
@@ -1195,17 +1306,16 @@ def plot_compare_genomes(indiv1, indiv2, names=("Indiv1", "Indiv2")):
     """
 
     # Checks
-    if "Born" in indiv1.index:
-        indiv1.drop(index="Born", inplace=True)
-    if "Born" in indiv2.index:
-        indiv2.drop(index="Born", inplace=True)
-    assert(indiv1.index.tolist() == indiv2.index.tolist())
+    try:
+        assert(indiv1.genes_names == indiv2.genes_names)
+    except:
+        raise AssertionError("indiv1 and indiv2 must have the name names for genes.")
         
-    # Building a data frame
-    tmp = pd.DataFrame(columns=indiv1.index.tolist())
+    # Build a data frame
+    tmp = pd.DataFrame(columns=indiv1.genes_names)
     tmp.index.names = ["Individuals"]
-    tmp.loc[names[0]] = indiv1
-    tmp.loc[names[1]] = indiv2
+    tmp.loc[names[0]] = indiv1.genes
+    tmp.loc[names[1]] = indiv2.genes
 
     # Plotting
     tmp.transpose().plot.bar(figsize=(10,5))
