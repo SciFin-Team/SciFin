@@ -78,9 +78,6 @@ class Distribution:
         # name (or nickname)
         self.name = name
     
-    
-    # Member functions
-    
     def info(self):
         """
         Prints the most relevant information about the distribution.
@@ -200,7 +197,6 @@ class Normal(Distribution):
         # name (or nickname)
         self.name = name
         
-        
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -308,7 +304,6 @@ class Uniform(Distribution):
         # name (or nickname)
         self.name = name
         
-
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -398,21 +393,20 @@ class Weibull(Distribution):
         self.mean = lmbda * gamma(1 + 1/k)
         self.variance = lmbda**2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))**2)
         self.std = np.sqrt(self.variance)
-        self.skewness = self.skewness_Weibull(k, lmbda)
-        self.kurtosis = self.kurtosis_Weibull(k, lmbda)
+        self.skewness = self.get_skewness(k, lmbda)
+        self.kurtosis = self.get_kurtosis(k, lmbda)
         
         # quantiles
         self.median = lmbda * np.power(np.log(2), 1/k)
         
         # others
-        self.mode = self.mode_Weibull(k, lmbda)
+        self.mode = self.get_mode(k, lmbda)
         self.entropy = np.euler_gamma * (1-1/k) + np.log(lmbda/k) + 1
         
         # name (or nickname)
         self.name = name
         
-        
-    def skewness_Weibull(self, k, lmbda):
+    def get_skewness(self, k, lmbda):
         """
         Computes the skewness of the Weibull distribution.
         """
@@ -425,7 +419,7 @@ class Weibull(Distribution):
         skew = (g3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
         return skew
         
-    def kurtosis_Weibull(self, k, lmbda):
+    def get_kurtosis(self, k, lmbda):
         """
         Computes the kurtosis of the Weibull distribution.
         """
@@ -436,11 +430,11 @@ class Weibull(Distribution):
         mu = lmbda * g1
         var = lmbda**2 * (g2 - g1**2)
         sig = np.sqrt(var)
-        kurt = (g4 * lmbda**4 - 4 * self.skewness_Weibull(k,lmbda) 
+        kurt = (g4 * lmbda**4 - 4 * self.get_skewness(k,lmbda) 
                    * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
         return kurt
         
-    def mode_Weibull(self, k, lmbda):
+    def get_mode(self, k, lmbda):
         """
         Computes the mode of the Weibull distribution.
         """
@@ -559,7 +553,6 @@ class Rayleigh(Distribution):
         # name (or nickname)
         self.name = name
 
-        
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -650,7 +643,6 @@ class Exponential(Distribution):
         
         # name (or nickname)
         self.name = name
-
 
     def pdf(self, x):
         """
@@ -766,7 +758,6 @@ class Gumbel(Distribution):
         # name (or nickname)
         self.name = name
 
-        
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -792,8 +783,6 @@ class Gumbel(Distribution):
         assert(p>0 and p<1)
         return self.mu - self.beta * np.log(-np.log(p))
 
-
-    
     
 class Laplace(Distribution):
     """
@@ -861,7 +850,6 @@ class Laplace(Distribution):
         
         # name (or nickname)
         self.name = name
-
 
     def pdf(self, x):
         """
@@ -977,7 +965,6 @@ class Levy(Distribution):
         # name (or nickname)
         self.name = name
 
-    
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -1076,7 +1063,6 @@ class Cauchy(Distribution):
         # name (or nickname)
         self.name = name
 
-
     def pdf(self, x):
         """
         Implements the Probability Density Function (PDF)
@@ -1085,7 +1071,6 @@ class Cauchy(Distribution):
         z = (np.array(x) - self.a) / self.b
         pdf = 1 / (np.pi * self.b) / (1 + z**2)
         return pdf
-
     
     def cdf(self, x):
         """
@@ -1172,13 +1157,12 @@ class Poisson(Distribution):
         # others
         self.k_max = k_max
         self.mode = np.floor(lmbda)
-        self.entropy = self.entropy_Poisson(lmbda)
+        self.entropy = self.get_entropy(lmbda)
         
         # name (or nickname)
         self.name = name
     
-    
-    def entropy_Poisson(self, lmbda):
+    def get_entropy(self, lmbda):
         """
         Computes the entropy for the Poisson distribution.
         """
@@ -1318,16 +1302,16 @@ class Binomial(Distribution):
         self.kurtosis = 3. + (1-6*p*(1-p))/(n*p*(1-p))
         
         # quantiles
-        self.median = self.median_Binomial(n, p)
+        self.median = self.get_median(n, p)
         
         # others
-        self.mode = self.mode_Binomial(n, p)
+        self.mode = self.get_mode(n, p)
         self.entropy = (1/2) * np.log2(2 * np.pi * np.e * n*p*(1-p))
         
         # name (or nickname)
         self.name = name
         
-    def mode_Binomial(self, n, p):
+    def get_mode(self, n, p):
         """
         Computes the mode of the Binomial distribution.
         """
@@ -1340,7 +1324,7 @@ class Binomial(Distribution):
         elif test_value == n+1:
             return n
 
-    def median_Binomial(self, n, p):
+    def get_median(self, n, p):
         """
         Partially computes the median of the Binomial distribution.
         """
@@ -1351,7 +1335,6 @@ class Binomial(Distribution):
             print("Median has a value in interval [", np.floor(test_value), ",",
                   np.ceil(test_value), "].")
             return None
-        
     
     def pmf(self, klist):
         """
