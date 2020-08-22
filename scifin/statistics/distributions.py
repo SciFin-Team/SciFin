@@ -1208,19 +1208,25 @@ class Poisson(Distribution):
                 ks_consecutive = False
                 break
         
+        # But if there is only one element
+        # Consider k's not-consecutive case
+        if N==1:
+            ks_consecutive = False
+        
         # Computing the list of elements to sum
         t = []
+        k_range = np.floor(klist)
         if ks_consecutive==True:
-            k_range = np.floor(klist)
-            tmp_sum = 1.
+            tmp_sum = sum([ np.power(self.lmbda,i) / np.math.factorial(i) 
+                            for i in range(int(np.floor(k_range[0]+1))) ])
             t.append(tmp_sum)
-            for i in range(1,N,1):
-                tmp_sum += np.power(self.lmbda,k_range[i]) / np.math.factorial(k_range[i])
+            for i in range(int(k_range[0]+1),int(k_range[-1]+1),1):
+                tmp_sum += np.power(self.lmbda,i) / np.math.factorial(i)
                 t.append(tmp_sum)
         else:
             for i in range(N):
-                tmp_sum = [ np.power(self.lmbda,i) / np.math.factorial(i) 
-                            for i in range(np.floor(k_range[i])) ].sum()
+                tmp_sum = sum([ np.power(self.lmbda,i) / np.math.factorial(i) 
+                            for i in range(int(np.floor(k_range[i]+1))) ])
                 t.append(tmp_sum)
         
         # Completing the calculation
