@@ -377,6 +377,8 @@ def create_market_shares(market, mean=100000, stdv=10000):
     return market_shares
 
 
+# VISUALIZATION METHODS
+
 def plot_market_components(market, dims=(10,5), legend=True):
     """
     Plots the assets contribution to the Equally-Weighted (EW) index.
