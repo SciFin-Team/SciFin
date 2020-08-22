@@ -12,7 +12,7 @@ import pandas as pd
 
 # Import my package
 from scifin import timeseries as ts
-from scifin import classifier as cl
+from scifin.classifier import classifier as cl
     
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -80,3 +80,4 @@ class TestDistances(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
     
+
