@@ -48,7 +48,7 @@ class TestIndividual(unittest.TestCase):
         self.i1 = gen.Individual(genes=[1,2,3], birth_date="2020-08-21", name="Albert")
         
         # Test attributes values
-        self.assertEqual(self.i1.genes_names, None)
+        self.assertIsNone(self.i1.genes_names)
         self.assertListEqual(list(self.i1.genes), [1, 2, 3])
         self.assertEqual(self.i1.birth_date, "2020-08-21")
         self.assertEqual(self.i1.ngenes, 3)
@@ -95,7 +95,7 @@ class TestPopulation(unittest.TestCase):
         self.assertEqual(self.p1.n_indiv, 2)
         self.assertEqual(self.p1.n_genes, 3)
         self.assertEqual(self.p1.name, "MyPopulation")   
-        self.assertEqual(self.p1.history, None)
+        self.assertIsNone(self.p1.history)
     
 
     

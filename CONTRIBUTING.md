@@ -1,6 +1,7 @@
 # Contributing
 
-Thank you for thinking to contribute! (or just being curious about this page :smiley:)
+Thank you for thinking to contribute!  
+(or just being curious about this page :smiley:)
 
 The bigger a project gets, the more necessary to have rules to focus everybody's efforts in an efficient way.
 This page gives some guidelines that should be followed to contribute to the project. Obviously, these rules will evolve with time and you are very welcome to suggest modifications of them if you believe they do not make sense.
@@ -24,14 +25,21 @@ If you think some idea or feature could fit well within SciFin, please do not he
 
 Nobody likes to create branches, merge them, resolve conflicts, etc. So why should we bother? Well, that question has the same answer as why we should eat these non-exciting vegetables like broccoli, cabbage, and spinach... because they are very healthy for us! :smiley: If we don't create branches, one can be almost certain that when the code is too large to check that everything works fine after we modified some function, the modifications that we thought would not affect anyone else will actually disrupt other people's work. **It is thus extremely important to create local development branches and merge them with the master branch only when we are sure that disruption is minimized.** It is also of great importance to communicate with other developers potentially affected by the changes before proceeding to the branch merger.
 
+To learn more about branches:
+- [managing branches and merging your branch into master](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) (very clear article).
+- [basic git commands for branches management](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches).
+- [creating a pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+
 There would be no branches without commits, so let's say a few words about them. It is advised to do a commit of your work each time you finish some task that do not involve too many modifications (between 20 and 50 lines of code seem a good estimate). **Committing too little or too much both makes a commit useless, so keep an eye on your commits size.** as for the description of your commit, it is advised to tell which function you worked on, in which class or package, and give a short explanation of what you did. Keep in mind that a commit is a message in a bottle for someone who does not know (at all) what you are doing, or for your own self in a not-so-distant future (who may not know at all what you were doing!). It is advized to push commits on the repository's development branch each day to avoid losing too much work in case of problems with local machines.
+
+To learn more about good practice for commits:
+- [Git commit rules](https://wiki.openstack.org/wiki/GitCommitMessages#Git_Commit_Good_Practice).
 
 If dealing with branches is as appealing as eating broccolis, creating unit tests is probably as boring as washing the dishes! But that also is a necessity! **Every function that can have a unit test should see a unit test being written.** The best moment to write that test is right after writing the function, preferably in a new commit. One should keep in mind that unit testing is like a safeguard and a guarantee of solidity for the future code, hence big saving of time and energy.
 
-Here are important and useful readings:
-- about [managing branches and merging your branch into master](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) (very clear article).
-- about [basic git commands for branches management](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches).
-- about [creating a pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+To learn more about unit tests:
+- [Python Reference](https://docs.python.org/3/library/unittest.html#) (very well explained).
+
 
 
 ## Coding conventions
