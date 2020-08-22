@@ -64,9 +64,11 @@ it is advised to install pandas version 1.0.3 using e.g. the command line:
 
 ## Usage
 
-To be updated.
+The code is growing fast and many classes and function acquire new features. Hence, one version can be significantly different from the previous one at the moment. That's what makes development exciting! But that can also be confusing.
 
-Please refer to the [Wiki page](https://github.com/SciFin-Team/SciFin/wiki).
+A documentation of the code should help users. Once ready, this documentation will start appearing on [SciFin's Wiki page](https://github.com/SciFin-Team/SciFin/wiki).
+
+If you encounter any problem while using SciFin, please do not hesitate to report it to us by [creating an issue](https://docs.github.com/en/github/managing-your-work-on-github/creating-an-issue).
 
 
 ## Contributing
