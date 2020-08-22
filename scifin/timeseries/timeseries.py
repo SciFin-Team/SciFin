@@ -1426,7 +1426,6 @@ class CatTimeSeries(Series):
         return X, y, D
     
     
-    
     def simple_plot(self, figsize=(12,5), dpi=100):
         """
         Plots the categorical time series in a simple way.

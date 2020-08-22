@@ -23,7 +23,7 @@ from . import TimeSeries
 # Simple models
 
 
-def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, name=""):
+def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=None, name=""):
     """
     Defines a time series with constant numerical value
     and eventually add a noise to it.
@@ -80,7 +80,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, name=""
 
     # Make time series
     df = pd.DataFrame(index=data_index, data=data_vals)
-    ts = TimeSeries(df, tz=tz, name=name)
+    ts = TimeSeries(df, tz=tz, unit=unit, name=name)
 
     return ts
 
