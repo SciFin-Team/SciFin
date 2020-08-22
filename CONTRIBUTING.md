@@ -7,6 +7,8 @@ This page gives some guidelines that should be followed to contribute to the pro
 
 Please always keep in mind that SciFin serves a certain purpose, and as such its development should make the code move towards that goal. You can read about the objectives of SciFin in the [Readme](https://github.com/SciFin-Team/SciFin/blob/master/README.md) file.
 
+You don't need to be an expert on Python to contribute! However, it is strongly advised to still have a fair knowledge of Python or other programming languages (or at least a strong motivation to learn), and it is recommanded to read in details the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before joining the project.
+
 
 ## Reporting bugs
 
@@ -35,6 +37,13 @@ Here are important and useful readings:
 ## Coding conventions
 
 ### Generalities:
+
+The package tries to follow the style guide for Python code [PEP8](https://www.python.org/dev/peps/pep-0008/) and all contributors should try to follow this style. Some parts of the code may not be written in this style and it is also important to maintain the code to uniformize the style on a regular basis.
+
+As for docstrings, the format we try to follow is given by the [numpy doc style](https://numpydoc.readthedocs.io/en/latest/format.html). Again, it is much better to take care of a docstring write after the function is written (and before committing!) than seeing this function misunderstood or unused.
+
+
+Here are some bulletpoints which are overlaping with the PEP8 style guide which are worth to recall:
 
 - Every function or class we write should have at least a docstring with a short description of its purpose. Doctrings start with """ and end with """.
 
