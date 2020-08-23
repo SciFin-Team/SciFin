@@ -203,9 +203,8 @@ class Weibull(unittest.TestCase):
         
         self.assertListEqual(list(self.d1.pdf([1,2])), [0.18393972058572117, 0.08595474576918094])
         self.assertListEqual(list(self.d1.cdf([1,2])), [0.6321205588285577, 0.7568832655657858])
-        self.assertEqual(d10.var(p=0.1)), 0.011100838259683056)
-        self.assertEqual(d10.cvar(p=0.1)), 2.2218218695753356)
-        
+        self.assertEqual(self.d1.var(p=0.1), 0.011100838259683056)
+        self.assertEqual(self.d1.cvar(p=0.1), 2.2218218695753356)
 
 
 class Rayleigh(unittest.TestCase):
@@ -228,7 +227,7 @@ class Rayleigh(unittest.TestCase):
             dis.Rayleigh(sigma=-1)
         
         # For the later tests
-        self.d1 = dis.Weibull(sigma=1., name="MyRayleigh")
+        self.d1 = dis.Rayleigh(sigma=1., name="MyRayleigh")
         
     def tearDown(self):
         pass
@@ -248,13 +247,63 @@ class Rayleigh(unittest.TestCase):
         self.assertEqual(self.d1.median, 1.1774100225154747)
         self.assertEqual(self.d1.mode, 1)
         self.assertEqual(self.d1.entropy, 0.9420342421707937)
-        self.assertEqual(self.d1.name, "MyWeibull")
+        self.assertEqual(self.d1.name, "MyRayleigh")
     
     def test_methods(self):
         
         self.assertListEqual(list(self.d1.pdf([1,2])), [0.6065306597126334, 0.2706705664732254])
         self.assertListEqual(list(self.d1.cdf([1,2])), [0.3934693402873666, 0.8646647167633873])
 
+
+        
+class Exponential(unittest.TestCase):
+    """
+    Tests the class Exponential.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Exponential(lmbda=-1)
+        
+        # For the later tests
+        self.d1 = dis.Exponential(lmbda=2., name="MyExponential")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Exponential')
+        self.assertEqual(self.d1.support, 'R+')
+        
+        self.assertEqual(self.d1.lmbda, 2.)
+        
+        self.assertEqual(self.d1.mean, 0.5)
+        self.assertEqual(self.d1.variance, 0.25)
+        self.assertEqual(self.d1.std, 0.5)
+        self.assertEqual(self.d1.skewness, 2)
+        self.assertEqual(self.d1.kurtosis, 9)
+        self.assertEqual(self.d1.median, 0.34657359027997264)
+        self.assertEqual(self.d1.mode, 0)
+        self.assertEqual(self.d1.entropy, 0.3068528194400547)
+        self.assertEqual(self.d1.name, "MyExponential")
+    
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1,2])), [2.0, 0.2706705664732254, 0.03663127777746836])
+        self.assertListEqual(list(self.d1.cdf([0,1,2])), [0.0, 0.8646647167633873, 0.9816843611112658])
+        self.assertEqual(self.d1.var(p=0.1), 0.05268025782891314)
+        self.assertEqual(self.d1.cvar(p=0.1), 0.5526802578289132)
         
     
 # DISCRETE DISTRIBUTIONS
