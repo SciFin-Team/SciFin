@@ -358,6 +358,58 @@ class Gumbel(unittest.TestCase):
         
         
         
+class Laplace(unittest.TestCase):
+    """
+    Tests the class Laplace.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Laplace(mu=0, b=-1)
+        
+        # For the later tests
+        self.d1 = dis.Laplace(mu=0, b=1, name="MyLaplace")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Laplace')
+        self.assertEqual(self.d1.support, 'R')
+        
+        self.assertEqual(self.d1.mu, 0)
+        self.assertEqual(self.d1.b, 1)
+        
+        self.assertEqual(self.d1.mean, 0)
+        self.assertEqual(self.d1.variance, 2)
+        self.assertEqual(self.d1.std, 1.4142135623730951)
+        self.assertEqual(self.d1.skewness, 0)
+        self.assertEqual(self.d1.kurtosis, 6)
+        self.assertEqual(self.d1.median, 0)
+        self.assertEqual(self.d1.mode, 0)
+        self.assertEqual(self.d1.entropy, 1.6931471805599452)
+        self.assertEqual(self.d1.name, "MyLaplace")
+
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1,2])), [0.5, 0.18393972058572117, 0.06766764161830635])
+        self.assertListEqual(list(self.d1.cdf([0,1,2])), [0.5, 0.8160602794142788, 0.9323323583816936])
+        self.assertEqual(self.d1.var(p=0.1), -1.6094379124341003)
+        self.assertEqual(self.d1.cvar(p=0.1), 0.28993754582601117)
+        
+        
+        
 # DISCRETE DISTRIBUTIONS
     
 class Poisson(unittest.TestCase):
