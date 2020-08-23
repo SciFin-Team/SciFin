@@ -154,9 +154,56 @@ class Uniform(unittest.TestCase):
 
         
         
+class Weibull(unittest.TestCase):
+    """
+    Tests the class Weibull.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
         
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Weibull(k=-1, lmbda=1)
+        with self.assertRaises(AssertionError):
+            dis.Weibull(k=1, lmbda=-1)
         
+        # For the later tests
+        self.d1 = dis.Weibull(k=0.5, lmbda=1., name="MyWeibull")
         
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Weibull')
+        self.assertEqual(self.d1.support, 'R+')
+        
+        self.assertEqual(self.d1.k, 0.5)
+        self.assertEqual(self.d1.lmbda, 1.)
+        
+        self.assertEqual(self.d1.mean, 2.0)
+        self.assertEqual(self.d1.variance, 20.0)
+        self.assertEqual(self.d1.std, 4.47213595499958)
+        self.assertEqual(self.d1.skewness, 6.6187612133993765)
+        self.assertEqual(self.d1.kurtosis, 87.71999999999998)
+        self.assertEqual(self.d1.median, 0.4804530139182014)
+        self.assertEqual(self.d1.mode, 0)
+        self.assertEqual(self.d1.entropy, 1.1159315156584124)
+        self.assertEqual(self.d1.name, "MyWeibull")
+    
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([1,2])), [0.18393972058572117, 0.08595474576918094])
+        
+
     
     
     
