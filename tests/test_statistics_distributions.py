@@ -155,8 +155,68 @@ class Poisson(unittest.TestCase):
         self.assertListEqual(list(self.d1.cdf([1,2])), [0.9097959895689501, 0.9856123220330293])
 
         
+        
+class Binomial(unittest.TestCase):
+    """
+    Tests the class Binomial.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Testing sigma=0 case raises an AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Binomial(n=1., p=0.5)
+        with self.assertRaises(AssertionError):
+            dis.Binomial(n=-10, p=0.5)
+        with self.assertRaises(AssertionError):
+            dis.Binomial(n=10, p=1.5)
+        with self.assertRaises(AssertionError):
+            dis.Binomial(n=10, p=-0.5)
+        
+        # For the later tests
+        self.d1 = dis.Binomial(n=10, p=0.7, name="MyBinomial")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Binomial')
+        self.assertEqual(self.d1.support, '{0,1,...,n}')
+        
+        self.assertEqual(self.d1.n, 10)
+        self.assertEqual(self.d1.p, 0.7)
+        self.assertAlmostEqual(self.d1.q, 0.3)
+        
+        self.assertEqual(self.d1.mean, 7.0)
+        self.assertEqual(self.d1.variance, 2.1000000000000005)
+        self.assertEqual(self.d1.std, 1.449137674618944)
+        self.assertEqual(self.d1.skewness, -0.27602622373694163)
+        self.assertEqual(self.d1.kurtosis, 2.876190476190476)
+        self.assertEqual(self.d1.median, 7.0)
+        
+        self.assertEqual(self.d1.mode, 7.0)
+        self.assertEqual(self.d1.entropy, 2.58229024912634)
+        self.assertEqual(self.d1.name, "MyBinomial")
+        
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pmf([1,2])), [0.00013778100000000018, 0.0014467005000000015])
+        self.assertListEqual(list(self.d1.cdf([1,2])), [0.00014368590000000018, 0.0015903864000000017])
     
 
+    
+    
+    
+    
     
 if __name__ == '__main__':
     unittest.main()

@@ -86,6 +86,7 @@ class Distribution:
         print("Type: \t\t", self.type)
         print("Mean: \t\t", self.mean)
         print("Variance: \t", self.variance)
+        print("Std. Dev.: \t", self.std)
         print("Skewness: \t", self.skewness)
         print("Kurtosis: \t", self.kurtosis)
         print("Median: \t", self.median)
@@ -1375,23 +1376,31 @@ class Binomial(Distribution):
                 ks_consecutive = False
                 break
         
+        # But if there is only one element
+        # Consider k's not-consecutive case
+        if N==1:
+            ks_consecutive = False
+        
         # Computing the list of elements to sum
         t = []
+        k_range = np.floor(klist)
         if ks_consecutive==True:
-            k_range = np.floor(klist)
-            tmp_sum = 1.
+            tmp_sum = sum([ np.math.factorial(self.n) \
+                           / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
+                           * np.power(self.p,i) * np.power(1-self.p,self.n-i) 
+                            for i in range(int(np.floor(k_range[0]+1))) ])
             t.append(tmp_sum)
-            for i in range(1,N,1):
+            for i in range(int(k_range[0]+1),int(k_range[-1]+1),1):
                 tmp_sum += np.math.factorial(self.n) \
                            / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
                            * np.power(self.p,i) * np.power(1-self.p,self.n-i)
                 t.append(tmp_sum)
         else:
             for i in range(N):
-                tmp_sum = [ np.math.factorial(self.n) 
+                tmp_sum = sum([ np.math.factorial(self.n) 
                             / (np.math.factorial(i) * np.math.factorial(self.n-i)) 
                             * np.power(self.p,i) * np.power(1-self.p,self.n-i) 
-                            for i in range(np.floor(k_range[i])) ].sum()
+                            for i in range(int(np.floor(k_range[i]+1))) ])
                 t.append(tmp_sum)
         
         # Completing the calculation
