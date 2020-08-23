@@ -49,6 +49,55 @@ class TestStandardNormalFunctions(unittest.TestCase):
         self.assertAlmostEqual(dis.standard_normal_quantile(0.99) + dis.standard_normal_quantile(0.01), 0.)
 
 
+class Uniform(unittest.TestCase):
+    """
+    Tests the class Uniform.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Uniform(a=2., b=1.)
+        
+        # For the later tests
+        self.d1 = dis.Uniform(a=-1., b=2., name="MyUniform")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Uniform')
+        self.assertEqual(self.d1.support, '[a,b]')
+        
+        self.assertEqual(self.d1.a, -1.)
+        self.assertEqual(self.d1.b, 2.)
+        
+        self.assertEqual(self.d1.mean, 0.5)
+        self.assertEqual(self.d1.variance, 0.75)
+        self.assertEqual(self.d1.std, 0.8660254037844386)
+        self.assertEqual(self.d1.skewness, 0.)
+        self.assertEqual(self.d1.kurtosis, 1.8)
+        self.assertEqual(self.d1.median, 0.5)
+        self.assertEqual(self.d1.mode, 'Any value between a and b.')
+        self.assertEqual(self.d1.entropy, 1.0986122886681098)
+        self.assertEqual(self.d1.name, "MyUniform")
+    
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1])), [0.3333333333333333, 0.3333333333333333])
+        self.assertListEqual(list(self.d1.cdf([0,1])), [0.3333333333333333, 0.6666666666666666])
+        
+        
 
 # CONTINUOUS DISTRIBUTIONS
         
@@ -67,7 +116,7 @@ class TestNormal(unittest.TestCase):
     
     def setUp(self):
         
-        # Testing sigma=0 case raises an AssertionError
+        # Test AssertionError
         with self.assertRaises(AssertionError):
             dis.Normal(mu=1., sigma=0., name="MyGaussian")
         
@@ -95,6 +144,7 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(self.d1.name, "MyGaussian")
         
     def test_methods(self):
+        
         self.assertListEqual(list(self.d1.pdf([1.,2.])), [1.329807601338109, 0.005140929987637022])
         self.assertListEqual(list(self.d1.cdf([1.,2.])), [0.5, 0.9995709396668031])
         self.assertEqual(self.d1.quantile(p=0.95), 1.4934560880854417)
@@ -124,7 +174,7 @@ class Poisson(unittest.TestCase):
     
     def setUp(self):
         
-        # Testing sigma=0 case raises an AssertionError
+        # Test AssertionError
         with self.assertRaises(AssertionError):
             dis.Poisson(lmbda=-1., name="MyPoisson")
         
@@ -171,7 +221,7 @@ class Binomial(unittest.TestCase):
     
     def setUp(self):
         
-        # Testing sigma=0 case raises an AssertionError
+        # Test AssertionError
         with self.assertRaises(AssertionError):
             dis.Binomial(n=1., p=0.5)
         with self.assertRaises(AssertionError):
