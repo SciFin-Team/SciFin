@@ -47,55 +47,6 @@ class TestStandardNormalFunctions(unittest.TestCase):
         self.assertEqual(dis.standard_normal_quantile(0.99), 2.3263478740408408)
         self.assertAlmostEqual(dis.standard_normal_quantile(0.95) + dis.standard_normal_quantile(0.05), 0.)
         self.assertAlmostEqual(dis.standard_normal_quantile(0.99) + dis.standard_normal_quantile(0.01), 0.)
-
-
-class Uniform(unittest.TestCase):
-    """
-    Tests the class Uniform.
-    """
-    
-    @classmethod
-    def setUpClass(cls):
-        pass
-    
-    @classmethod
-    def tearDownClass(cls):
-        pass
-    
-    def setUp(self):
-        
-        # Test AssertionError
-        with self.assertRaises(AssertionError):
-            dis.Uniform(a=2., b=1.)
-        
-        # For the later tests
-        self.d1 = dis.Uniform(a=-1., b=2., name="MyUniform")
-        
-    def tearDown(self):
-        pass
-    
-    def test_attributes(self):
-        
-        self.assertEqual(self.d1.type, 'Uniform')
-        self.assertEqual(self.d1.support, '[a,b]')
-        
-        self.assertEqual(self.d1.a, -1.)
-        self.assertEqual(self.d1.b, 2.)
-        
-        self.assertEqual(self.d1.mean, 0.5)
-        self.assertEqual(self.d1.variance, 0.75)
-        self.assertEqual(self.d1.std, 0.8660254037844386)
-        self.assertEqual(self.d1.skewness, 0.)
-        self.assertEqual(self.d1.kurtosis, 1.8)
-        self.assertEqual(self.d1.median, 0.5)
-        self.assertEqual(self.d1.mode, 'Any value between a and b.')
-        self.assertEqual(self.d1.entropy, 1.0986122886681098)
-        self.assertEqual(self.d1.name, "MyUniform")
-    
-    def test_methods(self):
-        
-        self.assertListEqual(list(self.d1.pdf([0,1])), [0.3333333333333333, 0.3333333333333333])
-        self.assertListEqual(list(self.d1.cdf([0,1])), [0.3333333333333333, 0.6666666666666666])
         
         
 
@@ -153,7 +104,59 @@ class TestNormal(unittest.TestCase):
     
 
     
+class Uniform(unittest.TestCase):
+    """
+    Tests the class Uniform.
+    """
     
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Uniform(a=2., b=1.)
+        
+        # For the later tests
+        self.d1 = dis.Uniform(a=-1., b=2., name="MyUniform")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Uniform')
+        self.assertEqual(self.d1.support, '[a,b]')
+        
+        self.assertEqual(self.d1.a, -1.)
+        self.assertEqual(self.d1.b, 2.)
+        
+        self.assertEqual(self.d1.mean, 0.5)
+        self.assertEqual(self.d1.variance, 0.75)
+        self.assertEqual(self.d1.std, 0.8660254037844386)
+        self.assertEqual(self.d1.skewness, 0.)
+        self.assertEqual(self.d1.kurtosis, 1.8)
+        self.assertEqual(self.d1.median, 0.5)
+        self.assertEqual(self.d1.mode, 'Any value between a and b.')
+        self.assertEqual(self.d1.entropy, 1.0986122886681098)
+        self.assertEqual(self.d1.name, "MyUniform")
+    
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1])), [0.3333333333333333, 0.3333333333333333])
+        self.assertListEqual(list(self.d1.cdf([0,1])), [0.3333333333333333, 0.6666666666666666])
+
+        
+        
+        
+        
+        
     
     
     
