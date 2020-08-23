@@ -458,6 +458,57 @@ class Levy(unittest.TestCase):
         self.assertListEqual(list(self.d1.pdf([0,1,2])), [0, 0.24197072451914337, 0.10984782236693061])
         self.assertListEqual(list(self.d1.cdf([0,1,2])), [0, 0.31731050786291415, 0.4795001221869535])
 
+
+        
+class Cauchy(unittest.TestCase):
+    """
+    Tests the class Cauchy.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Cauchy(a=0, b=-1)
+        
+        # For the later tests
+        self.d1 = dis.Cauchy(a=0, b=1, name="MyCauchy")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Cauchy')
+        self.assertEqual(self.d1.support, 'R')
+        
+        self.assertEqual(self.d1.a, 0)
+        self.assertEqual(self.d1.b, 1)
+        
+        self.assertEqual(self.d1.mean, None)
+        self.assertEqual(self.d1.variance, None)
+        self.assertEqual(self.d1.std, None)
+        self.assertEqual(self.d1.skewness, None)
+        self.assertEqual(self.d1.kurtosis, None)
+        self.assertEqual(self.d1.median, 0)
+        self.assertEqual(self.d1.mode, 0)
+        self.assertEqual(self.d1.entropy, 2.5310242469692907)
+        self.assertEqual(self.d1.name, "MyCauchy")
+
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1,2])), [0.3183098861837907, 0.15915494309189535, 0.06366197723675814])
+        self.assertListEqual(list(self.d1.cdf([0,1,2])), [0.5, 0.75, 0.8524163823495667])
+
+        
         
         
 # DISCRETE DISTRIBUTIONS
