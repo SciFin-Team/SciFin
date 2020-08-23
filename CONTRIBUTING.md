@@ -66,28 +66,28 @@ Here are some bulletpoints which are overlaping with the PEP8 style guide which 
 
 ### Templates:
 
-To help development and avoid too much typing, some templates for functions and classes are provided in [coding_templates.md](https://github.com/SciFin-Team/SciFin/wiki/docs/coding_templates.md). Don't hesitate to make use of them!
+To help development and avoid too much typing, some templates for functions and classes are provided in the [coding_templates](https://github.com/SciFin-Team/SciFin/docs/coding_templates.md) file. Don't hesitate to make use of them!
 
 
 ### Syntax Advice:
 
-Going more into details, some good practice to keep the code clear are the following:
+Going more into details, some good practice to keep this code clear are the following:
 
-- When deciding the name of a function, try to follow the pattern method_quantity, for example "historical_variance". Functions should not have capital letters, but classes should (like "TimeSeries").
+- When deciding for the name of a function, try to follow the pattern method_quantity, for example "historical_variance". Functions should not have capital letters, but classes should (like "TimeSeries").
 - Make the name of functions explicit. It is better to lose a bit of time than not being understood.
 - For arguments of a function, place most important first and least important last so that from left to write we go from most important to least important arguments.
-- Avoid starting description of a function with "Function that ..." or "Method that ...". No need for that.
-- Avoid starting description of parameters with "The" or "A".
+- Avoid starting description of a function with "Function that ..." or "Method that ...". No need for these introductions. Instead, use the base form of verbs (like "Computes the sum of two elements." or "Plots a function.").
+- Avoid starting description of parameters with "The" or "A". Try to include as many types as the function would accept for the argument.
 - Use 'DataFrame' to refer to the pandas object and 'data frame' to refer to it in a more general context. Same for classes like 'TimeSeries' with 'time series' or 'CatTimeSeries' with 'categorical time series'.
-- Use the base form of verbs in your comments, e.g. 'Create a variable' instead of 'Creates a variable' or (worth) 'Creating a variable'. Imagine you are writing a recipe. Don't put ":" at the end of comments.
+- Use the base form of verbs in your comments, e.g. 'Create a variable' instead of 'Creates a variable' or (worth) 'Creating a variable'. Imagine you are writing a recipe. Also don't put ":" at the end of comments.
 - Cite only reliable sources, preferentially in the "Notes" sections.
-- Keep small caps for variables, except for a one-letter variable name where it matters less (e.g. N, T).
+- Keep small caps for variables, except for one-letter variable names where it matters less (e.g. N, T).
 
 
 ## Submitting Changes
 
 
-Please discuss with Fabien Nugier and the team of developers whose work may be affected by your changes before you proceed. Good communication is an essential aspect of developing a package together.
+Please discuss with Fabien Nugier and the developers in SciFin-Team, whose work may be affected by your changes, before you proceed. Good communication is an essential aspect of developing a package together :wink:.
 
 
 
