@@ -784,6 +784,9 @@ class Gumbel(Distribution):
         assert(p>0 and p<1)
         return self.mu - self.beta * np.log(-np.log(p))
 
+    # Alias method
+    var = quantile
+    
     
 class Laplace(Distribution):
     """

@@ -305,7 +305,59 @@ class Exponential(unittest.TestCase):
         self.assertEqual(self.d1.var(p=0.1), 0.05268025782891314)
         self.assertEqual(self.d1.cvar(p=0.1), 0.5526802578289132)
         
+
+        
+class Gumbel(unittest.TestCase):
+    """
+    Tests the class Gumbel.
+    """
     
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Gumbel(mu=1., beta=-1.)
+        
+        # For the later tests
+        self.d1 = dis.Gumbel(mu=1., beta=2., name="MyGumbel")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Gumbel')
+        self.assertEqual(self.d1.support, 'R')
+        
+        self.assertEqual(self.d1.mu, 1.)
+        self.assertEqual(self.d1.beta, 2.)
+        
+        self.assertEqual(self.d1.mean, 2.1544313298030655)
+        self.assertEqual(self.d1.variance, 6.579736267392906)
+        self.assertEqual(self.d1.std, 2.565099660323728)
+        self.assertEqual(self.d1.skewness, 1.1395470994046488)
+        self.assertEqual(self.d1.kurtosis, 5.4)
+        self.assertEqual(self.d1.median, 1.7330258411633288)
+        self.assertEqual(self.d1.mode, 1)
+        self.assertEqual(self.d1.entropy, 2.270362845461478)
+        self.assertEqual(self.d1.name, "MyGumbel")
+    
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0., 5., 10.])), [0.15852096053897108, 0.05910247579657157, 0.005493134841201401])
+        self.assertListEqual(list(self.d1.cdf([0., 5., 10.])), [0.1922956455479649, 0.8734230184931167, 0.9889524805037951])
+        self.assertEqual(self.d1.var(p=0.1), -0.6680648904959114)
+        
+        
+        
 # DISCRETE DISTRIBUTIONS
     
 class Poisson(unittest.TestCase):
