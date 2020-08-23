@@ -11,17 +11,17 @@ Please always keep in mind that SciFin serves a certain purpose, and as such its
 You don't need to be an expert on Python to contribute! However, it is strongly advised to still have a fair knowledge of Python or other programming languages (or at least a strong motivation to learn), and it is recommanded to read in details the following [Python3 Tutorial](https://www.python-course.eu/python3_course.php) before joining the project.
 
 
-## Reporting bugs
+## Reporting Bugs
 
 If you find any bug, please let us know! Here is the procedure to [report an issue](https://docs.github.com/en/github/managing-your-work-on-github/creating-an-issue).
 
 
-## Suggesting ideas
+## Suggesting Ideas
 
 If you think some idea or feature could fit well within SciFin, please do not hesitate to send us an email.
 
 
-## Branches, commits and tests
+## Branches, Commits and Tests
 
 Nobody has a passion for branch creation, merging them, resolving conflicts, etc. So why should we bother? Well, that question has the same answer as why we should eat these non-exciting vegetables like broccoli, cabbage, and spinach... because they are very healthy for us! :smiley: If we don't create branches, one can be almost certain that when the code is too large the modifications that we thought would not affect anyone else will actually disrupt other people's work. **It is thus mandatory to create local development branches, and merge them with the master branch only when we are sure that disruption is minimized.** It is also of great importance to communicate with other developers potentially affected by the changes before proceeding to the branch merger. Each branch should also serve a specific goal reflected by its name. If working on different aspects of the code, it is better to create different branches. In addition, it is **strongly advised to add the author's initials at the begining of the branch name.**
 
@@ -42,7 +42,7 @@ To learn more about unit tests:
 
 
 
-## Coding conventions
+## Coding Conventions
 
 ### Generalities:
 
@@ -66,10 +66,10 @@ Here are some bulletpoints which are overlaping with the PEP8 style guide which 
 
 ### Templates:
 
-To help development and avoid too much typing, some templates for functions and classes are provided in [coding_templates.md](https://github.com/SciFin-Team/SciFin/wiki/docs/coding_templates.md).
+To help development and avoid too much typing, some templates for functions and classes are provided in [coding_templates.md](https://github.com/SciFin-Team/SciFin/wiki/docs/coding_templates.md). Don't hesitate to make use of them!
 
 
-### Syntax advice:
+### Syntax Advice:
 
 Going more into details, some good practice to keep the code clear are the following:
 
@@ -84,7 +84,7 @@ Going more into details, some good practice to keep the code clear are the follo
 - Keep small caps for variables, except for a one-letter variable name where it matters less (e.g. N, T).
 
 
-## Submitting changes
+## Submitting Changes
 
 
 Please discuss with Fabien Nugier and the team of developers whose work may be affected by your changes before you proceed. Good communication is an essential aspect of developing a package together.
