@@ -66,7 +66,7 @@ Here are some bulletpoints which are overlaping with the PEP8 style guide which 
 
 ### Templates:
 
-To help development and avoid too much typing, some templates for functions and classes are provided in the [coding_templates](https://github.com/SciFin-Team/SciFin/docs/coding_templates.md) file. Don't hesitate to make use of them!
+To help development and avoid too much typing, some templates for functions and classes are provided in the [coding_templates](https://github.com/SciFin-Team/SciFin/blob/master/docs/coding_templates.md) file. Don't hesitate to make use of them!
 
 
 ### Syntax Advice:
