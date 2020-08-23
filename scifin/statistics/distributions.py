@@ -945,7 +945,7 @@ class Levy(Distribution):
         assert(c>0)
         
         # Type of distribution
-        self.type = 'Lévy'
+        self.type = 'Levy'
         self.support = '[mu, Infinity)'
         
         # parameters

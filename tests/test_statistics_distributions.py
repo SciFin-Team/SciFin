@@ -408,6 +408,56 @@ class Laplace(unittest.TestCase):
         self.assertEqual(self.d1.var(p=0.1), -1.6094379124341003)
         self.assertEqual(self.d1.cvar(p=0.1), 0.28993754582601117)
         
+
+
+class Levy(unittest.TestCase):
+    """
+    Tests the class Levy.
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        pass
+    
+    def setUp(self):
+        
+        # Test AssertionError
+        with self.assertRaises(AssertionError):
+            dis.Levy(mu=0, c=-1)
+        
+        # For the later tests
+        self.d1 = dis.Levy(mu=0, c=1, name="MyLevy")
+        
+    def tearDown(self):
+        pass
+    
+    def test_attributes(self):
+        
+        self.assertEqual(self.d1.type, 'Levy')
+        self.assertEqual(self.d1.support, '[mu, Infinity)')
+        
+        self.assertEqual(self.d1.mu, 0)
+        self.assertEqual(self.d1.c, 1)
+        
+        self.assertEqual(self.d1.mean, 'Infinity')
+        self.assertEqual(self.d1.variance, 'Infinity')
+        self.assertEqual(self.d1.std, 'Infinity')
+        self.assertEqual(self.d1.skewness, None)
+        self.assertEqual(self.d1.kurtosis, None)
+        self.assertEqual(self.d1.median, 0.11373410577989317)
+        self.assertEqual(self.d1.mode, 0.3333333333333333)
+        self.assertEqual(self.d1.entropy, 6.64896560279378)
+        self.assertEqual(self.d1.name, "MyLevy")
+
+    def test_methods(self):
+        
+        self.assertListEqual(list(self.d1.pdf([0,1,2])), [0, 0.24197072451914337, 0.10984782236693061])
+        self.assertListEqual(list(self.d1.cdf([0,1,2])), [0, 0.31731050786291415, 0.4795001221869535])
+
         
         
 # DISCRETE DISTRIBUTIONS
