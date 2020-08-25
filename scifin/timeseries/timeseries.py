@@ -584,7 +584,7 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def hist_vol(self, start=None, end=None):
+    def hist_vol(self, start=None, end=None, verbose=True):
         """
         Computes the net returns of the time series and
         returns their associated historical volatility
@@ -603,7 +603,7 @@ class TimeSeries(Series):
         data = self.specify_data(start, end)
         
         # Warning message
-        if self.is_sampling_uniform() is not True:
+        if (self.is_sampling_uniform() is not True) and (verbose is True):
             print('Warning: Index not uniformly sampled. Result could be meaningless.')
             
         # Computing net returns
@@ -615,7 +615,7 @@ class TimeSeries(Series):
         return std
     
     
-    def annualized_vol(self, start=None, end=None):
+    def annualized_vol(self, start=None, end=None, verbose=True):
         """
         Returns the annualized volatility of the time series
         between two dates (default is the whole series),
@@ -623,7 +623,7 @@ class TimeSeries(Series):
         """
         
         # Initializations
-        hvol = self.hist_vol(start, end)
+        hvol = self.hist_vol(start, end, verbose=verbose)
         
         if (self.freq is not None) and (self.freq in DPOA.keys()):
             return hvol * np.sqrt(DPOA[self.freq])
@@ -654,25 +654,25 @@ class TimeSeries(Series):
             raise ValueError('Annualized return could not be evaluated.')
     
     
-    def risk_ratio(self, start=None, end=None):
+    def risk_ratio(self, start=None, end=None, verbose=True):
         """
         Returns the risk ratio, i.e. the ratio of annualized return
         over annualized volatility.
         """
 
         ann_return = self.annualized_return(start, end)
-        ann_volatility = self.annualized_vol(start, end)
+        ann_volatility = self.annualized_vol(start, end, verbose=verbose)
         
         return ann_return / ann_volatility
 
     
-    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None):
+    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None, verbose=True):
         """
         Returns the Sharpe ratio, also known as risk adjusted return.
         """
         
         ann_return = self.annualized_return(start, end)
-        ann_volatility = self.annualized_vol(start, end)
+        ann_volatility = self.annualized_vol(start, end, verbose=verbose)
         
         return (ann_return - risk_free_rate) / ann_volatility
     
