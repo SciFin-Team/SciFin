@@ -605,6 +605,10 @@ class TimeSeries(Series):
         # Warning message
         if (self.is_sampling_uniform() is not True) and (verbose is True):
             print('Warning: Index not uniformly sampled. Result could be meaningless.')
+    
+        # Warning message
+        if (0. in data.values) and (verbose is True):
+            print('Warning: Zero value in time series, will generate infinite return.')
             
         # Computing net returns
         net_returns = data.pct_change()[1:]
@@ -631,20 +635,38 @@ class TimeSeries(Series):
             raise ValueError('Annualized volatility could not be evaluated.')
 
     
-    def annualized_return(self, start=None, end=None):
+    def annualized_return(self, start=None, end=None, verbose=True):
         """
         Returns the annualized return of the time series
         between two dates (default is the whole series),
         using the frequency of the time series when usable.
+        
+        Arguments
+        ---------
+        start : str or datetime
+          Starting date of selection.
+        end : str or datetime
+          Ending date of selection.
+        verbose : bool
+          Verbose option.
+          
+        Returns
+        -------
+        float
+          Annualized return.
         """
         
         # Initializations
         gross_returns = self.gross_returns(start, end)
-        prd = gross_returns.data.prod()[0]
 
+        # Compute product of values
+        prd = gross_returns.data.prod()[0]
+        
         # Checks
-        assert(gross_returns.nvalues == self.nvalues-1)
-        if (gross_returns.freq != self.freq):
+        if (start is None) and (end is None):
+            assert(gross_returns.nvalues == self.nvalues-1)
+
+        if (gross_returns.freq != self.freq) and (verbose is True):
             print('Warning: gross_returns frequency and time series frequency do not match.')
             print('         In that context, results may not be making sense.')
         
