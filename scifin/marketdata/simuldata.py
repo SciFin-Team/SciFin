@@ -152,7 +152,7 @@ class Market:
         return None
 
 
-    def to_list(self, start_date=0, end_date=-1):
+    def to_list(self, start_date=None, end_date=None):
         """
         Converts the Market data frame into a list of TimeSeries.
 
@@ -170,15 +170,17 @@ class Market:
         List of TimeSeries
           The list of times series extracted from the data frame.
         """
-
-        # Forming a list of timeseries
+        
+        # Initialization
         list_ts = []
-        shared_index = self.data.index
-
-        # Loop over columns
+        new_index = self.data.loc[start_date:end_date].index.to_timestamp()
+        
+        # Forming a list of timeseries
+        i=0
         for c in self.data.columns:
-            tmp_df = pd.DataFrame(data=self.data[start_date:end_date][c], index=shared_index)
-            list_ts.append(timeseries.TimeSeries(tmp_df, name=c))
+            tmp_df = pd.DataFrame(index=new_index, data=self.data[start_date:end_date][c].values)
+            list_ts.append(timeseries.TimeSeries(tmp_df, tz=self.tz, unit=self.units[i], name=c))
+            i+=1
 
         return list_ts
 
@@ -375,6 +377,8 @@ def create_market_shares(market, mean=100000, stdv=10000):
         raise ValueError("A negative market share was generated, please launch again.")
     
     return market_shares
+
+
 
 
 # VISUALIZATION METHODS
@@ -598,22 +602,62 @@ def limited_propagation(population, environment, start, end):
     return None
 
 
-def portfolio_vol(weights, cov_matrix):
+def compute_return(returns, weights):
     """
-    Returns the volatility of a portfolio from a covariance matrix and weights.
+    Computes the return from a list of returns of assets
+    and a list of arbitrary weights.
     
     Parameters
     ----------
-    weights : Numpy Array
-      Array of size N or matrix of size N x 1.
+    returns : list of float or Numpy Array
+      Returns of assets.
+    weights : List of float or Numpy Array
+      Weights for assets.
+
+    Returns
+    -------
+    float
+      Total return considering weights.
+    """
+    
+    # Checks
+    assert(len(returns)==len(weights))
+
+    # Correct type
+    if isinstance(returns,list):
+        returns = np.array(returns)
+    if isinstance(weights,list):
+        weights = np.array(weights)
+           
+    return weights.T @ returns
+    
+
+def compute_vol(cov_matrix, weights):
+    """
+    Computes the volatility from a covariance matrix of assets
+    and a list of arbitrary weights.
+    
+    Parameters
+    ----------
     cov_matrix : Numpy Array
-      Matrix of size N x N.
+      Covariance matrix of assets.
+    weights : List of floats or Numpy Array
+      Weights for assets.
       
     Returns
     -------
     float
-      Volatility associated to the weights and covariance matrix.
+      Total Volatility considering weights.
     """
+    
+    # Checks
+    assert(cov_matrix.shape[0]==cov_matrix.shape[1])
+    assert(cov_matrix.shape[0]==len(weights))
+    
+    # Correct type
+    if isinstance(weights,list):
+        weights = np.array(weights)
+    
     return (weights.T @ cov_matrix @ weights)**0.5
 
 

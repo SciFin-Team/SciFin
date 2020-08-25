@@ -14,8 +14,9 @@ from .marketdata import get_sp500_tickers, get_assets_from_yahoo, get_marketcap_
 
 from .simuldata  import Market, \
                         set_market_names, create_market_returns, create_market_shares, plot_market_components, \
+                        compute_return, compute_vol, \
                         propagate_individual, evaluation_dates, \
-                        find_tick_before_eval, limited_propagation, portfolio_vol, \
+                        find_tick_before_eval, limited_propagation, \
                         fitness_calculation, \
                         visualize_portfolios_1, visualize_portfolios_2, show_allocation_distrib, \
                         config_4n, plot_diff_GenPort_CW, plot_asset_evol
