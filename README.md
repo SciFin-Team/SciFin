@@ -11,9 +11,11 @@ SciFin is a python package for Science and Finance.
 
 ## Summary
 
-The SciFin package is a Python package designed to gather and develop methods for scientific studies and financial services. It originates from the observation that numerous methods developed in scientific fields (such as mathematics, physics, biology and climate sciences) have direct applicability in finance and that, conversely, multiple methods developed in finance can benefit science.
+The SciFin package is a Python package designed to gather and develop methods for scientific studies and financial services. It originates from the observation that numerous methods developed in scientific fields (such as mathematics, physics, biology, climate sciences) have direct applicability in finance and that, conversely, multiple methods developed in finance can benefit science.
 
-The development goal of this package is to offer a toolbox that can be used both in research and business. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into business and finance to get new insights from science. Some functions are thus neutral to any scientific or economical fields, while others are more specialized to precise tasks. The motivation behind this design is to provide tools that perform advanced tasks while remaining simple (not depending on too many parameters).
+The development goal of this package is to offer a toolbox that can be used both in research and business analyses. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into sound business and finance get new insights from science. Core functions of SciFin thus try to remain neutral to any scientific or economical fields, while derived methods are more specialized towards specific applications.
+
+The SciFin toolbox thus intends to provide tools that perform advanced tasks while remaining simple, i.e. each function performing a precise task and depending on a minimal amount of parameters. We believe that doing so can increase the scope of users while focusing on the real nature of mathematical objects to solve problems, leaving most of the specialization to the user him/herself.
 
 
 ## Table of Contents
