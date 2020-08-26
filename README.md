@@ -15,7 +15,7 @@ The SciFin package is a Python package designed to gather and develop methods fo
 
 The development goal of this package is to offer a toolbox that can be used both in research and business analyses. Its purpose is not only to bring these fields together, but also to increase interoperability between them, helping science turn into sound business and finance get new insights from science. Core functions of SciFin thus try to remain neutral to any scientific or economical fields, while derived methods are more specialized towards specific applications.
 
-The SciFin toolbox thus intends to provide tools that perform advanced tasks while remaining simple, i.e. each function performing a precise task and depending on a minimal amount of parameters. We believe that doing so can increase the scope of users while focusing on the real nature of mathematical objects to solve problems, leaving most of the specialization to the user him/herself.
+The SciFin toolbox thus provides functions that perform advanced tasks while remaining simple, i.e. depending on a minimal amount of parameters. We believe that doing so can increase the scope of users while focusing on the real nature of mathematical objects to solve problems, leaving most of the specialization to the user him/herself.
 
 
 ## Table of Contents
@@ -38,7 +38,7 @@ The current development is focused on the following topics:
 | [`classifier`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/classifier) | classification techniques | ■ □ □ □ □ |
 | [`fouriertrf`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/fouriertrf) | Fourier transforms | ■ □ □ □ □ |
 | [`geneticalg`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/geneticalg) | genetic algorithms | ■ ■ ■ □ □ |
-| [`marketdata`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/marketdata) | reading market data | ■ □ □ □ □ |
+| [`marketdata`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/marketdata) | reading market data | ■ ■ □ □ □ |
 | [`montecarlo`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/montecarlo) | Monte Carlo simulations | ■ □ □ □ □ |
 | [`neuralnets`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/neuralnets) | neural networks | □ □ □ □ □ |
 | [`statistics`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/statistics) | basic statistics | ■ □ □ □ □ |
