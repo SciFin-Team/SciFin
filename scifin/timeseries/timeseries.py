@@ -4,6 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
+import warnings
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -584,7 +585,7 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def hist_vol(self, start=None, end=None):
+    def hist_vol(self, start=None, end=None, verbose=True):
         """
         Computes the net returns of the time series and
         returns their associated historical volatility
@@ -603,8 +604,12 @@ class TimeSeries(Series):
         data = self.specify_data(start, end)
         
         # Warning message
-        if self.is_sampling_uniform() is not True:
-            print('Warning: Index not uniformly sampled. Result could be meaningless.')
+        if (self.is_sampling_uniform() is not True) and (verbose is True):
+            warnings.warn("Index not uniformly sampled. Result could be meaningless.")
+    
+        # Warning message
+        if (0. in data.values) and (verbose is True):
+            warnings.warn("Zero value in time series, will generate infinite return.")
             
         # Computing net returns
         net_returns = data.pct_change()[1:]
@@ -615,7 +620,7 @@ class TimeSeries(Series):
         return std
     
     
-    def annualized_vol(self, start=None, end=None):
+    def annualized_vol(self, start=None, end=None, verbose=True):
         """
         Returns the annualized volatility of the time series
         between two dates (default is the whole series),
@@ -623,7 +628,7 @@ class TimeSeries(Series):
         """
         
         # Initializations
-        hvol = self.hist_vol(start, end)
+        hvol = self.hist_vol(start, end, verbose=verbose)
         
         if (self.freq is not None) and (self.freq in DPOA.keys()):
             return hvol * np.sqrt(DPOA[self.freq])
@@ -631,22 +636,41 @@ class TimeSeries(Series):
             raise ValueError('Annualized volatility could not be evaluated.')
 
     
-    def annualized_return(self, start=None, end=None):
+    def annualized_return(self, start=None, end=None, verbose=True):
         """
         Returns the annualized return of the time series
         between two dates (default is the whole series),
         using the frequency of the time series when usable.
+        
+        Arguments
+        ---------
+        start : str or datetime
+          Starting date of selection.
+        end : str or datetime
+          Ending date of selection.
+        verbose : bool
+          Verbose option.
+          
+        Returns
+        -------
+        float
+          Annualized return.
         """
         
         # Initializations
         gross_returns = self.gross_returns(start, end)
-        prd = gross_returns.data.prod()[0]
 
+        # Compute product of values
+        prd = gross_returns.data.prod()[0]
+        
         # Checks
-        assert(gross_returns.nvalues == self.nvalues-1)
-        if (gross_returns.freq != self.freq):
-            print('Warning: gross_returns frequency and time series frequency do not match.')
-            print('         In that context, results may not be making sense.')
+        if (start is None) and (end is None):
+            assert(gross_returns.nvalues == self.nvalues-1)
+
+        if (gross_returns.freq != self.freq) and (verbose is True):
+            warning_message = "Gross_returns frequency and time series frequency do not match." \
+            + " In that context, results may be meaningless."
+            warnings.warn(warning_message)
         
         if (self.freq is not None) and (self.freq in DPOA.keys()):
             return prd**(DPOA[self.freq]/gross_returns.nvalues) - 1
@@ -654,25 +678,25 @@ class TimeSeries(Series):
             raise ValueError('Annualized return could not be evaluated.')
     
     
-    def risk_ratio(self, start=None, end=None):
+    def risk_ratio(self, start=None, end=None, verbose=True):
         """
         Returns the risk ratio, i.e. the ratio of annualized return
         over annualized volatility.
         """
 
         ann_return = self.annualized_return(start, end)
-        ann_volatility = self.annualized_vol(start, end)
+        ann_volatility = self.annualized_vol(start, end, verbose=verbose)
         
         return ann_return / ann_volatility
 
     
-    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None):
+    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None, verbose=True):
         """
         Returns the Sharpe ratio, also known as risk adjusted return.
         """
         
         ann_return = self.annualized_return(start, end)
-        ann_volatility = self.annualized_vol(start, end)
+        ann_volatility = self.annualized_vol(start, end, verbose=verbose)
         
         return (ann_return - risk_free_rate) / ann_volatility
     
@@ -693,8 +717,9 @@ class TimeSeries(Series):
         # Checks
         assert(p>=0 and p<=1)
         if 100*p%1 != 0:
-            print("Warning: Probability too precise, only closest percentile computed here.")
-            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+            warning_message = "Probability too precise, only closest percentile computed here." \
+            + "Hence for p = " + str(p) + " , percentile estimation is based on p = " + str(int(100*p)) + " %."
+            warnings.warn(warning_message)
         
         # Prepare data
         data = self.specify_data(start, end)
@@ -716,8 +741,9 @@ class TimeSeries(Series):
         # Checks
         assert(p>=0 and p<=1)
         if 100*p%1 != 0:
-            print("Warning: Probability too precise, only closest percentile computed here.")
-            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+            warning_message = "Probability too precise, only closest percentile computed here." \
+            + "Hence for p = " + str(p) + " , percentile estimation is based on p = " + str(int(100*p)) + " %."
+            warnings.warn(warning_message)
         
         # Prepare data
         data = self.specify_data(start, end)
