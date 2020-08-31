@@ -4,6 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
+import warnings
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -604,11 +605,11 @@ class TimeSeries(Series):
         
         # Warning message
         if (self.is_sampling_uniform() is not True) and (verbose is True):
-            print('Warning: Index not uniformly sampled. Result could be meaningless.')
+            warnings.warn("Index not uniformly sampled. Result could be meaningless.")
     
         # Warning message
         if (0. in data.values) and (verbose is True):
-            print('Warning: Zero value in time series, will generate infinite return.')
+            warnings.warn("Zero value in time series, will generate infinite return.")
             
         # Computing net returns
         net_returns = data.pct_change()[1:]
@@ -667,8 +668,9 @@ class TimeSeries(Series):
             assert(gross_returns.nvalues == self.nvalues-1)
 
         if (gross_returns.freq != self.freq) and (verbose is True):
-            print('Warning: gross_returns frequency and time series frequency do not match.')
-            print('         In that context, results may not be making sense.')
+            warning_message = "Gross_returns frequency and time series frequency do not match." \
+            + " In that context, results may be meaningless."
+            warnings.warn(warning_message)
         
         if (self.freq is not None) and (self.freq in DPOA.keys()):
             return prd**(DPOA[self.freq]/gross_returns.nvalues) - 1
@@ -715,8 +717,9 @@ class TimeSeries(Series):
         # Checks
         assert(p>=0 and p<=1)
         if 100*p%1 != 0:
-            print("Warning: Probability too precise, only closest percentile computed here.")
-            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+            warning_message = "Probability too precise, only closest percentile computed here." \
+            + "Hence for p = " + str(p) + " , percentile estimation is based on p = " + str(int(100*p)) + " %."
+            warnings.warn(warning_message)
         
         # Prepare data
         data = self.specify_data(start, end)
@@ -738,8 +741,9 @@ class TimeSeries(Series):
         # Checks
         assert(p>=0 and p<=1)
         if 100*p%1 != 0:
-            print("Warning: Probability too precise, only closest percentile computed here.")
-            print("         Hence for p =", p, ", percentile estimation is based on p =", int(100*p), "%.")
+            warning_message = "Probability too precise, only closest percentile computed here." \
+            + "Hence for p = " + str(p) + " , percentile estimation is based on p = " + str(int(100*p)) + " %."
+            warnings.warn(warning_message)
         
         # Prepare data
         data = self.specify_data(start, end)
