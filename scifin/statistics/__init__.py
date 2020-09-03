@@ -11,5 +11,5 @@ from .distributions  import (standard_normal_pdf, standard_normal_cdf, standard_
                             Exponential, Gumbel, Laplace, Levy, Cauchy,
                             Poisson, Binomial)
 
-from .statistics import (random_covariance_matrix)
+from .statistics import (random_covariance_matrix, covariance_to_correlation)
 

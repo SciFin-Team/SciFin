@@ -54,3 +54,41 @@ def random_covariance_matrix(n, n_facts):
     
     return cov
 
+
+
+
+def covariance_to_correlation(cov):
+    """
+    Derive the correlation matrix from the covariance matrix.
+    
+    Arguments
+    ---------
+    cov : numpy.array or list of lists
+      Covariance matrix.
+      
+    Returns
+    -------
+    numpy.array
+      Correlation matrix.
+    """
+    
+    # Convert list of lists to numpy.array (if needed)
+    if isinstance(cov, list):
+        cov = np.array(cov)
+
+    # Checks
+    if cov.shape[0] != cov.shape[1]:
+        raise InputError("Covariance matrix should be a square matrix.")
+    
+    # Compute correlation matrix
+    std = np.sqrt(np.diag(cov))
+    corr = cov / np.outer(std, std)
+    
+    # Deal with potential numerical errors
+    corr[corr < -1] = -1
+    corr[corr > 1] = 1
+    
+    return corr
+
+
+
