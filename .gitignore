@@ -1,0 +1,13 @@
+.ipynb_checkpoints/
+
+./notebooks/*
+./archives/*
+./build/*
+./dist/*
+./SciFin.eff-info/*
+
+
+
+
+
+
