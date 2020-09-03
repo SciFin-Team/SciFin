@@ -6,10 +6,10 @@ __author__ = "Fabien Nugier"
 The :mod:`scifin.statistics` module includes methods for statistics.
 """
 
-from .distributions  import standard_normal_pdf, standard_normal_cdf, standard_normal_quantile, \
-                            Distribution, Normal, Uniform, Weibull, Rayleigh, \
-                            Exponential, Gumbel, Laplace, Levy, Cauchy, \
-                            Poisson, Binomial
+from .distributions  import (standard_normal_pdf, standard_normal_cdf, standard_normal_quantile,
+                            Distribution, Normal, Uniform, Weibull, Rayleigh,
+                            Exponential, Gumbel, Laplace, Levy, Cauchy,
+                            Poisson, Binomial)
 
-
+from .statistics import (random_covariance_matrix)
 
