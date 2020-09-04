@@ -59,7 +59,7 @@ class Series:
     
     Attributes
     ----------
-    data : DataFrame
+    data : pandas.Series or pandas.DataFrame
       Contains a time-like index and for each time a single value.
     start_utc : Pandas.Timestamp
       Starting date.
@@ -79,55 +79,47 @@ class Series:
       Timezone associated with dates.
     """
     
-    def __init__(self, df=None, tz=None, unit=None, name=""):
+    def __init__(self, data=None, tz=None, unit=None, name=""):
         """
-        Receives a data frame as an argument and initializes the time series.
+        Receives a panda.Series or pandas.DataFrame as an argument and initializes the time series.
         """
         
-        # Deal with DataFrame
-        if (df is None) or (df.empty == True):
-            self.data = pd.DataFrame(index=None, data=None)
+        # Deal with DataFrame / Series
+        if (data is None) or (data.empty == True):
+            self.data = pd.Series(index=None, data=None)
             self.start_utc = None
             self.end_utc = None
             self.nvalues = 0
             self.freq = None
             self.name = 'Empty TimeSeries'
         else:
-            # Making sure the dataframe is just
-            # an index + 1 value column
-            try:
-                assert(df.shape[1]==1)
-            except AssertionError:
-                raise AssertionError("Time series must be built from a data frame with only one value column.")
-                         
-            # Extract values
-            if type(df.index[0]) == 'str':
-                new_index = pd.to_datetime(df.index, format=fmt)
-                self.data = pd.DataFrame(index=new_index, data=df.values)
+            # Making sure the user entered a pandas.Series or pandas.DataFrame
+            # with just an index and one column for values
+            if isinstance(data, pd.DataFrame):
+                if data.shape[1]!=1:
+                    raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
+                else:
+                    self.data = pd.Series(data.iloc[:,0])
+            elif isinstance(data, pd.Series) == False:
+                raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
+                
+            # Deal with time
+            if type(data.index[0]) == 'str':
+                data.index = pd.to_datetime(data.index, format=fmt)
                 self.start_utc = datetime.strptime(str(new_index[0]), fmt)
                 self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
-                self.nvalues = df.shape[0]
-                try:
-                    self.freq = pd.infer_freq(self.data.index)
-                except:
-                    self.freq = 'Unknown'
-                self.name = name
+                self.nvalues = data.shape[0]
             else:
-                self.data = df
-                self.start_utc = df.index[0]
-                self.end_utc = df.index[-1]
-                self.nvalues = df.shape[0]
-                try:
-                    self.freq = pd.infer_freq(self.data.index)
-                except:
-                    self.freq = 'Unknown'
-                self.name = name
-                
-        # Deal with unit     
-        if unit is None:
-            self.unit = None
-        else:
-            self.unit = unit
+                self.start_utc = data.index[0]
+                self.end_utc = data.index[-1]
+                self.nvalues = data.shape[0]
+            try:
+                self.freq = pd.infer_freq(self.data.index)
+            except:
+                self.freq = 'Unknown'
+        
+        # Deal with unit
+        self.unit = unit
         
         # Deal with timezone
         if tz is None:
@@ -136,6 +128,9 @@ class Series:
         else:
             self.tz = tz
             self.timezone = pytz.timezone(tz)
+        
+        # Deal with name (nickname)
+        self.name = name
         
         
     def get_start_date_local(self):
@@ -160,7 +155,7 @@ class Series:
         or not the desired start and end dates.
         """
          
-        # Prepare data frame
+        # Prepare data
         if (start is None) and (end is None):
             data = self.data
 
@@ -220,7 +215,7 @@ class TimeSeries(Series):
     
     Attributes
     ----------
-    data : DataFrame
+    data : pandas.Series or pandas.DataFrame
       Contains a time-like index and for each time a single value.
     start_utc : Pandas.Timestamp
       Starting date.
@@ -242,12 +237,12 @@ class TimeSeries(Series):
       Unit of the time series values.
     """
     
-    def __init__(self, df=None, tz=None, unit=None, name=""):
+    def __init__(self, data=None, tz=None, unit=None, name=""):
         """
-        Receives a data frame as an argument and initializes the time series.
+        Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, tz=tz, unit=unit, name=name)
+        super().__init__(data=data, tz=tz, unit=unit, name=name)
         
         # Add attributes initialization if needed
         self.type = 'TimeSeries'
@@ -299,7 +294,7 @@ class TimeSeries(Series):
         Plots the distribution of values between two dates.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
             
         # Plot distribution of values
@@ -320,7 +315,7 @@ class TimeSeries(Series):
         Plots the density of values between two dates.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
@@ -344,7 +339,7 @@ class TimeSeries(Series):
         # Checks
         assert(isinstance(bins,int))
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         s,e = self.start_end_names(start, end)
         
@@ -498,7 +493,7 @@ class TimeSeries(Series):
         between two dates (default is the whole series).
         """
         data = self.specify_data(start, end)
-        skew = stats.skew(data.values)[0]
+        skew = stats.skew(data.values)
         
         return skew
     
@@ -509,7 +504,7 @@ class TimeSeries(Series):
         between two dates (default is the whole series).
         """
         data = self.specify_data(start, end)
-        kurt = stats.kurtosis(data.values, fisher=False)[0]
+        kurt = stats.kurtosis(data.values, fisher=False)
         
         return kurt
     
@@ -596,7 +591,7 @@ class TimeSeries(Series):
           When computing the percent change, first date gets
           NaN value and is thus removed from calculation.
         
-          Since pandas.DataFrame.pct_change() returns values in
+          Since pandas.Series.pct_change() returns values in
           percent, we divide by 100 to bring back numerical values.
         """
         
@@ -818,7 +813,7 @@ class TimeSeries(Series):
         if l==0:
             return 1
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         
         # General case
@@ -878,8 +873,8 @@ class TimeSeries(Series):
         Method that trims the time series to the desired dates
         and send back a new time series.
         """
-        new_df = self.data[new_start:new_end]
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = self.data[new_start:new_end]
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
     
@@ -888,8 +883,8 @@ class TimeSeries(Series):
         """
         Method that adds a constant to the time series.
         """
-        new_df = self.data + cst
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = self.data + cst
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
     
@@ -898,8 +893,8 @@ class TimeSeries(Series):
         """
         Method that multiplies the time series by a constant.
         """
-        new_df = self.data * cst
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = self.data * cst
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
     
@@ -911,8 +906,8 @@ class TimeSeries(Series):
         factor1 * current_ts + factor2 * other_ts.
         """
         new_data = factor1 * np.array(self.data.values) + factor2 * np.array(other_ts.data.values)
-        new_df = pd.DataFrame(index=self.data.index, data=new_data)
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = pd.Series(index=self.data.index, data=new_data)
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
     
@@ -954,7 +949,7 @@ class TimeSeries(Series):
         
         # Generate convolved values
         convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
-        convolved_ts = TimeSeries(pd.DataFrame(index=self.data.index, data=convolved_vals), tz=self.tz)
+        convolved_ts = TimeSeries(pd.Series(index=self.data.index, data=convolved_vals), tz=self.tz)
         
         return convolved_ts
     
@@ -969,7 +964,7 @@ class TimeSeries(Series):
           Time series of the drawdowns.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         
         # Compute drawdowns
@@ -992,7 +987,7 @@ class TimeSeries(Series):
           Maximum drawdown.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         
         # Compute drawdowns
@@ -1013,7 +1008,7 @@ class TimeSeries(Series):
           Division time series.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         
         # Check that data has the same index
@@ -1022,8 +1017,8 @@ class TimeSeries(Series):
         
         # Do the division
         new_data = np.array(data.values) / np.array(other_ts.data.values)
-        new_df = pd.DataFrame(index=data.index, data=new_data)
-        new_ts = TimeSeries(new_df, tz=self.tz, name=name)
+        new_data = pd.Series(index=data.index, data=new_data)
+        new_ts = TimeSeries(new_data, tz=self.tz, name=name)
         
         return new_ts
         
@@ -1051,7 +1046,7 @@ class TimeSeries(Series):
           Time series with added Gaussian noise.
         """
         
-        # Prepare data frame
+        # Prepare data
         data = self.specify_data(start, end)
         n = len(data.values)
         
@@ -1062,8 +1057,8 @@ class TimeSeries(Series):
         new_data = []
         for i in range(n):
             new_data.append(data.values[i][0] + noise[i])
-        new_df = pd.DataFrame(index=data.index, data=new_data)
-        new_ts = TimeSeries(new_df, tz=self.tz, name=name)
+        new_data = pd.Series(index=data.index, data=new_data)
+        new_ts = TimeSeries(new_data, tz=self.tz, name=name)
         
         return new_ts
     
@@ -1077,8 +1072,8 @@ class TimeSeries(Series):
         Transforms the time series into a rolling window average time series.
         """
         new_values = [self.data[x-pts+1:x].mean() for x in range(pts-1, self.nvalues, 1)]
-        new_df = pd.DataFrame(index=self.data.index[pts-1:self.nvalues], data=new_values)
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = pd.Series(index=self.data.index[pts-1:self.nvalues], data=new_values)
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
     
@@ -1099,10 +1094,10 @@ class TimeSeries(Series):
         print("Evaluated model: \n", model)
         yfit = [model(x) for x in new_index]
         
-        # Build data frame
+        # Build series
         assert(len(data.index)==len(yfit))
-        new_df = pd.DataFrame(index=data.index, data=yfit)
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = pd.Series(index=data.index, data=yfit)
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
 
@@ -1159,8 +1154,8 @@ class TimeSeries(Series):
             new_values[i] = before[1] + slope * (new_timestamps[i] - before[0])
 
         # Build the time series
-        new_df = pd.DataFrame(index=new_index, data=new_values)
-        new_ts = TimeSeries(new_df, tz=self.tz)
+        new_data = pd.Series(index=new_index, data=new_values)
+        new_ts = TimeSeries(new_data, tz=self.tz)
         
         return new_ts
         
@@ -1208,8 +1203,8 @@ class TimeSeries(Series):
         
         # Extract the linear trend
         lin_trend_y = model.predict(X)
-        lin_trend_df = pd.DataFrame(index=data.index, data=lin_trend_y)
-        lin_trend_ts = TimeSeries(lin_trend_df, tz=self.tz)
+        lin_trend_data = pd.Series(index=data.index, data=lin_trend_y)
+        lin_trend_ts = TimeSeries(lin_trend_data, tz=self.tz)
         
         # Remove the linear trend to the initial time series
         nonlin_y = y - lin_trend_y
@@ -1219,16 +1214,16 @@ class TimeSeries(Series):
             polyn_model = make_pipeline(PolynomialFeatures(polyn_order), Ridge())
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
-            polyn_comp_df = pd.DataFrame(index=data.index, data=polyn_component_y)
-            polyn_comp_ts = TimeSeries(polyn_comp_df, tz=self.tz)
+            polyn_comp_data = pd.Series(index=data.index, data=polyn_component_y)
+            polyn_comp_ts = TimeSeries(polyn_comp_data, tz=self.tz)
         
         # Generate the resting part time series
         if polyn_order is not None:
             rest_y = nonlin_y - polyn_component_y
         else:
             rest_y = nonlin_y
-        rest_df = pd.DataFrame(index=data.index, data=rest_y)
-        rest_ts = TimeSeries(rest_df, tz=self.tz)
+        rest_data = pd.Series(index=data.index, data=rest_y)
+        rest_ts = TimeSeries(rest_data, tz=self.tz)
         
         # Extracting seasonality
         if extract_seasonality==True:
@@ -1263,13 +1258,13 @@ class TimeSeries(Series):
             seasonal_y = []
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
-            seasonal_df = pd.DataFrame(index=data.index, data=seasonal_y)
-            seasonal_ts = TimeSeries(seasonal_df, tz=self.tz)
+            seasonal_data = pd.Series(index=data.index, data=seasonal_y)
+            seasonal_ts = TimeSeries(seasonal_data, tz=self.tz)
 
             # Build the residue time series
             residue_y = rest_y - seasonal_y
-            residue_df = pd.DataFrame(index=data.index, data=residue_y)
-            residue_ts = TimeSeries(residue_df, tz=self.tz)
+            residue_data = pd.Series(index=data.index, data=residue_y)
+            residue_ts = TimeSeries(residue_data, tz=self.tz)
         
         # Return results
         if polyn_order is not None:
@@ -1340,15 +1335,15 @@ class TimeSeries(Series):
         # Mean fit
         y_mean, y_cov = gpr.predict(X_[:,np.newaxis], return_cov=True)
         idx = self.data.index
-        ts_mean = TimeSeries(pd.DataFrame(index=idx, data=y_mean), tz=self.tz, name='Mean from GPR')
+        ts_mean = TimeSeries(pd.Series(index=idx, data=y_mean), tz=self.tz, name='Mean from GPR')
         
         # Mean - (1-sigma)
         y_std_m = y_mean - np.sqrt(np.diag(y_cov))
-        ts_std_m = TimeSeries(pd.DataFrame(index=idx, data=y_std_m), tz=self.tz, name='Mean-sigma from GPR')
+        ts_std_m = TimeSeries(pd.Series(index=idx, data=y_std_m), tz=self.tz, name='Mean-sigma from GPR')
         
         # Mean + (1-sigma)
         y_std_p = y_mean + np.sqrt(np.diag(y_cov))
-        ts_std_p = TimeSeries(pd.DataFrame(index=idx, data=y_std_p), tz=self.tz, name='Mean+sigma from GPR')
+        ts_std_p = TimeSeries(pd.Series(index=idx, data=y_std_p), tz=self.tz, name='Mean+sigma from GPR')
         
         # Plot the result
         if plotting==True:
@@ -1380,7 +1375,7 @@ class CatTimeSeries(Series):
     
     Attributes
     ----------
-    data : DataFrame
+    data : pandas.Series or pandas.DataFrame
       Contains a time-like index and for each time a single value.
     start_utc : Pandas.Timestamp
       Starting date.
@@ -1402,12 +1397,12 @@ class CatTimeSeries(Series):
       Type of the series.
     """
     
-    def __init__(self, df=None, tz=None, unit=None, name=""):
+    def __init__(self, data=None, tz=None, unit=None, name=""):
         """
-        Receives a data frame as an argument and initializes the time series.
+        Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
         """
 
-        super().__init__(df=df, tz=tz, unit=unit, name=name)
+        super().__init__(data=data, tz=tz, unit=unit, name=name)
         
         # Add attributes initialization if needed
         self.type = 'CatTimeSeries'
@@ -1507,18 +1502,18 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-def type_to_series(type):
+def type_to_series(series_type):
     """
     Returns the class TimeSeries or CatTimeSeries
     depending on wheter it receives 'TS' or 'CTS' argument.
     """
     
-    if type == 'TS':
+    if series_type == 'TS':
         return TimeSeries
-    elif type == 'CTS':
+    elif series_type == 'CTS':
         return CatTimeSeries
     
-    if type == None:
+    if series_type == None:
         return TimeSeries
     else:
         raise ValueError("Series type not recognized.")
@@ -1554,12 +1549,12 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
     """
    
     # Import data into a DataFrame
-    df = pd.read_csv(**kwargs)
-    ncols = df.shape[1]
+    data = pd.read_csv(**kwargs)
+    ncols = data.shape[1]
         
     # Return a time series
     if ncols == 1 :
-        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+        return type_to_series(series_type=type)(data=data, tz=tz, unit=unit, name=name)
     
     # or return a list of time series
     else:
@@ -1591,7 +1586,7 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+            ts_list.append( type_to_series(type[i])(pd.Series(data.iloc[:,i]), tz=tz[i],
                                                                                 unit=unit[i],
                                                                                 name=name[i]) )
         return ts_list
@@ -1627,12 +1622,12 @@ def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
     """
    
     # Import data into a DataFrame
-    df = pd.read_excel(**kwargs)
-    ncols = df.shape[1]
+    data = pd.read_excel(**kwargs)
+    ncols = data.shape[1]
         
     # Return a time series
     if ncols == 1 :
-        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+        return type_to_series(series_type=type)(data, tz=tz, unit=unit, name=name)
     # or return a list of time series
     else:
         # Checks
@@ -1663,19 +1658,21 @@ def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+            ts_list.append( type_to_series(type[i])(pd.Series(data.iloc[:,i]), tz=tz[i],
                                                                                 unit=unit[i],
                                                                                 name=name[i]) )
         return ts_list
 
 
     
-def build_from_dataframe(df, tz=None, unit=None, name=None, type=None):
+def build_from_dataframe(data, tz=None, unit=None, name=None, type=None):
     """
     Returns a list of time series from the reading of Pandas DataFrame.
     
     Arguments
     ---------
+    data : pandas.DataFrame
+      Data frame to build the time series from.
     tz : str or list of str.
       Timezone name or list of timezone names.
     unit : str or list of str
@@ -1694,11 +1691,11 @@ def build_from_dataframe(df, tz=None, unit=None, name=None, type=None):
     """
    
     # Import data into a DataFrame
-    ncols = df.shape[1]
+    ncols = data.shape[1]
         
     # Return a time series
     if ncols == 1 :
-        return type_to_series(type=type)(df, tz=tz, unit=unit, name=name)
+        return type_to_series(series_type=type)(data, tz=tz, unit=unit, name=name)
     
     # or return a list of time series
     else:
@@ -1730,7 +1727,7 @@ def build_from_dataframe(df, tz=None, unit=None, name=None, type=None):
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( type_to_series(type[i])(pd.DataFrame(df.iloc[:,i]), tz=tz[i],
+            ts_list.append( type_to_series(type[i])(pd.Series(data.iloc[:,i]), tz=tz[i],
                                                                                 unit=unit[i],
                                                                                 name=name[i]) )
         return ts_list
@@ -1766,8 +1763,8 @@ def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
     data_index = pd.date_range(**kwargs)
     T = len(data_index)
     
-    # Making DataFrame
-    df = pd.DataFrame(index=data_index, data=list_values)
+    # Making series
+    data = pd.Series(index=data_index, data=list_values)
     
     # Checks
     try:
@@ -1777,10 +1774,10 @@ def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
         
     # If the first value is a string, make a CatTimeSeries
     if type(list_values[0]) == str:
-        ts = CatTimeSeries(df, tz=tz, unit=unit, name=name)
+        ts = CatTimeSeries(data, tz=tz, unit=unit, name=name)
     # If the first value isn't a string, make a TimeSeries
     else:
-        ts = TimeSeries(df, tz=tz, unit=unit, name=name)
+        ts = TimeSeries(data, tz=tz, unit=unit, name=name)
     
     return ts
 
@@ -1812,15 +1809,15 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
     except IndexError:
         raise IndexError("Lengths of list_dates and list_values should be equal.")
     
-    # Making DataFrame
-    df = pd.DataFrame(index=list_dates, data=list_values)
+    # Making series
+    data = pd.Series(index=list_dates, data=list_values)
         
     # If the first value is a string, make a CatTimeSeries
     if type(list_values[0]) == str:
-        ts = CatTimeSeries(df, tz=tz, unit=unit, name=name)
+        ts = CatTimeSeries(data, tz=tz, unit=unit, name=name)
     # If the first value isn't a string, make a TimeSeries
     else:
-        ts = TimeSeries(df, tz=tz, unit=unit, name=name)
+        ts = TimeSeries(data, tz=tz, unit=unit, name=name)
     
     return ts
 
