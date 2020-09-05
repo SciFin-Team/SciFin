@@ -56,8 +56,6 @@ def random_covariance_matrix(n, n_facts):
     return cov
 
 
-
-
 def covariance_to_correlation(cov):
     """
     Derive the correlation matrix from the covariance matrix.
@@ -92,20 +90,19 @@ def covariance_to_correlation(cov):
     return corr
 
 
-
 def eigen_value_vector(matrix):
     """
-    Compute eigen value and eigen vector from a Hermitian matrix.
+    Compute eigenvalue and eigenvector from a Hermitian matrix.
     
     Arguments
     ---------
     matrix : numpy.array or list of lists
-      Matrix to extract eigen values and eigen vectors from.
+      Matrix to extract eigenvalues and eigenvectors from.
       
     Returns
     -------
     numpy.array, numpy.array
-      Array of eigen values, array of eigen vectors.
+      Array of eigenvalues, array of eigenvectors.
       
     Notes
     -----
@@ -125,8 +122,7 @@ def eigen_value_vector(matrix):
     if (matrix.T == np.conj(matrix)).flatten().all() == False:
         raise ValueError("Input matrix must be Hermitian.")
     
-    
-    # Compute eigen values and vectors
+    # Compute eigenvalues and eigenvectors
     e_val, e_vec = np.linalg.eigh(matrix)
     
     # Sort by size
@@ -139,4 +135,48 @@ def eigen_value_vector(matrix):
     
     return e_val, e_vec
 
+
+def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100):
+    """
+    Implements the Marcenko-Pastur PDF from the characteristics of
+    an observation matrix representing IID random observations with
+    zero mean and standard deviation sigma.
+    
+    Arguments
+    ---------
+    n_features : int
+      Number of features.
+    n_obs: int
+      Number of observations (in time).
+    sigma: float
+      Standard deviation of observations.
+    n_pts: int
+      Number of points to sample the PDF.
+    
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if (isinstance(n_features, int)==False) or (isinstance(n_obs, int)==False):
+        raise AssertionError("n_features and n_obs must be integers.")
+    if (isinstance(n_pts, int)==False):
+        raise AssertionError("n_pts must be integer.")
+        
+    # Initializations
+    ratio = n_features / n_obs
+    
+    # Max and min expected eigenvalues
+    e_min = sigma**2 * (1 - ratio**.5)**2
+    e_max = sigma**2 * (1 + ratio**.5)**2
+
+    e_val = np.linspace(e_min, e_max, n_pts)
+    pdf = ((e_max-e_val)*(e_val-e_min))**.5 / (2 * ratio * np.pi * sigma**2 * e_val)
+
+    print("Noise eigenvalues in range [" + str(e_min) + " , " + str(e_max) + "].")
+    pdf = pd.Series(data=pdf.flatten(), index=e_val.flatten())
+    
+    return pdf
 
