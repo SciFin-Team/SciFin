@@ -173,13 +173,18 @@ class Market:
         
         # Initialization
         list_ts = []
-        new_index = self.data.loc[start_date:end_date].index.to_timestamp()
+        new_index = pd.to_datetime(self.data.index[start_date:end_date])
         
         # Forming a list of timeseries
         i=0
         for c in self.data.columns:
-            tmp_df = pd.DataFrame(index=new_index, data=self.data[start_date:end_date][c].values)
-            list_ts.append(timeseries.TimeSeries(tmp_df, tz=self.tz, unit=self.units[i], name=c))
+            tmp_series = pd.Series(index=new_index, data=self.data.loc[start_date:end_date, c].values)
+            if self.units is None:
+                tmp_unit = ''
+            else:
+                tmp_unit = self.units[i]
+            tmp_ts = timeseries.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
+            list_ts.append(tmp_ts)
             i+=1
 
         return list_ts

@@ -52,7 +52,7 @@ class TestTimeSeries(unittest.TestCase):
         
         # Test Error
         with self.assertRaises(AssertionError):
-            ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+            ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
 
 
     def test_TimeSeries_init(self):
@@ -62,10 +62,10 @@ class TestTimeSeries(unittest.TestCase):
         test_df.loc['2020-01'] = 1.
         test_df.loc['2020-02'] = 2.
         test_df.loc['2020-03'] = 3.
-        self.ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+        self.ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
         
         # Test attributes values
-        self.assertEqual(self.ts1.data.iloc[0,0], 1.)
+        self.assertEqual(self.ts1.data[0], 1.)
         self.assertEqual(self.ts1.start_utc, '2020-01')
         self.assertEqual(self.ts1.end_utc, '2020-03')
         self.assertEqual(self.ts1.nvalues, 3)
@@ -93,10 +93,10 @@ class TestTimeSeries(unittest.TestCase):
         test_df.loc['2020-01'] = 'a'
         test_df.loc['2020-02'] = 'b'
         test_df.loc['2020-03'] = 'c'
-        self.cts1 = ts.CatTimeSeries(df=test_df, tz="UTC", unit='$', name="Test a categorical time series")
+        self.cts1 = ts.CatTimeSeries(data=test_df, tz="UTC", unit='$', name="Test a categorical time series")
         
         # Test attributes values
-        self.assertEqual(self.cts1.data.iloc[0,0], 'a')
+        self.assertEqual(self.cts1.data[0], 'a')
         self.assertEqual(self.cts1.start_utc, '2020-01')
         self.assertEqual(self.cts1.end_utc, '2020-03')
         self.assertEqual(self.cts1.nvalues, 3)
@@ -116,7 +116,7 @@ class TestTimeSeries(unittest.TestCase):
                                        tz="Europe/London", unit='£', name="Test a time series")
         
         # Test attributes values
-        self.assertEqual(self.ts1.data.iloc[0,0], 1.)
+        self.assertEqual(self.ts1.data[0], 1.)
         self.assertEqual(self.ts1.start_utc, '2020-01')
         self.assertEqual(self.ts1.end_utc, '2020-03')
         self.assertEqual(self.ts1.nvalues, 3)
@@ -142,7 +142,7 @@ class TestTimeSeries(unittest.TestCase):
                                        tz="UTC", unit='$', name="Test a categorical time series")
         
         # Test attributes values
-        self.assertEqual(self.cts1.data.iloc[0,0], 'a')
+        self.assertEqual(self.cts1.data[0], 'a')
         self.assertEqual(self.cts1.start_utc, '2020-01')
         self.assertEqual(self.cts1.end_utc, '2020-03')
         self.assertEqual(self.cts1.nvalues, 3)
