@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from sklearn.neighbors.kde import KernelDensity
 import seaborn as sns
 
 
@@ -138,7 +139,7 @@ def eigen_value_vector(matrix):
     return e_val, e_vec
 
 
-def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
+def marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts=100, verbose=False):
     """
     Implements the Marcenko-Pastur PDF from the characteristics of
     an observation matrix representing IID random observations with
@@ -148,7 +149,7 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     ---------
     n_features : int
       Number of features.
-    n_obs: int
+    n_facts: int
       Number of observations (in time).
     sigma: float
       Standard deviation of observations.
@@ -162,14 +163,14 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     """
     
     # Check
-    if (isinstance(n_features, int)==False) or (isinstance(n_obs, int)==False):
-        print(n_features, n_obs)
-        raise AssertionError("n_features and n_obs must be integers.")
+    if (isinstance(n_features, int)==False) or (isinstance(n_facts, int)==False):
+        print(n_features, n_facts)
+        raise AssertionError("n_features and n_facts must be integers.")
     if (isinstance(n_pts, int)==False):
         raise AssertionError("n_pts must be integer.")
         
     # Initializations
-    ratio = n_features / n_obs
+    ratio = n_facts / n_features
     
     # Max and min expected eigenvalues
     e_min = sigma**2 * (1 - ratio**.5)**2
@@ -188,5 +189,99 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     return pdf
 
 
+def marcenko_pastur_loss(sigma, n_features, n_facts, e_val, bwidth, kernel='gaussian', n_pts=100):
+    """
+    Return the loss (sum of squared errors) from the Marcenko-Pastur distribution.
+    
+    Arguments
+    ---------
+    sigma: float
+      Standard deviation of observations.
+    n_features : int
+      Number of features.
+    n_facts: int
+      Number of observations (in time).
+    e_val: matrix
+      Diagonal matrix of eigenvalues.
+    bwidth: float
+      Bandwidth values.
+    kernel: KernelDensity
+      Kernel used to fit observations.
+    n_pts: int
+      Number of points to sample the PDF.
+    
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Compute Theoretical PDF
+    pdf0 = marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts)
+    
+    # Compute Empirical PDF
+    # - Fit kernel to a series of observations
+    if len(e_val.shape)==1:
+        obs = e_val.reshape(-1,1)
+    kde = KernelDensity(kernel=kernel, bandwidth=bwidth).fit(obs)
+    # - Create index
+    x = pdf0.index.values
+    if x is None:
+        x = np.unique(obs).reshape(-1,1)
+    if len(x.shape)==1:
+        x = x.reshape(-1,1)
+    # - Derive the probability of observations
+    log_density = kde.score_samples(x)
+    pdf1 = pd.Series(np.exp(log_density), index=x.flatten())
+
+    # Return loss
+    loss = np.sum((pdf1-pdf0)**2)
+    return loss
 
 
+def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, kernel='gaussian'):
+    """
+    Find max random e_val by fitting the Marcenko-Pastur distribution.
+    
+    Arguments
+    ---------
+    n_features : int
+      Number of features.
+    n_facts: int
+      Number of observations (in time).
+    sigma_ini: float
+      Initial value for standard deviation of observations.
+    e_val: matrix
+      Matrix of eigenvalues.
+    bwidth: float
+      Bandwidth values.
+    kernel: KernelDensity
+      Kernel used to fit observations.
+    
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    assert(n_features==len(e_val))
+    
+    # Initializations
+    ratio = n_facts/n_features
+    
+    # Minimize loss
+    out = minimize(lambda *x: marcenko_pastur_loss(*x), x0=sigma_ini, args=(n_features, n_facts, np.diag(e_val), bwidth), bounds=((1E-5, 1-1E-5),))
+    
+    if out['success']:
+        sigma = out['x'][0]
+    else:
+        sigma = 1
+        
+    # Rescaling max expected eigenvalue
+    e_max = sigma**2 * (1 + ratio**.5)**2
+    
+    # Compute n_facts
+    n_facts = e_val.shape[0] - np.diag(e_val)[::-1].searchsorted(e_max)
+    
+    return e_max, sigma, n_facts
