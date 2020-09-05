@@ -102,6 +102,8 @@ class Series:
                     self.data = pd.Series(data.iloc[:,0])
             elif isinstance(data, pd.Series) == False:
                 raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
+            else:
+                self.data = data
                 
             # Deal with time
             if type(data.index[0]) == 'str':
@@ -656,7 +658,7 @@ class TimeSeries(Series):
         gross_returns = self.gross_returns(start, end)
 
         # Compute product of values
-        prd = gross_returns.data.prod()[0]
+        prd = gross_returns.data.prod()
         
         # Checks
         if (start is None) and (end is None):
@@ -749,7 +751,7 @@ class TimeSeries(Series):
         tmp_n = 0
         for val in data.values:
             if val <= var:
-                tmp_sum += val[0]
+                tmp_sum += val
                 tmp_n += 1
 
         return tmp_sum / tmp_n
@@ -781,8 +783,8 @@ class TimeSeries(Series):
         z = stats.norm.ppf(p)
         
         # Compute modified z-score from expansion
-        s = stats.skew(data.values)[0]
-        k = stats.kurtosis(data.values, fisher=False)[0]
+        s = stats.skew(data.values)
+        k = stats.kurtosis(data.values, fisher=False)
         new_z = z + (z**2 - 1) * s/6 + (z**3 - 3*z) * (k-3)/24 \
                   - (2*z**3 - 5*z) * (s**2)/36
         
@@ -874,7 +876,7 @@ class TimeSeries(Series):
         and send back a new time series.
         """
         new_data = self.data[new_start:new_end]
-        new_ts = TimeSeries(new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz)
         
         return new_ts
     
@@ -884,7 +886,7 @@ class TimeSeries(Series):
         Method that adds a constant to the time series.
         """
         new_data = self.data + cst
-        new_ts = TimeSeries(new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz)
         
         return new_ts
     
@@ -894,7 +896,7 @@ class TimeSeries(Series):
         Method that multiplies the time series by a constant.
         """
         new_data = self.data * cst
-        new_ts = TimeSeries(new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz)
         
         return new_ts
     
@@ -907,7 +909,7 @@ class TimeSeries(Series):
         """
         new_data = factor1 * np.array(self.data.values) + factor2 * np.array(other_ts.data.values)
         new_data = pd.Series(index=self.data.index, data=new_data)
-        new_ts = TimeSeries(new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz)
         
         return new_ts
     
@@ -972,7 +974,7 @@ class TimeSeries(Series):
         drawdowns = (data - trailing_max) / trailing_max
         
         # Make a time series from them
-        new_ts = TimeSeries(drawdowns, tz=self.tz, name=name)
+        new_ts = TimeSeries(data=drawdowns, tz=self.tz, name=name)
         
         return new_ts
     
@@ -1056,7 +1058,7 @@ class TimeSeries(Series):
         # Generate new time series
         new_data = []
         for i in range(n):
-            new_data.append(data.values[i][0] + noise[i])
+            new_data.append(data.values[i] + noise[i])
         new_data = pd.Series(index=data.index, data=new_data)
         new_ts = TimeSeries(new_data, tz=self.tz, name=name)
         
@@ -1086,7 +1088,7 @@ class TimeSeries(Series):
         # Prepar data
         data = self.specify_data(start, end)
         new_index = [datetime.timestamp(x) for x in data.index]
-        new_values = [data.values.tolist()[x][0] for x in range(len(data))]
+        new_values = [data.values.tolist()[x] for x in range(len(data))]
         
         # Do the fit
         fit_formula = np.polyfit(new_index, new_values, deg=order)
@@ -1122,8 +1124,8 @@ class TimeSeries(Series):
         new_index = [datetime.fromtimestamp(x) for x in new_timestamps]
         
         # Obtaining the new values from interpolation
-        before = [original_timestamps[0], original_values[0][0]]
-        after = [original_timestamps[1], original_values[1][0]]
+        before = [original_timestamps[0], original_values[0]]
+        after = [original_timestamps[1], original_values[1]]
         new_values = [0.] * N
         j=0
         k=0
@@ -1137,12 +1139,12 @@ class TimeSeries(Series):
                 before[0] = original_timestamps[j]
             j-=1
             before[0] = original_timestamps[j]
-            before[1] = original_values[j][0]
+            before[1] = original_values[j]
             # Known point after interpolation point
             while (after[0] <= new_timestamps[i] and k<N-1):
                 k+=1
                 after[0] = original_timestamps[k]
-            after[1] = original_values[k][0]
+            after[1] = original_values[k]
                 
             # Check the new date is sandwiched between the 2 original dates
             assert(before[0] <= new_timestamps[i])
@@ -1195,7 +1197,7 @@ class TimeSeries(Series):
         data = self.specify_data(start, end)
         X = [datetime.timestamp(x) for x in data.index]
         X = np.reshape(X, (len(X), 1))
-        y = [data.values.tolist()[x][0] for x in range(len(data))]
+        y = [data.values.tolist()[x] for x in range(len(data))]
         
         # Fit the linear component
         model = LinearRegression()
