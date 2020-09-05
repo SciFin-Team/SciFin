@@ -152,6 +152,58 @@ class TestTimeSeries(unittest.TestCase):
         self.assertEqual(self.cts1.timezone, pytz.timezone("UTC"))
         self.assertEqual(self.cts1.name, "Test a categorical time series")
         self.assertEqual(self.cts1.type, 'CatTimeSeries')
+
+    def test_add_constant(self):
+        # Given
+        test_df = pd.DataFrame(columns=['ts'], index=['2020-01', '2020-02', '2020-03'])
+        test_df.loc['2020-01'] = 1.
+        test_df.loc['2020-02'] = 2.
+        test_df.loc['2020-03'] = 3.
+        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+
+        expected = [4., 5., 6.]
+
+        # When
+        sum_result = ts1 + 3
+        actual = list(sum_result.data.iloc[:, 0])
+
+        # Then
+        self.assertListEqual(expected, actual)
+
+    def test_add_list(self):
+        # Given
+        test_df = pd.DataFrame(columns=['ts'], index=['2020-01', '2020-02', '2020-03'])
+        test_df.loc['2020-01'] = 1.
+        test_df.loc['2020-02'] = 2.
+        test_df.loc['2020-03'] = 3.
+        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+
+        expected = [4., 6., 8.]
+
+        # When
+        sum_result = ts1 + [3, 4, 5]
+        actual = list(sum_result.data.iloc[:, 0])
+
+        # Then
+        self.assertListEqual(expected, actual)
+
+    def test_multiply_by_constant(self):
+        # Given
+        test_df = pd.DataFrame(columns=['ts'], index=['2020-01', '2020-02', '2020-03'])
+        test_df.loc['2020-01'] = 1.
+        test_df.loc['2020-02'] = 2.
+        test_df.loc['2020-03'] = 3.
+        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+
+        expected = [10., 20., 30.]
+
+        # When
+        mul_result = ts1 * 10
+        actual = list(mul_result.data.iloc[:, 0])
+
+        # Then
+        self.assertListEqual(expected, actual)
+
         
         
 if __name__ == '__main__':

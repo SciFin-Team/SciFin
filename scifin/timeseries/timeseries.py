@@ -200,9 +200,19 @@ class Series:
             if intervals[i] - prev > 1.e-6:
                 return False
         return True
-    
 
-    
+
+PANDAS_METHODS = ["__add__", "__mul__"]
+for method_name in PANDAS_METHODS:
+    def create_method(method_name):
+        def method(self, *args, **kwargs):
+            pd_series = self.data.iloc[:, 0]
+            func = getattr(pd_series, method_name)
+            new_series = func(*args, **kwargs)
+            new_df = pd.DataFrame(data=new_series, index=new_series.index)
+            return Series(new_df, tz=self.tz, unit=self.unit, name=self.name)
+        return method
+    setattr(Series, method_name, create_method(method_name))
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
