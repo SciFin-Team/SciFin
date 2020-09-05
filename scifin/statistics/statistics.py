@@ -9,7 +9,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.optimize import minimize
 import seaborn as sns
+
 
 # Local application imports
 # /
@@ -20,14 +22,14 @@ import seaborn as sns
 
 
 
-def random_covariance_matrix(n, n_facts):
+def random_covariance_matrix(n_features, n_facts):
     """
-    Generate a random matrix with dimensions n x n,
-    simulating n x n_facts to generate the data.
+    Generate a random matrix with dimensions n_features x n_features,
+    simulating n_features x n_facts to generate the data.
     
     Parameters
     ----------
-    n : int
+    n_features : int
       Dimension of the covariance matrix.
     n_facts : int
       Number of facts to generate data.
@@ -39,19 +41,19 @@ def random_covariance_matrix(n, n_facts):
     """
     
     # Checks
-    if isinstance(n, int) is False:
-        raise AssertionError("Argument n for matrix dimension must be integer.")
+    if isinstance(n_features, int) is False:
+        raise AssertionError("Argument n_features for matrix dimension must be integer.")
     if isinstance(n_facts, int) is False:
         raise AssertionError("Argument n_facts must be integer.")
     
     # Generate random numbers
-    w = np.random.normal(size=(n, n_facts))
+    w = np.random.normal(size=(n_features, n_facts))
     
     # Random covariance matrix, not full rank
     cov = np.dot(w, w.T)
     
     # Full rank covariance matrix
-    cov += np.diag(np.random.uniform(size=n))
+    cov += np.diag(np.random.uniform(size=n_features))
     
     return cov
 
@@ -136,7 +138,7 @@ def eigen_value_vector(matrix):
     return e_val, e_vec
 
 
-def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100):
+def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     """
     Implements the Marcenko-Pastur PDF from the characteristics of
     an observation matrix representing IID random observations with
@@ -159,8 +161,9 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100):
       Marcos López de Prado (2018).
     """
     
-    # Checks
+    # Check
     if (isinstance(n_features, int)==False) or (isinstance(n_obs, int)==False):
+        print(n_features, n_obs)
         raise AssertionError("n_features and n_obs must be integers.")
     if (isinstance(n_pts, int)==False):
         raise AssertionError("n_pts must be integer.")
@@ -175,8 +178,15 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100):
     e_val = np.linspace(e_min, e_max, n_pts)
     pdf = ((e_max-e_val)*(e_val-e_min))**.5 / (2 * ratio * np.pi * sigma**2 * e_val)
 
-    print("Noise eigenvalues in range [" + str(e_min) + " , " + str(e_max) + "].")
+    # Display information
+    if verbose:
+        print("Noise eigenvalues in range [" + str(e_min) + " , " + str(e_max) + "].")
+        
+    # Build series
     pdf = pd.Series(data=pdf.flatten(), index=e_val.flatten())
     
     return pdf
+
+
+
 
