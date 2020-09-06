@@ -285,3 +285,54 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
     n_facts = e_val.shape[0] - np.diag(e_val)[::-1].searchsorted(e_max)
     
     return e_max, sigma, n_facts
+
+
+def distance_from_vectors(X, Y):
+    """
+    Implements the Euclidean distance between two random vectors X and Y.
+    """
+
+    # Checks
+    if len(X) != len(Y):
+        raise AssertionError("Vectors X and Y must have same length.")
+    
+    # Initializations
+    X = np.array(X)
+    Y = np.array(Y)
+    
+    return np.sqrt(np.power(X-Y, 2).sum())
+    
+    
+def pearson_correlation(X, Y):
+    """
+    Implements the Pearson's correlation betwenn two random vectors X and Y.
+    """
+    
+    # Checks
+    if len(X) != len(Y):
+        raise AssertionError("Vectors X and Y must have same length.")
+    
+    # Initializations
+    N = len(X)
+    X = np.array(X)
+    Y = np.array(Y)
+    X = X - X.mean()
+    Y = Y - Y.mean()
+
+    return np.dot(X,Y) / N / np.std(X) / np.std(Y)
+
+
+def distance_from_pearson(X, Y):
+    """
+    Implements the Euclidean distance betwenn two random vectors X and Y
+    from Pearson's correlation.
+    """
+    
+    # Checks
+    if len(X) != len(Y):
+        raise AssertionError("Vectors X and Y must have same length.")
+    
+    return np.sqrt(0.5 * (1 - pearson_correlation(X,Y)))
+
+
+    
