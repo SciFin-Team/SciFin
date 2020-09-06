@@ -202,17 +202,23 @@ class Series:
         return True
 
 
-PANDAS_METHODS = ["__add__", "__mul__"]
-for method_name in PANDAS_METHODS:
+PANDAS_METHODS = ["__add__", "__mul__", "__getitem__"]
+for name in PANDAS_METHODS:
     def create_method(method_name):
         def method(self, *args, **kwargs):
-            pd_series = self.data.iloc[:, 0]
+            pd_series = self.data
             func = getattr(pd_series, method_name)
-            new_series = func(*args, **kwargs)
-            new_df = pd.DataFrame(data=new_series, index=new_series.index)
-            return Series(new_df, tz=self.tz, unit=self.unit, name=self.name)
+            new_args = []
+            for arg in args:
+                # if one of the args is a series turn into a pd.Series
+                if isinstance(arg, Series):
+                    new_args.append(arg.data)
+                else:
+                    new_args.append(arg)
+            new_series = func(*new_args, **kwargs)
+            return Series(new_series, tz=self.tz, unit=self.unit, name=self.name)
         return method
-    setattr(Series, method_name, create_method(method_name))
+    setattr(Series, name, create_method(name))
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

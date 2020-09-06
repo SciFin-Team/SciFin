@@ -159,13 +159,13 @@ class TestTimeSeries(unittest.TestCase):
         test_df.loc['2020-01'] = 1.
         test_df.loc['2020-02'] = 2.
         test_df.loc['2020-03'] = 3.
-        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+        ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
 
         expected = [4., 5., 6.]
 
         # When
         sum_result = ts1 + 3
-        actual = list(sum_result.data.iloc[:, 0])
+        actual = list(sum_result.data)
 
         # Then
         self.assertListEqual(expected, actual)
@@ -176,13 +176,33 @@ class TestTimeSeries(unittest.TestCase):
         test_df.loc['2020-01'] = 1.
         test_df.loc['2020-02'] = 2.
         test_df.loc['2020-03'] = 3.
-        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+        ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
 
         expected = [4., 6., 8.]
 
         # When
         sum_result = ts1 + [3, 4, 5]
-        actual = list(sum_result.data.iloc[:, 0])
+        actual = list(sum_result.data)
+
+        # Then
+        self.assertListEqual(expected, actual)
+
+    def test_add_ts(self):
+        # Given
+        test_df = pd.DataFrame(columns=['ts'], index=['2020-01', '2020-02', '2020-03'])
+        test_df.loc['2020-01'] = 1.
+        test_df.loc['2020-02'] = 2.
+        test_df.loc['2020-03'] = 3.
+        ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
+
+        # create a ts with all ones
+        ts2 = ts1 * 0 + 1
+
+        expected = [2., 3., 4.]
+
+        # When
+        sum_result = ts1 + ts2
+        actual = list(sum_result.data)
 
         # Then
         self.assertListEqual(expected, actual)
@@ -193,19 +213,41 @@ class TestTimeSeries(unittest.TestCase):
         test_df.loc['2020-01'] = 1.
         test_df.loc['2020-02'] = 2.
         test_df.loc['2020-03'] = 3.
-        ts1 = ts.TimeSeries(df=test_df, tz="Europe/London", unit='£', name="Test a time series")
+        ts1 = ts.TimeSeries(data=test_df, tz="Europe/London", unit='£', name="Test a time series")
 
         expected = [10., 20., 30.]
 
         # When
         mul_result = ts1 * 10
-        actual = list(mul_result.data.iloc[:, 0])
+        actual = list(mul_result.data)
 
         # Then
         self.assertListEqual(expected, actual)
 
-        
-        
+    def test_slicing(self):
+        # Given
+        series = pd.Series([0, 1, 2, 3, 4, 5, 6])
+        ts1 = ts.TimeSeries(data=series, tz="Europe/London", unit='£', name="Test a time series")
+
+        # slicing with start and end
+        expected = pd.Series([1, 2], index=[1, 2])
+        actual = ts1[1:3].data
+        self.assertListEqual(list(expected.values), list(actual.values))
+        self.assertListEqual(list(expected.index), list(actual.index))
+
+        # slicing with start and without end
+        expected = pd.Series([5, 6], index=[5, 6])
+        actual = ts1[5:].data
+        self.assertListEqual(list(expected.values), list(actual.values))
+        self.assertListEqual(list(expected.index), list(actual.index))
+
+        # slicing with step
+        expected = pd.Series([0, 2, 4, 6], index=[0, 2, 4, 6])
+        actual = ts1[::2].data
+        self.assertListEqual(list(expected.values), list(actual.values))
+        self.assertListEqual(list(expected.index), list(actual.index))
+
+
 if __name__ == '__main__':
     unittest.main()
     
