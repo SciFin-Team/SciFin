@@ -95,6 +95,18 @@ def covariance_to_correlation(cov):
     return corr
 
 
+def denoise_cov(cov0, q, b_width):
+    
+    corr0 = cov_to_corr(cov0)
+    e_val0, e_vec0 = get_pca(corr0)
+    e_max0, var0 = find_max_eval(np.diag(e_val0), q, b_width)
+    n_facts0 = e_val0.shape[0] - np.diag(e_val0)[::-1].searchsorted(e_max0)
+    corr1 = denoised_corr(e_val0, e_vec0, n_facts0)
+    cov1 = corr_to_cov(corr1, np.diag(cov0)**.5)
+    
+    return cov1
+
+
 def covariance_from_ts(list_ts, **kwargs):
     """
     Compute the covariance matrix of a list of time series.
@@ -458,6 +470,7 @@ def entropy_info(X, Y, bins, returns=None, verbose=False):
     """
     Display entropy information between two random vectors X and Y.
     Or returns any quantity that is wished for.
+    X and Y are assumed to be IID Gaussian random vectors.
     
     Arguments
     ---------

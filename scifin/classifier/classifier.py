@@ -11,6 +11,8 @@ import random as random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples
 
 # Local application imports
 from .. import timeseries
@@ -112,7 +114,80 @@ def dtw_distance(ts1, ts2, window=None):
     return np.sqrt(dtw[N1, N2])
 
 
+def kmeans_base_clustering(corr, max_num_clusters=10, n_init=10):
+    """
+    Perform the base clustering with Kmeans.
+    
+    
+    Arguments
+    ---------
+    corr: numpy.array
+      Correlation matrix.
+    max_num_clusters: int
+      Maximum number of clusters.
+    n_init : int
+      Initial value n_init for KMeans.
+    
+    Returns
+    -------
+    pd.DataFrame
+      Clustered correlation matrix.
+    dictionary
+      List of clusters and their content.
+    pd.Series
+      Silhouette scores.
+    
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if not isinstance(max_num_clusters, int):
+        raise AssertionError("max_num_clusters must be integer.")
+    if not isinstance(n_init, int):
+        raise AssertionError("n_init must be integer.")
+    
+    # Initializations
+    corr = pd.DataFrame(corr)
+    silh_score = pd.Series()
+    
+    # Define the observations matrix X
+    X = ((1 - corr.fillna(0))/2.)**.5
+    
+    # Loop to generate different initializations
+    for init in range(n_init):
+        
+        # Loop to generate different numbers of clusters
+        for i in range(2, max_num_clusters+1):
+            
+            # Define model and fit
+            kmeans_ = KMeans(n_clusters=i, n_jobs=1, n_init=n_init).fit(X)
+            
+            # Compute silhouette coefficients
+            silh_ = silhouette_samples(X, kmeans_.labels_)
+            
+            # Compute clustering quality q (t-statistic of silhouette score)
+            stat = (silh_.mean()/silh_.std(), silh_score.mean()/silh_score.std())
+            if np.isnan(stat[1]) or (stat[0]>stat[1]):
+                silh_score, kmeans = silh_, kmeans_
+                
+    # Extract index according to sorted labels
+    new_idx = np.argsort(kmeans.labels_)
+    
+    # Reorder rows
+    clustered_corr = corr.iloc[new_idx]
+    # Reorder columns
+    clustered_corr = clustered_corr.iloc[:,new_idx]
+    
+    # Form clusters
+    clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist() for i in np.unique(kmeans.labels_)}
+    
+    # Define a series with the silhouette score
+    silh_score = pd.Series(silh_score, index=X.index)
 
+    return clustered_corr, clusters, silh_score
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
