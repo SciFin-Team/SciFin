@@ -114,7 +114,7 @@ def dtw_distance(ts1, ts2, window=None):
     return np.sqrt(dtw[N1, N2])
 
 
-def kmeans_base_clustering(corr, max_num_clusters=10, n_init=10):
+def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_init=10):
     """
     Perform the base clustering with Kmeans.
     
@@ -150,7 +150,7 @@ def kmeans_base_clustering(corr, max_num_clusters=10, n_init=10):
         raise AssertionError("n_init must be integer.")
     
     # Initializations
-    corr = pd.DataFrame(corr)
+    corr = pd.DataFrame(data=corr, index=names_features)
     silh_score = pd.Series()
     
     # Define the observations matrix X
