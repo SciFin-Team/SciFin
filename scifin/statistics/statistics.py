@@ -23,6 +23,7 @@ from sklearn.neighbors.kde import KernelDensity
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
+# COVARIANCE MATRICES
 
 def random_covariance_matrix(n_features, n_facts):
     """
@@ -93,6 +94,58 @@ def covariance_to_correlation(cov):
     
     return corr
 
+
+def covariance_from_ts(list_ts, **kwargs):
+    """
+    Compute the covariance matrix of a list of time series.
+    
+    Arguments
+    ---------
+    list_ts : list of TimeSeries
+      List of time series we want to extract the covariance from.
+    **kwargs:
+      Arguments for pandas.DataFrame.cov().
+    
+    Returns
+    -------
+    numpy.array
+      Covariance matrix between the time series.
+    
+    Notes
+    -----
+      Makes use of pandas.DataFrame.cov(), more information here:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
+    
+    """
+    
+    # Checks
+    N = len(list_ts)
+    T = list_ts[0].nvalues
+    # Indexes must be identical
+    idx = list_ts[0].data.index
+    for i in range(1,N,1):
+        if (list_ts[i].data.index != idx).all():
+            raise AssertionError("Time series must have same index values.")
+    # Names must be different
+    set_names = set()
+    for i in range(N):
+        set_names.add(list_ts[i].name)
+    if len(set_names) != N:
+        raise AssertionError("Names of time series must be different")
+            
+    # Make a data frame
+    df = pd.DataFrame(index=idx, data=None)
+    for i in range(N):
+        df[list_ts[i].name] = list_ts[i].data
+    
+    # Compute the covariance matrix
+    cov = df.cov(**kwargs)
+    
+    return np.array(cov)
+
+
+
+# EIGENVALUES AND EIGENVECTORS
 
 def eigen_value_vector(matrix):
     """
@@ -288,6 +341,10 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
     return e_max, sigma, n_facts
 
 
+
+
+# SIMILARITY / DISSIMILARITY MEASURES
+
 def distance_from_vectors(X, Y):
     """
     Implements the Euclidean distance between two random vectors X and Y.
@@ -397,7 +454,6 @@ def distance_from_abs_pearson(X, Y):
     return np.sqrt(1 - np.abs(pearson_correlation(X,Y)))
 
 
-
 def entropy_info(X, Y, bins, returns=None, verbose=False):
     """
     Display entropy information between two random vectors X and Y.
@@ -496,5 +552,6 @@ def entropy_info(X, Y, bins, returns=None, verbose=False):
         print("Normalized variation of information: \t", vXYn)
         
     return None
+
 
 
