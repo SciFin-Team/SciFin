@@ -349,7 +349,7 @@ def pearson_correlation(X, Y):
 
 def distance_from_pearson(X, Y):
     """
-    Implements the Euclidean distance betwenn two random vectors X and Y
+    Implements the Euclidean distance between two random vectors X and Y
     from Pearson's correlation.
     
     Arguments
@@ -372,9 +372,36 @@ def distance_from_pearson(X, Y):
     return np.sqrt(0.5 * (1 - pearson_correlation(X,Y)))
 
 
-def display_entropy_info(X, Y, bins, verbose=False):
+def distance_from_abs_pearson(X, Y):
+    """
+    Implements the Euclidean distance between two random vectors X and Y
+    from Pearson's correlation absolute value.
+    
+    Arguments
+    ---------
+    X : numpy.array or list
+      Random vector X.
+    Y : numpy.array or list
+      Random vector Y.
+      
+    Returns
+    -------
+    float
+      Eucliden distance from Pearson absolute coefficient, between vectors X and Y.
+    """
+    
+    # Checks
+    if len(X) != len(Y):
+        raise AssertionError("Vectors X and Y must have same length.")
+    
+    return np.sqrt(1 - np.abs(pearson_correlation(X,Y)))
+
+
+
+def entropy_info(X, Y, bins, returns=None, verbose=False):
     """
     Display entropy information between two random vectors X and Y.
+    Or returns any quantity that is wished for.
     
     Arguments
     ---------
@@ -384,6 +411,8 @@ def display_entropy_info(X, Y, bins, verbose=False):
       Random vector Y.
     bins : int
       Number of bins.
+    returns : str
+      Name of quantity to return.
     verbose : bool
       Verbose option.
     
@@ -410,32 +439,62 @@ def display_entropy_info(X, Y, bins, verbose=False):
     
     # Joint distribution
     cXY = np.histogram2d(X,Y,bins=bins)
+    if (verbose==False) and (returns=="joint"):
+        return cXY
+    
+    # Entropies of marginal distributions
+    hX = ss.entropy(np.histogram(X, bins=bins)[0])
+    if (verbose==False) and (returns=="marginal_X"):
+        return hX
+    hY = ss.entropy(np.histogram(Y, bins=bins)[0])
+    if (verbose==False) and (returns=="marginal_Y"):
+        return hY
+    
+    # Mutual information
+    iXY = mutual_info_score(None, None, contingency=cXY[0])
+    if (verbose==False) and (returns=="mutual_info"):
+        return iXY
+    iXYn = iXY/min(hX, hY)
+    if (verbose==False) and (returns=="mutual_info_norm"):
+        return iXYn
+    
+    # Joint entropy
+    hXY = hX + hY - iXY
+    if (verbose==False) and (returns=="joint_entropy"):
+        return hXY
+    
+    # Conditional entropies
+    hX_Y = hXY - hY
+    if (verbose==False) and (returns=="conditional_entropy_X"):
+        return hXY
+    hX_Y = hXY - hY
+    if (verbose==False) and (returns=="conditional_entropy_Y"):
+        return hXY
+    
+    # Variation of information
+    vXY = hX + hY - 2*iXY
+    if (verbose==False) and (returns=="variation_info"):
+        return vXY
+    vXYn = vXY / hXY
+    if (verbose==False) and (returns=="variation_info_norm"):
+        return vXYn
+    
+    # Display
     if verbose:
         plt.figure(figsize=(8,5))
         sns.heatmap(cXY[0], xticklabels=np.around(cXY[1],2), yticklabels=np.around(cXY[2],2), cmap='viridis')
         plt.title("Joint distribution of X and Y.")
         plt.show()
+        print("Entropy of marginal distribution in X: \t", hX)
+        print("Entropy of marginal distribution in Y: \t", hY)
+        print("Mutual information: \t \t \t", iXY)
+        print("Normalized mutual information: \t \t", iXYn)
+        print("Joint entropy of X and Y: \t \t", hXY)
+        print("Conditional entropy of X given Y: \t", hX_Y)
+        print("Conditional entropy of X given Y: \t", hX_Y)
+        print("Variation of information: \t \t", vXY)
+        print("Normalized variation of information: \t", vXYn)
         
-    # Derived quantities
-    hX = ss.entropy(np.histogram(X, bins=bins)[0])
-    print("Entropy of marginal distribution in X: \t", hX)
-    hY = ss.entropy(np.histogram(Y, bins=bins)[0])
-    print("Entropy of marginal distribution in Y: \t", hY)
-    iXY = mutual_info_score(None, None, contingency=cXY[0])
-    print("Mutual information: \t \t \t", iXY)
-    iXYn = iXY/min(hX, hY)
-    print("Normalized mutual information: \t \t", iXYn)
-    hXY = hX + hY - iXY
-    print("Joint entropy of X and Y: \t \t", hXY)
-    hX_Y = hXY - hY
-    print("Conditional entropy of X given Y: \t", hX_Y)
-    hX_Y = hXY - hY
-    print("Conditional entropy of X given Y: \t", hX_Y)
-    vXY = hX + hY - 2*iXY
-    print("Variation of information: \t \t", vXY)
-    vXYn = vXY / hXY
-    print("Normalized variation of information: \t", vXYn)
-    
     return None
 
 
