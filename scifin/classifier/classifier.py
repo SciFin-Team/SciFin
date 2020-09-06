@@ -150,7 +150,7 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
         raise AssertionError("n_init must be integer.")
     
     # Initializations
-    corr = pd.DataFrame(data=corr, index=names_features)
+    corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
     
     # Define the observations matrix X
