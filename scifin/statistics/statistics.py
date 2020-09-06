@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from sklearn.neighbors.kde import KernelDensity
+import scipy.stats as ss
 import seaborn as sns
-
+from sklearn.metrics import mutual_info_score
+from sklearn.neighbors.kde import KernelDensity
 
 # Local application imports
 # /
@@ -290,6 +291,18 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
 def distance_from_vectors(X, Y):
     """
     Implements the Euclidean distance between two random vectors X and Y.
+    
+    Arguments
+    ---------
+    X : numpy.array or list
+      Random vector X.
+    Y : numpy.array or list
+      Random vector Y.
+      
+    Returns
+    -------
+    float
+      Eucliden distance between vectors X and Y.
     """
 
     # Checks
@@ -306,6 +319,18 @@ def distance_from_vectors(X, Y):
 def pearson_correlation(X, Y):
     """
     Implements the Pearson's correlation betwenn two random vectors X and Y.
+    
+    Arguments
+    ---------
+    X : numpy.array or list
+      Random vector X.
+    Y : numpy.array or list
+      Random vector Y.
+      
+    Returns
+    -------
+    float
+      Pearson correlation coefficient between vectors X and Y.
     """
     
     # Checks
@@ -326,6 +351,18 @@ def distance_from_pearson(X, Y):
     """
     Implements the Euclidean distance betwenn two random vectors X and Y
     from Pearson's correlation.
+    
+    Arguments
+    ---------
+    X : numpy.array or list
+      Random vector X.
+    Y : numpy.array or list
+      Random vector Y.
+      
+    Returns
+    -------
+    float
+      Eucliden distance from Pearson coefficient, between vectors X and Y.
     """
     
     # Checks
@@ -335,4 +372,70 @@ def distance_from_pearson(X, Y):
     return np.sqrt(0.5 * (1 - pearson_correlation(X,Y)))
 
 
+def display_entropy_info(X, Y, bins, verbose=False):
+    """
+    Display entropy information between two random vectors X and Y.
     
+    Arguments
+    ---------
+    X : numpy.array or list
+      Random vector X.
+    Y : numpy.array or list
+      Random vector Y.
+    bins : int
+      Number of bins.
+    verbose : bool
+      Verbose option.
+    
+    Returns
+    -------
+    None
+      None
+      
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if len(X) != len(Y):
+        raise AssertionError("Vectors X and Y must have same length.")
+    if not isinstance(bins, int):
+        raise AssertionError("Value of bins must be integer.")
+    
+    # Initializations
+    X = np.array(X)
+    Y = np.array(Y)
+    
+    # Joint distribution
+    cXY = np.histogram2d(X,Y,bins=bins)
+    if verbose:
+        plt.figure(figsize=(8,5))
+        sns.heatmap(cXY[0], xticklabels=np.around(cXY[1],2), yticklabels=np.around(cXY[2],2), cmap='viridis')
+        plt.title("Joint distribution of X and Y.")
+        plt.show()
+        
+    # Derived quantities
+    hX = ss.entropy(np.histogram(X, bins=bins)[0])
+    print("Entropy of marginal distribution in X: \t", hX)
+    hY = ss.entropy(np.histogram(Y, bins=bins)[0])
+    print("Entropy of marginal distribution in Y: \t", hY)
+    iXY = mutual_info_score(None, None, contingency=cXY[0])
+    print("Mutual information: \t \t \t", iXY)
+    iXYn = iXY/min(hX, hY)
+    print("Normalized mutual information: \t \t", iXYn)
+    hXY = hX + hY - iXY
+    print("Joint entropy of X and Y: \t \t", hXY)
+    hX_Y = hXY - hY
+    print("Conditional entropy of X given Y: \t", hX_Y)
+    hX_Y = hXY - hY
+    print("Conditional entropy of X given Y: \t", hX_Y)
+    vXY = hX + hY - 2*iXY
+    print("Variation of information: \t \t", vXY)
+    vXYn = vXY / hXY
+    print("Normalized variation of information: \t", vXYn)
+    
+    return None
+
+
