@@ -41,6 +41,7 @@ statsmodels = "^0.11.0"
 pytest = "^5.2"
 
 # New scripts
+jupyter = "^1.0.0"
 [tool.poetry.scripts]
 scifin = 'scifin:main'
 
