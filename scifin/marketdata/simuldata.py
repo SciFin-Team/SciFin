@@ -180,7 +180,7 @@ class Market:
         for c in self.data.columns:
             tmp_series = pd.Series(index=new_index, data=self.data.loc[start_date:end_date, c].values)
             if self.units is None:
-                tmp_unit = ''
+                tmp_unit = None
             else:
                 tmp_unit = self.units[i]
             tmp_ts = timeseries.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)

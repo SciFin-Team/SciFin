@@ -100,7 +100,7 @@ class Series:
                     raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
                 else:
                     self.data = pd.Series(data.iloc[:,0])
-            elif isinstance(data, pd.Series) == False:
+            elif not isinstance(data, pd.Series):
                 raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
             else:
                 self.data = data
