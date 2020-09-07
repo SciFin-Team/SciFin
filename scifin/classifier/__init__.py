@@ -8,7 +8,7 @@ The :mod:`scifin.classifier` module includes methods for classification and clus
 """
 
 from .classifier import (euclidean_distance, dtw_distance,
-                         kmeans_base_clustering)
+                         kmeans_base_clustering, kmeans_advanced_clustering)
 
 
 
