@@ -18,8 +18,8 @@ from .. import timeseries
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-# start_date=None, end_date=None, frequency=None, n=1, 
-def generate_series(n=1, series_model=None, **kwargs):
+ 
+def generate_series(n=1, generate_names=True, names_base="rs", series_model=None, **kwargs):
     """
     Generate a list of `n` series of the type `series_model`.
     Here all series have the same building parameters.
@@ -45,11 +45,12 @@ def generate_series(n=1, series_model=None, **kwargs):
     # Create list
     L = []
     for i in range(n):
-        L.append(series_model(**kwargs))
+        if generate_names is True:
+            L.append(series_model(name=names_base+str(i), **kwargs))
+        else:
+            L.append(series_model(**kwargs))
     
     return L
-
-
 
 
 
