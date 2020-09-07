@@ -25,16 +25,16 @@ from sklearn.neighbors.kde import KernelDensity
 
 # COVARIANCE MATRICES
 
-def random_covariance_matrix(n_features, n_facts):
+def random_covariance_matrix(n_features, n_obs):
     """
     Generate a random matrix with dimensions n_features x n_features,
-    simulating n_features x n_facts to generate the data.
+    simulating n_features x n_obs to generate the data.
     
     Parameters
     ----------
     n_features : int
       Dimension of the covariance matrix.
-    n_facts : int
+    n_obs : int
       Number of facts to generate data.
       
     Returns
@@ -46,11 +46,11 @@ def random_covariance_matrix(n_features, n_facts):
     # Checks
     if isinstance(n_features, int) is False:
         raise AssertionError("Argument n_features for matrix dimension must be integer.")
-    if isinstance(n_facts, int) is False:
-        raise AssertionError("Argument n_facts must be integer.")
+    if isinstance(n_obs, int) is False:
+        raise AssertionError("Argument n_obs must be integer.")
     
     # Generate random numbers
-    w = np.random.normal(size=(n_features, n_facts))
+    w = np.random.normal(size=(n_features, n_obs))
     
     # Random covariance matrix, not full rank
     cov = np.dot(w, w.T)
@@ -95,16 +95,14 @@ def covariance_to_correlation(cov):
     return corr
 
 
-def denoise_cov(cov0, q, b_width):
+def correlation_to_covariance(corr, std):
+    """
+    Derive the covariance matrix from the correlation matrix.
+    """
     
-    corr0 = cov_to_corr(cov0)
-    e_val0, e_vec0 = get_pca(corr0)
-    e_max0, var0 = find_max_eval(np.diag(e_val0), q, b_width)
-    n_facts0 = e_val0.shape[0] - np.diag(e_val0)[::-1].searchsorted(e_max0)
-    corr1 = denoised_corr(e_val0, e_vec0, n_facts0)
-    cov1 = corr_to_cov(corr1, np.diag(cov0)**.5)
+    cov = corr * np.outer(std, std)
     
-    return cov1
+    return cov
 
 
 def covariance_from_ts(list_ts, **kwargs):
@@ -115,7 +113,7 @@ def covariance_from_ts(list_ts, **kwargs):
     ---------
     list_ts : list of TimeSeries
       List of time series we want to extract the covariance from.
-    **kwargs:
+    **kwargs :
       Arguments for pandas.DataFrame.cov().
     
     Returns
@@ -127,7 +125,6 @@ def covariance_from_ts(list_ts, **kwargs):
     -----
       Makes use of pandas.DataFrame.cov(), more information here:
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
-    
     """
     
     # Checks
@@ -154,6 +151,63 @@ def covariance_from_ts(list_ts, **kwargs):
     cov = df.cov(**kwargs)
     
     return np.array(cov)
+
+
+def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1000):
+    """
+    Denoise a covariance matrix.
+    
+    Arguments
+    ---------
+    cov : numpy.array
+      Covariance matrix to denoise.
+    n_obs : int
+      Number of facts to generate data.
+    sigma_ini : float
+      Initial value for standard deviation of observations.
+    bwidth : float
+      Bandwidth values.
+    kernel : KernelDensity
+      Kernel used to fit observations.
+      
+    Notes
+    -----
+      Makes use of pandas.DataFrame.cov(), more information here:
+      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
+    """
+    
+    # Checks
+    if not isinstance(n_obs, int):
+        raise AssertionError("n_obs must be integers.")
+    
+    # Initialization
+    n_features = cov.shape[0]
+    
+    # Compute correlation matrix
+    corr = covariance_to_correlation(cov)
+    
+    # Compute eigenvalues and eigenvectors
+    e_val, e_vec = eigen_value_vector(corr)
+    
+    # Find max eigenvalue from fit
+    e_max, sigma, n_obs_new = marcenko_pastur_fit_params(n_features=n_features,
+                                                         n_obs=n_obs,
+                                                         sigma_ini=sigma_ini,
+                                                         e_val=e_val,
+                                                         bwidth=bwidth,
+                                                         kernel=kernel,
+                                                         n_pts=n_pts)
+    
+    # Remove noise from correlation matrix
+    # by fixing random eigenvalues.
+    eval_ = np.diag(e_val).copy()
+    eval_[n_obs_new:] = eval_[n_obs_new:].sum() / float(eval_.shape[0] - n_obs_new)
+    eval_ = np.diag(eval_)
+    
+    # Form new covariance matrix
+    cov1 = np.dot(e_vec, eval_).dot(e_vec.T)
+    
+    return cov1
 
 
 
@@ -205,7 +259,7 @@ def eigen_value_vector(matrix):
     return e_val, e_vec
 
 
-def marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts=100, verbose=False):
+def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     """
     Implements the Marcenko-Pastur PDF from the characteristics of
     an observation matrix representing IID random observations with
@@ -215,13 +269,15 @@ def marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts=100, verbose=False):
     ---------
     n_features : int
       Number of features.
-    n_facts: int
+    n_obs : int
       Number of observations (in time).
-    sigma: float
+    sigma : float
       Standard deviation of observations.
-    n_pts: int
+    n_pts : int
       Number of points to sample the PDF.
-    
+    verbose : bool
+      Verbose option.
+      
     Notes
     -----
       Function adapted from "Advances in Financial Machine Learning",
@@ -229,14 +285,13 @@ def marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts=100, verbose=False):
     """
     
     # Check
-    if (isinstance(n_features, int)==False) or (isinstance(n_facts, int)==False):
-        print(n_features, n_facts)
-        raise AssertionError("n_features and n_facts must be integers.")
-    if (isinstance(n_pts, int)==False):
+    if (not isinstance(n_features, int)) or (not isinstance(n_obs, int)):
+        raise AssertionError("n_features and n_obs must be integers.")
+    if not isinstance(n_pts, int):
         raise AssertionError("n_pts must be integer.")
         
     # Initializations
-    ratio = n_facts / n_features
+    ratio = n_obs / n_features
     
     # Max and min expected eigenvalues
     e_min = sigma**2 * (1 - ratio**.5)**2
@@ -255,25 +310,25 @@ def marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts=100, verbose=False):
     return pdf
 
 
-def marcenko_pastur_loss(sigma, n_features, n_facts, e_val, bwidth, kernel='gaussian', n_pts=100):
+def marcenko_pastur_loss(sigma, n_features, n_obs, e_val, bwidth, kernel='gaussian', n_pts=1000):
     """
     Return the loss (sum of squared errors) from the Marcenko-Pastur distribution.
     
     Arguments
     ---------
-    sigma: float
+    sigma : float
       Standard deviation of observations.
     n_features : int
       Number of features.
-    n_facts: int
+    n_obs : int
       Number of observations (in time).
-    e_val: matrix
+    e_val : matrix
       Diagonal matrix of eigenvalues.
-    bwidth: float
+    bwidth : float
       Bandwidth values.
-    kernel: KernelDensity
+    kernel : KernelDensity
       Kernel used to fit observations.
-    n_pts: int
+    n_pts : int
       Number of points to sample the PDF.
     
     Notes
@@ -283,29 +338,28 @@ def marcenko_pastur_loss(sigma, n_features, n_facts, e_val, bwidth, kernel='gaus
     """
     
     # Compute Theoretical PDF
-    pdf0 = marcenko_pastur_pdf(n_features, n_facts, sigma, n_pts)
+    pdf0 = marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts)
     
     # Compute Empirical PDF
-    # - Fit kernel to a series of observations
+    # Fit kernel to a series of observations
     if len(e_val.shape)==1:
-        obs = e_val.reshape(-1,1)
-    kde = KernelDensity(kernel=kernel, bandwidth=bwidth).fit(obs)
-    # - Create index
+        e_val = e_val.reshape(-1,1)
+    kde = KernelDensity(kernel=kernel, bandwidth=bwidth).fit(e_val)
+    # Create index
     x = pdf0.index.values
-    if x is None:
-        x = np.unique(obs).reshape(-1,1)
     if len(x.shape)==1:
         x = x.reshape(-1,1)
-    # - Derive the probability of observations
+    # Derive the probability of observations
     log_density = kde.score_samples(x)
     pdf1 = pd.Series(np.exp(log_density), index=x.flatten())
 
     # Return loss
     loss = np.sum((pdf1-pdf0)**2)
+    
     return loss
 
 
-def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, kernel='gaussian'):
+def marcenko_pastur_fit_params(n_features, n_obs, sigma_ini, e_val, bwidth, kernel='gaussian', n_pts=1000):
     """
     Find max random e_val by fitting the Marcenko-Pastur distribution.
     
@@ -313,16 +367,18 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
     ---------
     n_features : int
       Number of features.
-    n_facts: int
+    n_obs : int
       Number of observations (in time).
-    sigma_ini: float
+    sigma_ini : float
       Initial value for standard deviation of observations.
-    e_val: matrix
+    e_val : matrix
       Matrix of eigenvalues.
-    bwidth: float
+    bwidth : float
       Bandwidth values.
-    kernel: KernelDensity
+    kernel : KernelDensity
       Kernel used to fit observations.
+    n_pts : int
+      Number of points to sample the PDF.
     
     Notes
     -----
@@ -334,10 +390,13 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
     assert(n_features==len(e_val))
     
     # Initializations
-    ratio = n_facts/n_features
+    ratio = n_obs/n_features
     
     # Minimize loss
-    out = minimize(lambda *x: marcenko_pastur_loss(*x), x0=sigma_ini, args=(n_features, n_facts, np.diag(e_val), bwidth), bounds=((1E-5, 1-1E-5),))
+    out = minimize(lambda *x: marcenko_pastur_loss(*x),
+                   x0=sigma_ini,
+                   args=(n_features, n_obs, np.diag(e_val), bwidth, kernel, n_pts),
+                   bounds=((1E-5, 1-1E-5),))
     
     if out['success']:
         sigma = out['x'][0]
@@ -347,11 +406,10 @@ def marcenko_pastur_fit_params(n_features, n_facts, sigma_ini, e_val, bwidth, ke
     # Rescaling max expected eigenvalue
     e_max = sigma**2 * (1 + ratio**.5)**2
     
-    # Compute n_facts
-    n_facts = e_val.shape[0] - np.diag(e_val)[::-1].searchsorted(e_max)
+    # Compute n_obs
+    n_obs = e_val.shape[0] - np.diag(e_val)[::-1].searchsorted(e_max)
     
-    return e_max, sigma, n_facts
-
+    return e_max, sigma, n_obs
 
 
 
