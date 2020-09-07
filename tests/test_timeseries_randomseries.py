@@ -53,7 +53,7 @@ class TestRandomSeries(unittest.TestCase):
                       cst=3, sigma=0., tz="Europe/London", unit='$', name="Cst time series")
         
         # Test attributes values
-        self.assertEqual(self.rs1.data.iloc[0,0], 3)
+        self.assertEqual(self.rs1.data[0], 3)
         self.assertEqual(str(self.rs1.start_utc), '2020-01-31 00:00:00')
         self.assertEqual(str(self.rs1.end_utc), '2020-03-31 00:00:00')
         self.assertEqual(self.rs1.nvalues, 3)

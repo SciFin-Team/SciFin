@@ -33,18 +33,18 @@ class TestStandardNormalFunctions(unittest.TestCase):
         pass
     
     def test_pdf(self):
-        self.assertEqual(dis.standard_normal_pdf(0.), 0.3989422804014327)
-        self.assertEqual(dis.standard_normal_pdf(1.), 0.24197072451914337)
+        self.assertAlmostEqual(dis.standard_normal_pdf(0.), 0.3989422804014327, places=12)
+        self.assertAlmostEqual(dis.standard_normal_pdf(1.), 0.24197072451914337, places=12)
         self.assertEqual(dis.standard_normal_pdf(1.), dis.standard_normal_pdf(-1.))
 
     def test_cdf(self):
         self.assertEqual(dis.standard_normal_cdf(0.), 0.5)
-        self.assertEqual(dis.standard_normal_cdf(1.6448536269514722), 0.95)
+        self.assertAlmostEqual(dis.standard_normal_cdf(1.6448536269514722), 0.95, places=12)
         self.assertEqual(dis.standard_normal_cdf(1.), 1-dis.standard_normal_cdf(-1.))
 
     def test_quantile(self):
-        self.assertEqual(dis.standard_normal_quantile(0.95), 1.6448536269514722)
-        self.assertEqual(dis.standard_normal_quantile(0.99), 2.3263478740408408)
+        self.assertAlmostEqual(dis.standard_normal_quantile(0.95), 1.6448536269514722, places=12)
+        self.assertAlmostEqual(dis.standard_normal_quantile(0.99), 2.3263478740408408, places=12)
         self.assertAlmostEqual(dis.standard_normal_quantile(0.95) + dis.standard_normal_quantile(0.05), 0.)
         self.assertAlmostEqual(dis.standard_normal_quantile(0.99) + dis.standard_normal_quantile(0.01), 0.)
         
@@ -90,17 +90,17 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(self.d1.kurtosis, 3.)
         self.assertEqual(self.d1.median, 1.)
         self.assertEqual(self.d1.mode, 1.)
-        self.assertEqual(self.d1.MAD, 0.2393653682408596)
-        self.assertEqual(self.d1.entropy, 0.2149657288787366)
+        self.assertAlmostEqual(self.d1.MAD, 0.2393653682408596, places=12)
+        self.assertAlmostEqual(self.d1.entropy, 0.2149657288787366, places=12)
         self.assertEqual(self.d1.name, "MyGaussian")
         
     def test_methods(self):
         
         self.assertListEqual(list(self.d1.pdf([1.,2.])), [1.329807601338109, 0.005140929987637022])
         self.assertListEqual(list(self.d1.cdf([1.,2.])), [0.5, 0.9995709396668031])
-        self.assertEqual(self.d1.quantile(p=0.95), 1.4934560880854417)
-        self.assertEqual(self.d1.var(p=0.1), 0.61553453033662)
-        self.assertEqual(self.d1.cvar(p=0.1), 1.5264949957974605)
+        self.assertAlmostEqual(self.d1.quantile(p=0.95), 1.4934560880854417, places=12)
+        self.assertAlmostEqual(self.d1.var(p=0.1), 0.61553453033662, places=12)
+        self.assertAlmostEqual(self.d1.cvar(p=0.1), 1.5264949957974605, places=12)
     
 
     
@@ -139,12 +139,12 @@ class Uniform(unittest.TestCase):
         
         self.assertEqual(self.d1.mean, 0.5)
         self.assertEqual(self.d1.variance, 0.75)
-        self.assertEqual(self.d1.std, 0.8660254037844386)
+        self.assertAlmostEqual(self.d1.std, 0.8660254037844386, places=12)
         self.assertEqual(self.d1.skewness, 0.)
         self.assertEqual(self.d1.kurtosis, 1.8)
         self.assertEqual(self.d1.median, 0.5)
         self.assertEqual(self.d1.mode, 'Any value between a and b.')
-        self.assertEqual(self.d1.entropy, 1.0986122886681098)
+        self.assertAlmostEqual(self.d1.entropy, 1.0986122886681098, places=12)
         self.assertEqual(self.d1.name, "MyUniform")
     
     def test_methods(self):
@@ -191,20 +191,20 @@ class Weibull(unittest.TestCase):
         
         self.assertEqual(self.d1.mean, 2.0)
         self.assertEqual(self.d1.variance, 20.0)
-        self.assertEqual(self.d1.std, 4.47213595499958)
-        self.assertEqual(self.d1.skewness, 6.6187612133993765)
-        self.assertEqual(self.d1.kurtosis, 87.71999999999998)
-        self.assertEqual(self.d1.median, 0.4804530139182014)
+        self.assertAlmostEqual(self.d1.std, 4.47213595499958, places=12)
+        self.assertAlmostEqual(self.d1.skewness, 6.6187612133993765, places=12)
+        self.assertAlmostEqual(self.d1.kurtosis, 87.71999999999998, places=12)
+        self.assertAlmostEqual(self.d1.median, 0.4804530139182014, places=12)
         self.assertEqual(self.d1.mode, 0)
-        self.assertEqual(self.d1.entropy, 1.1159315156584124)
+        self.assertAlmostEqual(self.d1.entropy, 1.1159315156584124, places=12)
         self.assertEqual(self.d1.name, "MyWeibull")
     
     def test_methods(self):
         
         self.assertListEqual(list(self.d1.pdf([1,2])), [0.18393972058572117, 0.08595474576918094])
         self.assertListEqual(list(self.d1.cdf([1,2])), [0.6321205588285577, 0.7568832655657858])
-        self.assertEqual(self.d1.var(p=0.1), 0.011100838259683056)
-        self.assertEqual(self.d1.cvar(p=0.1), 2.2218218695753356)
+        self.assertAlmostEqual(self.d1.var(p=0.1), 0.011100838259683056, places=12)
+        self.assertAlmostEqual(self.d1.cvar(p=0.1), 2.2218218695753356, places=12)
 
 
 class Rayleigh(unittest.TestCase):
@@ -239,14 +239,14 @@ class Rayleigh(unittest.TestCase):
         
         self.assertEqual(self.d1.sigma, 1.)
         
-        self.assertEqual(self.d1.mean, 1.2533141373155001)
-        self.assertEqual(self.d1.variance, 0.42920367320510344)
-        self.assertEqual(self.d1.std, 0.6551363775620336)
-        self.assertEqual(self.d1.skewness, 0.6311106578189364)
-        self.assertEqual(self.d1.kurtosis, 3.245089300687639)
-        self.assertEqual(self.d1.median, 1.1774100225154747)
+        self.assertAlmostEqual(self.d1.mean, 1.2533141373155001, places=12)
+        self.assertAlmostEqual(self.d1.variance, 0.42920367320510344, places=12)
+        self.assertAlmostEqual(self.d1.std, 0.6551363775620336, places=12)
+        self.assertAlmostEqual(self.d1.skewness, 0.6311106578189364, places=12)
+        self.assertAlmostEqual(self.d1.kurtosis, 3.245089300687639, places=12)
+        self.assertAlmostEqual(self.d1.median, 1.1774100225154747, places=12)
         self.assertEqual(self.d1.mode, 1)
-        self.assertEqual(self.d1.entropy, 0.9420342421707937)
+        self.assertAlmostEqual(self.d1.entropy, 0.9420342421707937, places=12)
         self.assertEqual(self.d1.name, "MyRayleigh")
     
     def test_methods(self):
@@ -293,17 +293,17 @@ class Exponential(unittest.TestCase):
         self.assertEqual(self.d1.std, 0.5)
         self.assertEqual(self.d1.skewness, 2)
         self.assertEqual(self.d1.kurtosis, 9)
-        self.assertEqual(self.d1.median, 0.34657359027997264)
+        self.assertAlmostEqual(self.d1.median, 0.34657359027997264, places=12)
         self.assertEqual(self.d1.mode, 0)
-        self.assertEqual(self.d1.entropy, 0.3068528194400547)
+        self.assertAlmostEqual(self.d1.entropy, 0.3068528194400547, places=12)
         self.assertEqual(self.d1.name, "MyExponential")
     
     def test_methods(self):
         
         self.assertListEqual(list(self.d1.pdf([0,1,2])), [2.0, 0.2706705664732254, 0.03663127777746836])
         self.assertListEqual(list(self.d1.cdf([0,1,2])), [0.0, 0.8646647167633873, 0.9816843611112658])
-        self.assertEqual(self.d1.var(p=0.1), 0.05268025782891314)
-        self.assertEqual(self.d1.cvar(p=0.1), 0.5526802578289132)
+        self.assertAlmostEqual(self.d1.var(p=0.1), 0.05268025782891314, places=12)
+        self.assertAlmostEqual(self.d1.cvar(p=0.1), 0.5526802578289132, places=12)
         
 
         
@@ -340,14 +340,14 @@ class Gumbel(unittest.TestCase):
         self.assertEqual(self.d1.mu, 1.)
         self.assertEqual(self.d1.beta, 2.)
         
-        self.assertEqual(self.d1.mean, 2.1544313298030655)
-        self.assertEqual(self.d1.variance, 6.579736267392906)
-        self.assertEqual(self.d1.std, 2.565099660323728)
-        self.assertEqual(self.d1.skewness, 1.1395470994046488)
+        self.assertAlmostEqual(self.d1.mean, 2.1544313298030655, places=12)
+        self.assertAlmostEqual(self.d1.variance, 6.579736267392906, places=12)
+        self.assertAlmostEqual(self.d1.std, 2.565099660323728, places=12)
+        self.assertAlmostEqual(self.d1.skewness, 1.1395470994046488, places=12)
         self.assertEqual(self.d1.kurtosis, 5.4)
-        self.assertEqual(self.d1.median, 1.7330258411633288)
+        self.assertAlmostEqual(self.d1.median, 1.7330258411633288, places=12)
         self.assertEqual(self.d1.mode, 1)
-        self.assertEqual(self.d1.entropy, 2.270362845461478)
+        self.assertAlmostEqual(self.d1.entropy, 2.270362845461478, places=12)
         self.assertEqual(self.d1.name, "MyGumbel")
     
     def test_methods(self):
@@ -393,20 +393,20 @@ class Laplace(unittest.TestCase):
         
         self.assertEqual(self.d1.mean, 0)
         self.assertEqual(self.d1.variance, 2)
-        self.assertEqual(self.d1.std, 1.4142135623730951)
+        self.assertAlmostEqual(self.d1.std, 1.4142135623730951, places=12)
         self.assertEqual(self.d1.skewness, 0)
         self.assertEqual(self.d1.kurtosis, 6)
         self.assertEqual(self.d1.median, 0)
         self.assertEqual(self.d1.mode, 0)
-        self.assertEqual(self.d1.entropy, 1.6931471805599452)
+        self.assertAlmostEqual(self.d1.entropy, 1.6931471805599452, places=12)
         self.assertEqual(self.d1.name, "MyLaplace")
 
     def test_methods(self):
         
         self.assertListEqual(list(self.d1.pdf([0,1,2])), [0.5, 0.18393972058572117, 0.06766764161830635])
         self.assertListEqual(list(self.d1.cdf([0,1,2])), [0.5, 0.8160602794142788, 0.9323323583816936])
-        self.assertEqual(self.d1.var(p=0.1), -1.6094379124341003)
-        self.assertEqual(self.d1.cvar(p=0.1), 0.28993754582601117)
+        self.assertAlmostEqual(self.d1.var(p=0.1), -1.6094379124341003, places=12)
+        self.assertAlmostEqual(self.d1.cvar(p=0.1), 0.28993754582601117, places=12)
         
 
 
@@ -448,9 +448,9 @@ class Levy(unittest.TestCase):
         self.assertEqual(self.d1.std, 'Infinity')
         self.assertEqual(self.d1.skewness, None)
         self.assertEqual(self.d1.kurtosis, None)
-        self.assertEqual(self.d1.median, 0.11373410577989317)
-        self.assertEqual(self.d1.mode, 0.3333333333333333)
-        self.assertEqual(self.d1.entropy, 6.64896560279378)
+        self.assertAlmostEqual(self.d1.median, 0.11373410577989317, places=12)
+        self.assertAlmostEqual(self.d1.mode, 0.3333333333333333, places=12)
+        self.assertAlmostEqual(self.d1.entropy, 6.64896560279378, places=12)
         self.assertEqual(self.d1.name, "MyLevy")
 
     def test_methods(self):
@@ -500,7 +500,7 @@ class Cauchy(unittest.TestCase):
         self.assertEqual(self.d1.kurtosis, None)
         self.assertEqual(self.d1.median, 0)
         self.assertEqual(self.d1.mode, 0)
-        self.assertEqual(self.d1.entropy, 2.5310242469692907)
+        self.assertAlmostEqual(self.d1.entropy, 2.5310242469692907, places=12)
         self.assertEqual(self.d1.name, "MyCauchy")
 
     def test_methods(self):
@@ -544,13 +544,13 @@ class Poisson(unittest.TestCase):
         self.assertEqual(self.d1.lmbda, 0.5)
         self.assertEqual(self.d1.mean, 0.5)
         self.assertEqual(self.d1.variance, 0.5)
-        self.assertEqual(self.d1.std, 0.7071067811865476)
-        self.assertEqual(self.d1.skewness, 1.414213562373095)
-        self.assertEqual(self.d1.kurtosis, 4.414213562373095)
+        self.assertAlmostEqual(self.d1.std, 0.7071067811865476, places=12)
+        self.assertAlmostEqual(self.d1.skewness, 1.414213562373095, places=12)
+        self.assertAlmostEqual(self.d1.kurtosis, 4.414213562373095, places=12)
         self.assertEqual(self.d1.median, 0.)
         self.assertEqual(self.d1.k_max, 1000)
         self.assertEqual(self.d1.mode, 0.)
-        self.assertEqual(self.d1.entropy, 0.8465735902799727)
+        self.assertAlmostEqual(self.d1.entropy, 0.8465735902799727, places=12)
         self.assertEqual(self.d1.name, "MyPoisson")
         
     def test_methods(self):
@@ -601,14 +601,14 @@ class Binomial(unittest.TestCase):
         self.assertAlmostEqual(self.d1.q, 0.3)
         
         self.assertEqual(self.d1.mean, 7.0)
-        self.assertEqual(self.d1.variance, 2.1000000000000005)
-        self.assertEqual(self.d1.std, 1.449137674618944)
-        self.assertEqual(self.d1.skewness, -0.27602622373694163)
-        self.assertEqual(self.d1.kurtosis, 2.876190476190476)
+        self.assertAlmostEqual(self.d1.variance, 2.1000000000000005, places=12)
+        self.assertAlmostEqual(self.d1.std, 1.449137674618944, places=12)
+        self.assertAlmostEqual(self.d1.skewness, -0.27602622373694163, places=12)
+        self.assertAlmostEqual(self.d1.kurtosis, 2.876190476190476, places=12)
         self.assertEqual(self.d1.median, 7.0)
         
         self.assertEqual(self.d1.mode, 7.0)
-        self.assertEqual(self.d1.entropy, 2.58229024912634)
+        self.assertAlmostEqual(self.d1.entropy, 2.58229024912634, places=12)
         self.assertEqual(self.d1.name, "MyBinomial")
         
     def test_methods(self):

@@ -9,6 +9,7 @@
 
 SciFin is a python package for Science and Finance.
 
+
 ## Summary
 
 The SciFin package is a Python package designed to gather and develop methods for scientific studies and financial services. It originates from the observation that numerous methods developed in scientific fields (such as mathematics, physics, biology, climate sciences) have direct applicability in finance and that, conversely, multiple methods developed in finance can benefit science.
@@ -102,3 +103,16 @@ If you have comments or suggestions, please reach Fabien Nugier. Thank you very 
 
 
 
+## References
+
+SciFin uses code from scientific papers, books and online articles sometimes. Here are presented lists of materials which have been used to develop some functionalities in the code:
+
+**Books:**
+- [_Machine Learning for Asset Managers_, Marcos López de Prado](https://www.cambridge.org/core/books/machine-learning-for-asset-managers/6D9211305EA2E425D33A9F38D0AE3545), Cambridge University Press (2018).
+- [_Advances in Financial Machine Learning_, Marcos López de Prado](https://www.wiley.com/en-fr/Advances+in+Financial+Machine+Learning-p-9781119482086), Wiley (2020).  
+  
+**Articles:**
+- [_Continuous Genetic Algorithm From Scratch With Python_, Cahit bartu yazıcı](https://towardsdatascience.com/continuous-genetic-algorithm-from-scratch-with-python-ff29deedd099)  
+  
+**Websites:**
+- [Wikipedia](https://www.wikipedia.org/)

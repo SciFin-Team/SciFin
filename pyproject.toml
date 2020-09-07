@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "SciFin"
+version = "0.1.0"
+description = "SciFin is a python package for Science and Finance."
+authors = ["Fabien Nugier <fabien.nugier@outlook.com>"]
+
+# New attributes
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/SciFin-Team/SciFin"
+repository = "https://github.com/SciFin-Team/SciFin"
+documentation = "https://github.com/SciFin-Team/SciFin/wiki"
+keywords = ["SciFin", "scifin", "science", "finance"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Education",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Build Tools"
+]
+include = ["LICENSE"]
+
+[tool.poetry.dependencies]
+# Updated Python version
+python = "^3.6.1"
+# New dependencies
+IPython = "^7.13.0"
+matplotlib = "^3.1.3"
+numpy = "^1.18.1"
+pandas = "<=1.0.3"
+pandas_datareader = "^0.8.1"
+pytz = "^2019.3"
+requests = "^2.23.0"
+scikit-learn = "^0.23.0"
+scipy = "^1.4.1"
+statsmodels = "^0.11.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+# New scripts
+[tool.poetry.scripts]
+scifin = 'scifin:main'
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+
