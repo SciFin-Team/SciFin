@@ -9,11 +9,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.linalg import block_diag
 from scipy.optimize import minimize
 import scipy.stats as ss
 import seaborn as sns
 from sklearn.metrics import mutual_info_score
 from sklearn.neighbors.kde import KernelDensity
+from sklearn.utils import check_random_state
 
 # Local application imports
 # /
@@ -44,10 +46,10 @@ def random_covariance_matrix(n_features, n_obs):
     """
     
     # Checks
-    if isinstance(n_features, int) is False:
+    if not isinstance(n_features, int):
         raise AssertionError("Argument n_features for matrix dimension must be integer.")
-    if isinstance(n_obs, int) is False:
-        raise AssertionError("Argument n_obs must be integer.")
+    if not isinstance(n_obs, int):
+        raise AssertionError("Argument n_obs for number of observations must be integer.")
     
     # Generate random numbers
     w = np.random.normal(size=(n_features, n_obs))
@@ -172,8 +174,8 @@ def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1
       
     Notes
     -----
-      Makes use of pandas.DataFrame.cov(), more information here:
-      https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Checks
@@ -210,6 +212,165 @@ def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1
     return cov1
 
 
+def get_subcovariance(n_features, n_obs, sigma, random_state=None):
+    """
+    Generate sub-covariance matrix with dimensions n_features x n_features,
+    simulating n_features x n_obs to generate the data.
+    
+    Parameters
+    ----------
+    n_features : int
+      Dimension of the covariance matrix.
+    n_obs : int
+      Number of facts to generate data.
+    sigma : float
+      Standard deviation of the noise.
+    random_state : int
+      Random State.
+      
+    Returns
+    -------
+    numpy.array
+      Sub-covariance matrix.
+      
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(n_features, int):
+        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+    if not isinstance(n_obs, int):
+        raise AssertionError("Argument n_obs for number of observations must be integer.")
+    
+    # Initializations
+    rng = check_random_state(random_state)
+    
+    if n_features==1:
+        return np.ones((1,1))
+    
+    ar0 = rng.normal(size=(n_obs,1))
+    ar0 = np.repeat(ar0, n_features, axis=1)
+    ar0 += rng.normal(scale=sigma, size=ar0.shape)
+    cov = np.cov(ar0, rowvar=False)
+    
+    return cov
+
+
+def random_block_covariance(n_features, n_blocks, min_block_size=1, sigma=1., random_state=None):
+    """
+    Generate a block random covariance matrix.
+    
+    Parameters
+    ----------
+    n_features : int
+      Dimension of the covariance matrix.
+    n_blocks : int
+      Number of blocks to generate.
+    min_block_size : int
+      Minimum block size.
+    sigma : float
+      Standard deviation of the noise.
+    random_state : int
+      Random State.
+      
+    Returns
+    -------
+    numpy.array
+      Block random covariance matrix.
+      
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(n_features, int):
+        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+    if not isinstance(n_blocks, int):
+        raise AssertionError("Argument n_blocks for number of blocks must be integer.")
+    if not isinstance(min_block_size, int):
+        raise AssertionError("Argument min_block_size for number of blocks must be integer.")
+    
+    # Initializations
+    rng = check_random_state(random_state)
+    
+    # Dimensionality check
+    try:
+        assert(n_features - (min_block_size-1) * n_blocks > 0)
+    except AssertionError:
+        raise AssertionError("n_features - (min_block_size-1) * n_blocks = ", n_features - (min_block_size-1) * n_blocks, " !")
+        
+    # Generate parts
+    parts = rng.choice(range(1, n_features - (min_block_size-1) * n_blocks), n_blocks-1, replace=False)
+    parts.sort()
+    parts = np.append(parts, n_features - (min_block_size-1) * n_blocks)
+    parts = np.append(parts[0], np.diff(parts)) - 1 + min_block_size
+    
+    # Generate covariance
+    cov = None
+    for n_features_ in parts:
+        n_obs_ = int(max(n_features*(n_features_ + 1)/2., 100))
+        cov_ = get_subcovariance(int(n_features_), n_obs_, sigma, random_state=rng)
+        if cov is None:
+            cov = cov_.copy()
+        else:
+            cov = block_diag(cov, cov_)
+            
+    return cov
+
+
+def random_block_correlation(n_features, n_blocks, min_block_size=1, sigma_base=1., sigma_noise=0.5, random_state=None):
+    """
+    Form block random correlation matrix of dimension n_features x n_features with n_blocks blocks.
+    Mininum block size and noise levels can be specified.
+    
+    Parameters
+    ----------
+    n_features : int
+      Dimension of the covariance matrix.
+    n_blocks : int
+      Number of blocks to generate.
+    min_block_size : int
+      Minimum block size.
+    sigma_base : float
+      Standard deviation of the noise in base blocks.
+    sigma_noise : float
+      Standard deviation for the noise added to each matrix element.
+    random_state : int
+      Random State.
+      
+    Returns
+    -------
+    numpy.array
+      Block random correlation matrix.
+      
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    rng = check_random_state(random_state)
+
+    # Initial random block covariance matrix
+    cov_base = random_block_covariance(n_features, n_blocks, min_block_size=min_block_size,
+                                       sigma=sigma_base, random_state=rng)
+    
+    # Add noise
+    cov_noise = random_block_covariance(n_features, 1, min_block_size=min_block_size,
+                                        sigma=sigma_noise, random_state=rng)
+    cov = cov_base + cov_noise
+    
+    # Generate correlation matrix
+    corr = covariance_to_correlation(cov)
+    corr = pd.DataFrame(corr)
+    
+    return corr
+
+
 
 # EIGENVALUES AND EIGENVECTORS
 
@@ -229,8 +390,8 @@ def eigen_value_vector(matrix):
       
     Notes
     -----
-      Function adapted from "Advances in Financial Machine Learning",
-      Marcos López de Prado (2018).
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Convert list of lists to numpy.array (if needed)
@@ -280,8 +441,8 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
       
     Notes
     -----
-      Function adapted from "Advances in Financial Machine Learning",
-      Marcos López de Prado (2018).
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Check
@@ -333,8 +494,8 @@ def marcenko_pastur_loss(sigma, n_features, n_obs, e_val, bwidth, kernel='gaussi
     
     Notes
     -----
-      Function adapted from "Advances in Financial Machine Learning",
-      Marcos López de Prado (2018).
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Compute Theoretical PDF
@@ -382,8 +543,8 @@ def marcenko_pastur_fit_params(n_features, n_obs, sigma_ini, e_val, bwidth, kern
     
     Notes
     -----
-      Function adapted from "Advances in Financial Machine Learning",
-      Marcos López de Prado (2018).
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Checks
@@ -550,8 +711,8 @@ def entropy_info(X, Y, bins, returns=None, verbose=False):
       
     Notes
     -----
-      Function adapted from "Advances in Financial Machine Learning",
-      Marcos López de Prado (2018).
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
     """
     
     # Checks
