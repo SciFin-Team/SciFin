@@ -1372,6 +1372,67 @@ class TimeSeries(Series):
         # Returning the time series
         return [ts_mean, ts_std_m, ts_std_p]
 
+    
+    def make_selection(self, threshold, mode):
+        """
+        Make a time series from selected events and the values of the time series.
+
+        Arguments
+        ---------
+        threshold : float
+          Threshold value for selection.
+        mode : str
+          Mode to choose from (among ['run-ups', 'run-downs', 'symmetric']).
+        return_df : bool
+          Option to return a pandas.DataFrame with selection.
+
+        Returns
+        -------
+        TimeSeries
+          Time series of the selection.
+
+        Notes
+        -----
+          Function adapted from "Advances in Financial Machine Learning",
+          Marcos López de Prado (2018).
+        """
+
+        # Checks
+        assert(mode in ['run-ups', 'run-downs', 'symmetric'])
+
+        # Implements the symmetric cumsum filter
+        t_events, s_pos, s_neg = [], 0, 0
+        diff = self.data.diff()
+        for t in diff.index[1:]:
+            s_pos = max(0, s_pos + diff.loc[t])
+            s_neg = min(0, s_neg + diff.loc[t])
+
+            if mode == 'run-downs':
+                if s_neg < -threshold:
+                    s_neg = 0
+                    t_events.append(t)
+            elif mode == 'run-ups':
+                if s_pos > threshold:
+                    s_pos = 0
+                    t_events.append(t)
+            elif mode == 'symmetric':
+                if s_neg < -threshold:
+                    s_neg = 0
+                    t_events.append(t)
+                elif s_pos > threshold:
+                    s_pos = 0
+                    t_events.append(t)
+
+        t_index = pd.DatetimeIndex(t_events)
+
+        # Get selection values into DataFrame
+        df_selection = self.data.loc[t_index]
+
+        # Make TimeSeries
+        ts_selection = TimeSeries(data=df_selection, tz=self.tz, unit=self.unit, name=self.name + "_Selection")
+        
+        return ts_selection
+    
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
