@@ -17,8 +17,10 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
-from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.api import OLS
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.stattools import acf, pacf
+
 
 # Local application imports
 # /
@@ -1829,7 +1831,52 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
     
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
+
+
+
+def linear_tvalue(data):
+    """
+    Compute the t-value from a linear trend.
     
+    Arguments
+    ---------
+    data : list of floats, numpy.array or pandas.Series
+      Data to compute the linear t_value from.
+      
+    Returns
+    -------
+    float
+      Linear t-value for the provided data.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(data, list) and not isinstance(data, np.ndarray) and not isinstance(data, pd.Series):
+        raise AssertionError("data must be a list, a numpy.ndarray or a pandas.Series.")
+    
+    # Initializations
+    if isinstance(data, list):
+        N = len(data)
+    else:
+        N = data.shape[0]
+        
+    # Prepare linear trend
+    x = np.ones((N, 2))
+    x[:,1] = np.arange(N)
+    
+    # Fit the linear trend
+    ols = OLS(data, x).fit()
+    
+    # Get linear tvalue
+    tval = ols.tvalues[1]
+    
+    return tval
+
+
 
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
