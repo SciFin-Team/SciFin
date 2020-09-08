@@ -23,7 +23,7 @@ from statsmodels.tsa.stattools import acf, pacf
 
 
 # Local application imports
-# /
+from .. import exceptions
 
 
 # Dictionary of Pandas' Offset Aliases
@@ -278,16 +278,20 @@ class TimeSeries(Series):
         
         # Make it cute
         if self.name is None:
-            tmp_name = " "
+            title = "Time series from " + str(self.start_utc)[:10] \
+                    + " to " + str(self.end_utc)[:10]
         else:
-            tmp_name = self.name
-        title = "Time series " + tmp_name + " from " + str(self.start_utc)[:10] \
-                + " to " + str(self.end_utc)[:10]
+            title = "Time series " + self.name + " from " + str(self.start_utc)[:10] \
+                    + " to " + str(self.end_utc)[:10]
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
         if self.unit is None:
             ylabel = 'Value'
         else:
             ylabel = 'Value (' + self.unit + ')'
-        plt.gca().set(title=title, xlabel="Date", ylabel=ylabel)
+        plt.gca().set(title=title, xlabel=xlabel, ylabel=ylabel)
         plt.show()
         
         return None
@@ -355,22 +359,25 @@ class TimeSeries(Series):
         f_ax1 = fig.add_subplot(gs[:, 0:3])
         f_ax1.plot(data.index, data.values, color='k')
         if self.name is None:
-            tmp_name = " "
+            title1 = "Time series from " + s + " to " + e
         else:
-            tmp_name = self.name
-        title1 = "Time series " + tmp_name + " from " + s + " to " + e
+            title1 = "Time series " + self.name + " from " + s + " to " + e
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
         if self.unit is None:
             ylabel = 'Value'
         else:
             ylabel = 'Value (' + self.unit + ')'
-        plt.gca().set(title=title1, xlabel="Date", ylabel=ylabel)
+        plt.gca().set(title=title1, xlabel=xlabel, ylabel=ylabel)
         
         # Plot 2 - Distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
         data.hist(bins=bins, grid=False, ax=f_ax2, orientation="horizontal", color='w', lw=2, edgecolor='k')
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
         title2 = "Distribution"
-        plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
+        plt.gca().set(title=title2, xlabel=ylabel, ylabel="Hits")
         
         return None
     
@@ -380,7 +387,7 @@ class TimeSeries(Series):
         Returns the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
-            raise SamplingError("Error: the time series is not uniformly sampled.")
+            raise exceptions.SamplingError("Time series is not uniformly sampled.")
         else:
             idx1 = self.data.index[1]
             idx0 = self.data.index[0]
@@ -1495,7 +1502,11 @@ class CatTimeSeries(Series):
         # Make it cute
         title = "Categorical Time series " + self.name + " from " + str(self.start_utc)[:10] \
                 + " to " + str(self.end_utc)[:10]
-        plt.gca().set(title=title, xlabel="Date", ylabel="")
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
+        plt.gca().set(title=title, xlabel=xlabel, ylabel="")
         plt.show()
         
         return None
@@ -1827,11 +1838,8 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
 
 
 
-
-    
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
-
 
 
 def linear_tvalue(data):
@@ -1892,6 +1900,13 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
       Dots-per-inch definition of the figure.
     """
 
+    # Checks
+    # All series with same timezone
+    name_tz = Series[0].tz
+    for s in Series:
+        if s.tz != name_tz:
+            raise AssertionError("Series must have the same time zone.")
+    
     # Initialization
     N = len(Series)
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -1944,7 +1959,11 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
     # Make it cute
     title = "Multiplot of time series from " + str(min_date)[:10] \
             + " to " + str(max_date)[:10]
-    plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+    if Series[0].tz is None:
+        xlabel = 'Date'
+    else:
+        xlabel = 'Date (' + Series[0].tz + ')'
+    plt.gca().set(title=title, xlabel=xlabel, ylabel="Value")
     plt.show()
         
     return None
@@ -1974,6 +1993,11 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
 
     # Checks
     assert(isinstance(bins,int))
+    # All series with same timezone
+    name_tz = Series[0].tz
+    for s in Series:
+        if s.tz != name_tz:
+            raise AssertionError("Series must have the same time zone.")
 
     # Initialization
     N = len(Series)
@@ -1998,7 +2022,11 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
     for i in range(N):
         f_ax1.plot(Series[i].data.index, Series[i].data.values)
     title1 = "Time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
-    plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
+    if Series[0].tz is None:
+        xlabel = 'Date'
+    else:
+        xlabel = 'Date (' + Series[0].tz + ')'
+    plt.gca().set(title=title1, xlabel=xlabel, ylabel="Value")
 
     # Plot 2 - Distribution of values
     f_ax2 = fig.add_subplot(gs[:, 3:])
