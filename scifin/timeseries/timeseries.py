@@ -1953,7 +1953,7 @@ def bins_from_trend(ts, max_span, return_df=False):
         return cts
 
     
-def imbalance(ts, name=None):
+def tick_imbalance(ts, name=None):
     """
     Computes the tick imbalance from a time series.
     
@@ -1981,23 +1981,76 @@ def imbalance(ts, name=None):
     
     # Initialization
     delta = ts.percent_change()
-    print(delta.nvalues, ts.nvalues)
     T = delta.nvalues
     
     # Create the imbalance data
-    b_data = [np.abs(delta.data.values[0]) / delta.data.values[0]]
+    tick_imb_data = [np.abs(delta.data.values[0]) / delta.data.values[0]]
     for t in range(1,T,1):
         if delta.data.values[t] == 0.:
-            b_data.append(b_data[t-1])
+            tick_imb_data.append(tick_imb_data[t-1])
         else:
-            b_data.append(np.abs(delta.data.values[t]) / delta.data.values[t])
+            tick_imb_data.append(np.abs(delta.data.values[t]) / delta.data.values[t])
             
     # Make DataFrame and TimeSeries
-    b_df = pd.DataFrame(data=b_data, index=delta.data.index)
-    b_ts = TimeSeries(b_df, tz=ts.tz, name=name)
+    tick_imb_df = pd.DataFrame(index=delta.data.index, data=tick_imb_data)
+    tick_imb_ts = TimeSeries(tick_imb_df, tz=ts.tz, unit=None, name=name)
 
-    return b_ts
+    return tick_imb_ts
+
+
+def imbalance(tick_imb_ts, ts=None, name=None):
+    """
+    Compute the value imbalance from tick imbalance and a time series.
     
+    If ts = None, the cumulative sum of tick imbalance is returned.
+    If ts is not None, the cumulative sum of tick imbalance is combined
+    with the values for ts in order to generate a new time series.
+    
+    Arguments
+    ---------
+    tick_imb_ts : TimeSeries
+      Time series of tick imbalance.
+    ts : TimeSeries
+      Optional time series to combine with imbalance.
+    name : str
+      Name of the new time series.
+    
+    Returns
+    -------
+    TimeSeries
+      Time series representing tick + value imbalance.
+      
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if not isinstance(tick_imb_ts, TimeSeries):
+        raise AssertionError('tick_imb_ts must be a TimeSeries.')
+    assert(tick_imb_ts.data.values[1:].max()==1) # First value is NaN
+    assert(tick_imb_ts.data.values[1:].min()==-1) # First value is NaN
+    if ts is not None:
+        assert(isinstance(ts, TimeSeries))
+        if tick_imb_ts.tz != ts.tz:
+            raise AssertionError("tick_imb_ts and ts must have same timezone!")
+
+    # Compute the cumulative sum (with or without v time series)
+    if ts is None:
+        tickval_imb_df = pd.DataFrame(index=tick_imb_ts.data.index, data=tick_imb_ts.data.cumsum())
+    else:
+        # assert(tick_imb_ts.nvalues == ts.nvalues-1)
+        assert((tick_imb_ts.data.index == ts.data.index[1:]).all())
+        T = tick_imb_ts.nvalues
+        new_data = [tick_imb_ts.data.values[t] * ts.data.values[t+1] for t in range(T)]
+        tickval_imb_df = pd.DataFrame(index=tick_imb_ts.data.index, data=new_data)
+    
+    # Make TimeSeries
+    tickval_imb_ts = TimeSeries(data=tickval_imb_df, tz=tick_imb_ts.tz, unit=None, name=name)
+    
+    return tickval_imb_ts
+
 
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
