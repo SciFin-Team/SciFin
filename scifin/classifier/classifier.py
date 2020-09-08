@@ -372,6 +372,87 @@ def generate_random_classification(n_features, n_informative, n_redundant, n_sam
     return X, y
         
         
+def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
+    """
+    Plot the p-values of features from a fit.
+    
+    Arguments
+    ---------
+    fit : fit
+      Fit already applied to data.
+    plot : bool
+      Option to plot feature importance.
+    figsize : (float, float)
+      Dimensions of the plot.
+    
+    Returns
+    -------
+    pandas.DataFrame
+      Data frame with features importance.
+    """
+    
+    # Extract p-values and sort them
+    pvals = fit.pvalues.sort_values(ascending=False)
+
+    # Plot
+    if plot is True:
+        plt.figure(figsize=figsize)
+        plt.title("P-values of features.")
+        plt.barh(y=pvals.index, width=pvals.values)
+        plt.show()
+    
+    # Make DataFrame
+    pvals_df = pd.DataFrame(pvals)
+    pvals_df.index.name = "Feature"
+    pvals_df.columns = ["Importance"]
+    
+    return pvals_df
+
+
+def feature_importance_mdi(fit, feature_names, plot=False, figsize=(10,10)):
+    """
+    Feature importance based on in-sample Mean-Decrease Impurity (MDI).
+    
+    Arguments
+    ---------
+    fit : fit from tree classifier
+      Fit from tree classifier already applied to data.
+    feature_names : list of str
+      Names of features.
+    plot : bool
+      Option to plot feature importance.
+    figsize : (float, float)
+      Dimensions of the plot.
+    
+    Returns
+    -------
+    pandas.DataFrame
+      Data frame with features importance.
+    """
+    
+    # Extract feature importance
+    df0 = {i: tree.feature_importances_ for i, tree in enumerate(fit.estimators_)}
+    
+    # Make Data Frame
+    df0 = pd.DataFrame.from_dict(df0, orient='index')
+    df0.columns = feature_names
+    df0 = df0.replace(0, np.nan)
+    fimp_df = pd.concat( {'Importance Mean': df0.mean(), 'Importance Std': df0.std() * df0.shape[0]**(-0.5)}, axis=1)
+    fimp_df /= fimp_df['Importance Mean'].sum()
+    fimp_df.index.name = "Feature"
+    
+    # Sort values
+    sorted_fimp = fimp_df.sort_values(by='Importance Mean')
+    
+    # Plot
+    if plot is True:
+        plt.figure(figsize=figsize)
+        plt.title("Feature importance based on in-sample Mean-Decrease Impurity (MDI).")
+        plt.barh(y=sorted_fimp.index, width=sorted_fimp['Importance Mean'], xerr=sorted_fimp['Importance Std'])
+        plt.show()
+    
+    return fimp_df
+        
         
         
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

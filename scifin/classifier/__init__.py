@@ -9,7 +9,7 @@ The :mod:`scifin.classifier` module includes methods for classification and clus
 
 from .classifier import (euclidean_distance, dtw_distance,
                          kmeans_base_clustering, kmeans_advanced_clustering,
-                         generate_random_classification)
+                         generate_random_classification, feature_importance_pvalues, feature_importance_mdi)
 
 
 
