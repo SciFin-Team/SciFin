@@ -11,6 +11,7 @@ import random as random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.datasets import make_classification
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
 
@@ -20,7 +21,7 @@ from .. import timeseries
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
+# DISTANCES
 
 def euclidean_distance(ts1, ts2):
     """
@@ -113,6 +114,8 @@ def dtw_distance(ts1, ts2, window=None):
     # Return distance
     return np.sqrt(dtw[N1, N2])
 
+
+# KMEANS CLUSTERING
 
 def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_init=10):
     """
@@ -296,6 +299,78 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
             return corr1, clusters, silh
         else:
             return corr_new, clusters_new, silh_new
+        
+
+        
+# FEATURE IMPORTANCE
+
+def generate_random_classification(n_features, n_informative, n_redundant, n_samples, random_state=0, sigma_std=0.):
+    """
+    Generate a random dataset for a classification problem.
+    
+    Arguments
+    ---------
+    n_features : int
+      Total number of features.
+    n_informative : int
+      Number of informative features.
+    n_redundant : int
+      Number of redundant features.
+    n_samples : int
+      Number of samples.
+    random_state : int
+      See random state.
+    sigma_std: float
+      Standard deviation of added noise.
+      
+    Returns
+    -------
+    pandas.DataFrame
+      Data Frame with features as columns and samples as rows.
+    pandas.Series
+      Series containing class membership.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    for arg in [('n_features',n_features), ('n_informative',n_informative), ('n_redundant',n_redundant),
+                ('n_samples',n_samples), ('random_state',random_state)]:
+        if not isinstance(arg[1],int):
+            raise AssertionError(arg[0] + " must be integer.")
+    if not isinstance(arg[1], float) and not isinstance(arg[1], int):
+        raise AssertionError("sigma_std must be float.")
+    
+    # Initializations
+    np.random.seed(random_state)
+    
+    # Generate classification
+    X, y = make_classification(n_samples = n_samples,
+                               n_features = n_features - n_redundant,
+                               n_informative = n_informative,
+                               n_redundant = 0,
+                               shuffle = False,
+                               random_state = random_state)
+    
+    # Informed explanatory variables
+    cols = ['I_' + str(i) for i in range(n_informative)]
+    
+    # Noise explanatory variables
+    cols += ['N_' + str(i) for i in range(n_features - n_informative - n_redundant)]
+    
+    X = pd.DataFrame(X, columns=cols)
+    y = pd.Series(y)
+    i = np.random.choice(range(n_informative), size=n_redundant)
+    
+    # Redundant explanatory variables
+    for k, j in enumerate(i):
+        X['R_' + str(k)] = X['I_' + str(j)] + np.random.normal(size=X.shape[0]) * sigma_std
+        
+    return X, y
+        
         
         
         
