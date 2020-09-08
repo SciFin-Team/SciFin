@@ -1885,6 +1885,73 @@ def linear_tvalue(data):
     return tval
 
 
+def bins_from_trend(ts, max_span, return_df=False):
+    """
+    Derive labels from the sign of the t-value of linear trend
+    and return a CatTimeSeries representing the labels.
+    
+    Arguments
+    ---------
+    ts : TimeSeries
+      Time series from which we want to extract bins.
+    max_span : list of 3 integer
+        Characteristics of the horizon used to search for maximum linear t-value.
+        Represents [index min, index max, step size].
+    return_df : bool
+      Option to return the data frame with bin information.
+    
+    Returns
+    -------
+    CatTimeSeries
+      Categorical time series representing the trend sign.
+    pandas.DataFrame
+      Data frame containing information about the constructed bins.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(max_span, list) and (len(max_span) != 3):
+        raise AssertionError("max_span must be a list of 3 integers.")
+    
+    # Initializations
+    out = pd.DataFrame(index=ts.data.index, columns=['trend_end_time', 't_value', 'trend_sign'])
+    horizons = range(*max_span)
+    
+    # Going through time
+    for t0 in ts.data.index:
+        s0 = pd.Series()
+        iloc0 = ts.data.index.get_loc(t0)
+        if iloc0 + max(horizons) > ts.data.shape[0]:
+            continue
+            
+        for horizon in horizons:
+            t1 = ts.data.index[iloc0 + horizon - 1]
+            s1 = ts.data.loc[t0:t1]
+            s0.loc[t1] = linear_tvalue(s1.values)
+        t1 = s0.replace([-np.inf, np.inf, np.nan], 0).abs().idxmax()
+        
+        out.loc[t0, ['trend_end_time','t_value','trend_sign']] = s0.index[-1], s0[t1], np.sign(s0[t1])
+    
+    out['trend_end_time'] = pd.to_datetime(out['trend_end_time'])
+    out['trend_sign'] = pd.to_numeric(out['trend_sign'], downcast='signed')
+    
+    # Make data frame to output
+    df = out.dropna(subset=['trend_sign'])
+    
+    # Make CatTimeSeries
+    df_tmp = pd.DataFrame(index=df.index, data=df['trend_sign'])
+    cts = CatTimeSeries(data=df_tmp, tz=ts.tz, unit=ts.unit, name="Trend from " + ts.name)
+    
+    # Return
+    if return_df is True:
+        return cts, df
+    else:
+        return cts
+
 
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
