@@ -36,7 +36,7 @@ The current development is focused on the following topics:
 
 | Subpackage | Short Description | Development Stage |
 | :-----: | :-----: | :-----: |
-| [`classifier`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/classifier) | classification techniques | ■ □ □ □ □ |
+| [`classifier`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/classifier) | classification techniques | ■ ■ □ □ □ |
 | [`fouriertrf`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/fouriertrf) | Fourier transforms | ■ □ □ □ □ |
 | [`geneticalg`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/geneticalg) | genetic algorithms | ■ ■ ■ □ □ |
 | [`marketdata`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/marketdata) | reading market data | ■ ■ □ □ □ |
@@ -45,7 +45,7 @@ The current development is focused on the following topics:
 | [`statistics`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/statistics) | basic statistics | ■ ■ □ □ □ |
 | [`timeseries`](https://github.com/SciFin-Team/SciFin/tree/master/scifin/timeseries) | time series analysis | ■ ■ ■ ■ □ |
 
-The topics already developed are time series analysis, genetic algorithms and statistics.
+The topics already well developed are time series analysis and genetic algorithms. Topics recently developed are statistics and classification methods.
 
 A lot of development still needs to be done. Other topics will also later follow.
 
