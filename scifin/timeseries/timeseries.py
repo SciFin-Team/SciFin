@@ -1952,6 +1952,52 @@ def bins_from_trend(ts, max_span, return_df=False):
     else:
         return cts
 
+    
+def imbalance(ts, name=None):
+    """
+    Computes the tick imbalance from a time series.
+    
+    Arguments
+    ---------
+    ts : TimeSeries
+      Time series we want to extract tick imbalance from.
+    name : str
+      Name of the new time series.
+      
+    Returns
+    -------
+    TimeSeries
+      Time series representing tick imbalance.
+      
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if not isinstance(ts, TimeSeries):
+        raise AssertionError("ts must be a TimeSeries.")
+    
+    # Initialization
+    delta = ts.percent_change()
+    print(delta.nvalues, ts.nvalues)
+    T = delta.nvalues
+    
+    # Create the imbalance data
+    b_data = [np.abs(delta.data.values[0]) / delta.data.values[0]]
+    for t in range(1,T,1):
+        if delta.data.values[t] == 0.:
+            b_data.append(b_data[t-1])
+        else:
+            b_data.append(np.abs(delta.data.values[t]) / delta.data.values[t])
+            
+    # Make DataFrame and TimeSeries
+    b_df = pd.DataFrame(data=b_data, index=delta.data.index)
+    b_ts = TimeSeries(b_df, tz=ts.tz, name=name)
+
+    return b_ts
+    
 
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
