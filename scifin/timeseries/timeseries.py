@@ -17,11 +17,13 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
-from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.api import OLS
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.stattools import acf, pacf
+
 
 # Local application imports
-# /
+from .. import exceptions
 
 
 # Dictionary of Pandas' Offset Aliases
@@ -276,16 +278,20 @@ class TimeSeries(Series):
         
         # Make it cute
         if self.name is None:
-            tmp_name = " "
+            title = "Time series from " + str(self.start_utc)[:10] \
+                    + " to " + str(self.end_utc)[:10]
         else:
-            tmp_name = self.name
-        title = "Time series " + tmp_name + " from " + str(self.start_utc)[:10] \
-                + " to " + str(self.end_utc)[:10]
+            title = "Time series " + self.name + " from " + str(self.start_utc)[:10] \
+                    + " to " + str(self.end_utc)[:10]
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
         if self.unit is None:
             ylabel = 'Value'
         else:
             ylabel = 'Value (' + self.unit + ')'
-        plt.gca().set(title=title, xlabel="Date", ylabel=ylabel)
+        plt.gca().set(title=title, xlabel=xlabel, ylabel=ylabel)
         plt.show()
         
         return None
@@ -353,22 +359,25 @@ class TimeSeries(Series):
         f_ax1 = fig.add_subplot(gs[:, 0:3])
         f_ax1.plot(data.index, data.values, color='k')
         if self.name is None:
-            tmp_name = " "
+            title1 = "Time series from " + s + " to " + e
         else:
-            tmp_name = self.name
-        title1 = "Time series " + tmp_name + " from " + s + " to " + e
+            title1 = "Time series " + self.name + " from " + s + " to " + e
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
         if self.unit is None:
             ylabel = 'Value'
         else:
             ylabel = 'Value (' + self.unit + ')'
-        plt.gca().set(title=title1, xlabel="Date", ylabel=ylabel)
+        plt.gca().set(title=title1, xlabel=xlabel, ylabel=ylabel)
         
         # Plot 2 - Distribution of values
         f_ax2 = fig.add_subplot(gs[:, 3:])
         data.hist(bins=bins, grid=False, ax=f_ax2, orientation="horizontal", color='w', lw=2, edgecolor='k')
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
         title2 = "Distribution"
-        plt.gca().set(title=title2, xlabel="Value", ylabel="Hits")
+        plt.gca().set(title=title2, xlabel=ylabel, ylabel="Hits")
         
         return None
     
@@ -378,7 +387,7 @@ class TimeSeries(Series):
         Returns the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
-            raise SamplingError("Error: the time series is not uniformly sampled.")
+            raise exceptions.SamplingError("Time series is not uniformly sampled.")
         else:
             idx1 = self.data.index[1]
             idx0 = self.data.index[0]
@@ -1363,6 +1372,67 @@ class TimeSeries(Series):
         # Returning the time series
         return [ts_mean, ts_std_m, ts_std_p]
 
+    
+    def make_selection(self, threshold, mode):
+        """
+        Make a time series from selected events and the values of the time series.
+
+        Arguments
+        ---------
+        threshold : float
+          Threshold value for selection.
+        mode : str
+          Mode to choose from (among ['run-ups', 'run-downs', 'symmetric']).
+        return_df : bool
+          Option to return a pandas.DataFrame with selection.
+
+        Returns
+        -------
+        TimeSeries
+          Time series of the selection.
+
+        Notes
+        -----
+          Function adapted from "Advances in Financial Machine Learning",
+          Marcos López de Prado (2018).
+        """
+
+        # Checks
+        assert(mode in ['run-ups', 'run-downs', 'symmetric'])
+
+        # Implements the symmetric cumsum filter
+        t_events, s_pos, s_neg = [], 0, 0
+        diff = self.data.diff()
+        for t in diff.index[1:]:
+            s_pos = max(0, s_pos + diff.loc[t])
+            s_neg = min(0, s_neg + diff.loc[t])
+
+            if mode == 'run-downs':
+                if s_neg < -threshold:
+                    s_neg = 0
+                    t_events.append(t)
+            elif mode == 'run-ups':
+                if s_pos > threshold:
+                    s_pos = 0
+                    t_events.append(t)
+            elif mode == 'symmetric':
+                if s_neg < -threshold:
+                    s_neg = 0
+                    t_events.append(t)
+                elif s_pos > threshold:
+                    s_pos = 0
+                    t_events.append(t)
+
+        t_index = pd.DatetimeIndex(t_events)
+
+        # Get selection values into DataFrame
+        df_selection = self.data.loc[t_index]
+
+        # Make TimeSeries
+        ts_selection = TimeSeries(data=df_selection, tz=self.tz, unit=self.unit, name=self.name + "_Selection")
+        
+        return ts_selection
+    
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
@@ -1493,7 +1563,11 @@ class CatTimeSeries(Series):
         # Make it cute
         title = "Categorical Time series " + self.name + " from " + str(self.start_utc)[:10] \
                 + " to " + str(self.end_utc)[:10]
-        plt.gca().set(title=title, xlabel="Date", ylabel="")
+        if self.tz is None:
+            xlabel = 'Date'
+        else:
+            xlabel = 'Date (' + self.tz + ')'
+        plt.gca().set(title=title, xlabel=xlabel, ylabel="")
         plt.show()
         
         return None
@@ -1825,11 +1899,219 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
 
 
 
-
-    
     
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
+
+
+def linear_tvalue(data):
+    """
+    Compute the t-value from a linear trend.
     
+    Arguments
+    ---------
+    data : list of floats, numpy.array or pandas.Series
+      Data to compute the linear t_value from.
+      
+    Returns
+    -------
+    float
+      Linear t-value for the provided data.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(data, list) and not isinstance(data, np.ndarray) and not isinstance(data, pd.Series):
+        raise AssertionError("data must be a list, a numpy.ndarray or a pandas.Series.")
+    
+    # Initializations
+    if isinstance(data, list):
+        N = len(data)
+    else:
+        N = data.shape[0]
+        
+    # Prepare linear trend
+    x = np.ones((N, 2))
+    x[:,1] = np.arange(N)
+    
+    # Fit the linear trend
+    ols = OLS(data, x).fit()
+    
+    # Get linear tvalue
+    tval = ols.tvalues[1]
+    
+    return tval
+
+
+def bins_from_trend(ts, max_span, return_df=False):
+    """
+    Derive labels from the sign of the t-value of linear trend
+    and return a CatTimeSeries representing the labels.
+    
+    Arguments
+    ---------
+    ts : TimeSeries
+      Time series from which we want to extract bins.
+    max_span : list of 3 integer
+        Characteristics of the horizon used to search for maximum linear t-value.
+        Represents [index min, index max, step size].
+    return_df : bool
+      Option to return the data frame with bin information.
+    
+    Returns
+    -------
+    CatTimeSeries
+      Categorical time series representing the trend sign.
+    pandas.DataFrame
+      Data frame containing information about the constructed bins.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(max_span, list) and (len(max_span) != 3):
+        raise AssertionError("max_span must be a list of 3 integers.")
+    
+    # Initializations
+    out = pd.DataFrame(index=ts.data.index, columns=['trend_end_time', 't_value', 'trend_sign'])
+    horizons = range(*max_span)
+    
+    # Going through time
+    for t0 in ts.data.index:
+        s0 = pd.Series()
+        iloc0 = ts.data.index.get_loc(t0)
+        if iloc0 + max(horizons) > ts.data.shape[0]:
+            continue
+            
+        for horizon in horizons:
+            t1 = ts.data.index[iloc0 + horizon - 1]
+            s1 = ts.data.loc[t0:t1]
+            s0.loc[t1] = linear_tvalue(s1.values)
+        t1 = s0.replace([-np.inf, np.inf, np.nan], 0).abs().idxmax()
+        
+        out.loc[t0, ['trend_end_time','t_value','trend_sign']] = s0.index[-1], s0[t1], np.sign(s0[t1])
+    
+    out['trend_end_time'] = pd.to_datetime(out['trend_end_time'])
+    out['trend_sign'] = pd.to_numeric(out['trend_sign'], downcast='signed')
+    
+    # Make data frame to output
+    df = out.dropna(subset=['trend_sign'])
+    
+    # Make CatTimeSeries
+    df_tmp = pd.DataFrame(index=df.index, data=df['trend_sign'])
+    cts = CatTimeSeries(data=df_tmp, tz=ts.tz, unit=ts.unit, name="Trend from " + ts.name)
+    
+    # Return
+    if return_df is True:
+        return cts, df
+    else:
+        return cts
+
+    
+def tick_imbalance(ts, name=None):
+    """
+    Computes the tick imbalance from a time series.
+    
+    Arguments
+    ---------
+    ts : TimeSeries
+      Time series we want to extract tick imbalance from.
+    name : str
+      Name of the new time series.
+      
+    Returns
+    -------
+    TimeSeries
+      Time series representing tick imbalance.
+      
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if not isinstance(ts, TimeSeries):
+        raise AssertionError("ts must be a TimeSeries.")
+    
+    # Initialization
+    delta = ts.percent_change()
+    T = delta.nvalues
+    
+    # Create the imbalance data
+    tick_imb_data = [np.abs(delta.data.values[0]) / delta.data.values[0]]
+    for t in range(1,T,1):
+        if delta.data.values[t] == 0.:
+            tick_imb_data.append(tick_imb_data[t-1])
+        else:
+            tick_imb_data.append(np.abs(delta.data.values[t]) / delta.data.values[t])
+            
+    # Make DataFrame and TimeSeries
+    tick_imb_df = pd.DataFrame(index=delta.data.index, data=tick_imb_data)
+    tick_imb_ts = TimeSeries(tick_imb_df, tz=ts.tz, unit=None, name=name)
+
+    return tick_imb_ts
+
+
+def imbalance(tick_imb_ts, ts=None, name=None):
+    """
+    Compute the value imbalance from tick imbalance and a time series.
+    
+    If ts = None, the cumulative sum of tick imbalance is returned.
+    If ts is not None, the cumulative sum of tick imbalance is combined
+    with the values for ts in order to generate a new time series.
+    
+    Arguments
+    ---------
+    tick_imb_ts : TimeSeries
+      Time series of tick imbalance.
+    ts : TimeSeries
+      Optional time series to combine with imbalance.
+    name : str
+      Name of the new time series.
+    
+    Returns
+    -------
+    TimeSeries
+      Time series representing tick + value imbalance.
+      
+    Notes
+    -----
+      Function adapted from "Advances in Financial Machine Learning",
+      Marcos López de Prado (2018).
+    """
+    
+    # Checks
+    if not isinstance(tick_imb_ts, TimeSeries):
+        raise AssertionError('tick_imb_ts must be a TimeSeries.')
+    assert(tick_imb_ts.data.values[1:].max()==1) # First value is NaN
+    assert(tick_imb_ts.data.values[1:].min()==-1) # First value is NaN
+    if ts is not None:
+        assert(isinstance(ts, TimeSeries))
+        if tick_imb_ts.tz != ts.tz:
+            raise AssertionError("tick_imb_ts and ts must have same timezone!")
+
+    # Compute the cumulative sum (with or without v time series)
+    if ts is None:
+        tickval_imb_df = pd.DataFrame(index=tick_imb_ts.data.index, data=tick_imb_ts.data.cumsum())
+    else:
+        # assert(tick_imb_ts.nvalues == ts.nvalues-1)
+        assert((tick_imb_ts.data.index == ts.data.index[1:]).all())
+        T = tick_imb_ts.nvalues
+        new_data = [tick_imb_ts.data.values[t] * ts.data.values[t+1] for t in range(T)]
+        tickval_imb_df = pd.DataFrame(index=tick_imb_ts.data.index, data=new_data)
+    
+    # Make TimeSeries
+    tickval_imb_ts = TimeSeries(data=tickval_imb_df, tz=tick_imb_ts.tz, unit=None, name=name)
+    
+    return tickval_imb_ts
+
 
 def multi_plot(Series, figsize=(12,5), dpi=100):
     """
@@ -1845,6 +2127,13 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
       Dots-per-inch definition of the figure.
     """
 
+    # Checks
+    # All series with same timezone
+    name_tz = Series[0].tz
+    for s in Series:
+        if s.tz != name_tz:
+            raise AssertionError("Series must have the same time zone.")
+    
     # Initialization
     N = len(Series)
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -1897,7 +2186,11 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
     # Make it cute
     title = "Multiplot of time series from " + str(min_date)[:10] \
             + " to " + str(max_date)[:10]
-    plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+    if Series[0].tz is None:
+        xlabel = 'Date'
+    else:
+        xlabel = 'Date (' + Series[0].tz + ')'
+    plt.gca().set(title=title, xlabel=xlabel, ylabel="Value")
     plt.show()
         
     return None
@@ -1927,6 +2220,11 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
 
     # Checks
     assert(isinstance(bins,int))
+    # All series with same timezone
+    name_tz = Series[0].tz
+    for s in Series:
+        if s.tz != name_tz:
+            raise AssertionError("Series must have the same time zone.")
 
     # Initialization
     N = len(Series)
@@ -1951,7 +2249,11 @@ def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
     for i in range(N):
         f_ax1.plot(Series[i].data.index, Series[i].data.values)
     title1 = "Time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
-    plt.gca().set(title=title1, xlabel="Date", ylabel="Value")
+    if Series[0].tz is None:
+        xlabel = 'Date'
+    else:
+        xlabel = 'Date (' + Series[0].tz + ')'
+    plt.gca().set(title=title1, xlabel=xlabel, ylabel="Value")
 
     # Plot 2 - Distribution of values
     f_ax2 = fig.add_subplot(gs[:, 3:])
