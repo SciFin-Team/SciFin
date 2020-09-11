@@ -24,4 +24,5 @@ jobs:
         poetry install
     - name: Test with unittest
       run: |
+        source $HOME/.poetry/env
         poetry run python -m unittest
