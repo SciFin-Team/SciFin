@@ -11,8 +11,11 @@ import random as random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.datasets import make_classification
 from sklearn.cluster import KMeans
+from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
+from sklearn.model_selection._split import KFold
 
 # Local application imports
 from .. import timeseries
@@ -20,7 +23,7 @@ from .. import timeseries
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
+# DISTANCES
 
 def euclidean_distance(ts1, ts2):
     """
@@ -113,6 +116,8 @@ def dtw_distance(ts1, ts2, window=None):
     # Return distance
     return np.sqrt(dtw[N1, N2])
 
+
+# KMEANS CLUSTERING
 
 def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_init=10):
     """
@@ -297,6 +302,254 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
         else:
             return corr_new, clusters_new, silh_new
         
+
         
+# FEATURE IMPORTANCE
+
+def generate_random_classification(n_features, n_informative, n_redundant, n_samples, random_state=0, sigma_std=0.):
+    """
+    Generate a random dataset for a classification problem.
+    
+    Arguments
+    ---------
+    n_features : int
+      Total number of features.
+    n_informative : int
+      Number of informative features.
+    n_redundant : int
+      Number of redundant features.
+    n_samples : int
+      Number of samples.
+    random_state : int
+      See random state.
+    sigma_std: float
+      Standard deviation of added noise.
+      
+    Returns
+    -------
+    pandas.DataFrame
+      Data Frame with features as columns and samples as rows.
+    pandas.Series
+      Series containing class membership.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    for arg in [('n_features',n_features), ('n_informative',n_informative), ('n_redundant',n_redundant),
+                ('n_samples',n_samples), ('random_state',random_state)]:
+        if not isinstance(arg[1],int):
+            raise AssertionError(arg[0] + " must be integer.")
+    if not isinstance(arg[1], float) and not isinstance(arg[1], int):
+        raise AssertionError("sigma_std must be float.")
+    
+    # Initializations
+    np.random.seed(random_state)
+    
+    # Generate classification
+    X, y = make_classification(n_samples = n_samples,
+                               n_features = n_features - n_redundant,
+                               n_informative = n_informative,
+                               n_redundant = 0,
+                               shuffle = False,
+                               random_state = random_state)
+    
+    # Informed explanatory variables
+    cols = ['I_' + str(i) for i in range(n_informative)]
+    
+    # Noise explanatory variables
+    cols += ['N_' + str(i) for i in range(n_features - n_informative - n_redundant)]
+    
+    X = pd.DataFrame(X, columns=cols)
+    y = pd.Series(y)
+    i = np.random.choice(range(n_informative), size=n_redundant)
+    
+    # Redundant explanatory variables
+    for k, j in enumerate(i):
+        X['R_' + str(k)] = X['I_' + str(j)] + np.random.normal(size=X.shape[0]) * sigma_std
+        
+    return X, y
+        
+        
+def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
+    """
+    Plot the p-values of features from a fit.
+    
+    Arguments
+    ---------
+    fit : fit model
+      Fit already apply on data.
+    plot : bool
+      Option to plot feature importance.
+    figsize : (float, float)
+      Dimensions of the plot.
+    
+    Returns
+    -------
+    pandas.DataFrame
+      Data frame with features importance.
+    """
+    
+    # Extract p-values and sort them
+    pvals = fit.pvalues.sort_values(ascending=False)
+
+    # Plot
+    if plot is True:
+        plt.figure(figsize=figsize)
+        plt.title("P-values of features.")
+        plt.barh(y=pvals.index, width=pvals.values)
+        plt.show()
+    
+    # Make DataFrame
+    pvals_df = pd.DataFrame(pvals)
+    pvals_df.index.name = "Feature"
+    pvals_df.columns = ["Importance"]
+    
+    return pvals_df
+
+
+def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
+    """
+    Feature importance based on in-sample Mean-Decrease Impurity (MDI).
+    
+    Arguments
+    ---------
+    classifier : tree classifier
+      Tree classifier to apply on data.
+    X : pandas.DataFrame
+      Data Frame with features as columns and samples as rows.
+    y : pandas.Series
+      Series containing class membership.
+    plot : bool
+      Option to plot feature importance.
+    figsize : (float, float)
+      Dimensions of the plot.
+    
+    Returns
+    -------
+    pandas.DataFrame
+      Data frame with features importance.
+      
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(X, pd.DataFrame):
+        raise AssertionError("X must be pandas.DataFrame.")
+    if not isinstance(y, pd.Series):
+        raise AssertionError("y must be pandas.Series.")
+    
+    # Fit
+    fit = classifier.fit(X,y)
+    
+    # Extract feature importance
+    df0 = {i: tree.feature_importances_ for i, tree in enumerate(fit.estimators_)}
+    
+    # Make Data Frame
+    df0 = pd.DataFrame.from_dict(df0, orient='index')
+    df0.columns = X.columns
+    df0 = df0.replace(0, np.nan)
+    fimp_df = pd.concat( {'Importance Mean': df0.mean(), 'Importance Std': df0.std() * df0.shape[0]**(-0.5)}, axis=1)
+    fimp_df /= fimp_df['Importance Mean'].sum()
+    fimp_df.index.name = "Feature"
+    
+    # Sort values
+    sorted_fimp = fimp_df.sort_values(by='Importance Mean')
+    
+    # Plot
+    if plot is True:
+        plt.figure(figsize=figsize)
+        plt.title("Feature importance based on in-sample Mean-Decrease Impurity (MDI).")
+        plt.barh(y=sorted_fimp.index, width=sorted_fimp['Importance Mean'], xerr=sorted_fimp['Importance Std'])
+        plt.show()
+    
+    return fimp_df
+        
+    
+def feature_importance_mda(classifier, X, y, n_splits=10, plot=False, figsize=(10,10)):
+    """
+    Feature importance based out-of-sample Mean-Decrease Accuracy (MDA).
+    
+    Arguments
+    ---------
+    classifier : tree classifier
+      Tree classifier to apply on data.
+    X : pandas.DataFrame
+      Data Frame with features as columns and samples as rows.
+    y : pandas.Series
+      Series containing class membership.
+    plot : bool
+      Option to plot feature importance.
+    figsize : (float, float)
+      Dimensions of the plot.
+    
+    Returns
+    -------
+    pandas.DataFrame
+      Data frame with features importance.
+    
+    Notes
+    -----
+      Function adapted from "Machine Learning for Asset Managers",
+      Marcos López de Prado (2020).
+    """
+    
+    # Checks
+    if not isinstance(X, pd.DataFrame):
+        raise AssertionError("X must be pandas.DataFrame.")
+    if not isinstance(y, pd.Series):
+        raise AssertionError("y must be pandas.Series.")
+    
+    # Generate K-fold cross validation
+    cv_gen = KFold(n_splits=n_splits)
+    scr0 = pd.Series()
+    scr1 = pd.DataFrame(columns=X.columns)
+    
+    # Loop over the folds:
+    for i, (train, test) in enumerate(cv_gen.split(X=X)):
+        
+        # Train/Test split
+        X0, y0 = X.iloc[train,:], y.iloc[train]
+        X1, y1 = X.iloc[test,:], y.iloc[test]
+        
+        # Fit
+        fit = classifier.fit(X=X0, y=y0)
+        
+        # Prediction before shuffling
+        prob = fit.predict_proba(X1)
+        scr0.loc[i] = -log_loss(y1, prob, labels=classifier.classes_)
+        
+        for j in X.columns:
+            X1_ = X1.copy(deep=True)
+            
+            # Shuffle one column
+            np.random.shuffle(X1_[j].values)
+            
+            # Prediction after shuffling
+            prob = fit.predict_proba(X1_)
+            scr1.loc[i,j] = -log_loss(y1, prob, labels=classifier.classes_)
+    
+    fimp_df = (-1*scr1).add(scr0, axis=0)
+    fimp_df = fimp_df / (-1*scr1)
+    fimp_df = pd.concat({'Importance Mean': fimp_df.mean(), 'Importance Std': fimp_df.std()*fimp_df.shape[0]**-.5}, axis=1)
+    
+    # Sort values
+    sorted_fimp = fimp_df.sort_values(by='Importance Mean')
+    
+    # Plot
+    if plot is True:
+        plt.figure(figsize=figsize)
+        plt.title("Feature importance based on out-of-sample Mean-Decrease Accuracy (MDA).")
+        plt.barh(y=sorted_fimp.index, width=sorted_fimp['Importance Mean'], xerr=sorted_fimp['Importance Std'])
+        plt.show()
+    
+    return sorted_fimp
+
         
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

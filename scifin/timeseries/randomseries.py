@@ -40,6 +40,8 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
       The constant to build the time series from.
     sigma : float
       Standard deviation for the Gaussian noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
 
@@ -91,7 +93,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
 # These models describe the evolution of time series.
 
 
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, name=""):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -119,6 +121,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
       Coefficients of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
     
@@ -170,12 +174,12 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, name=""):
+def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, unit=None, name=""):
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -196,6 +200,8 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, na
       Initial value of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
     
@@ -234,12 +240,12 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, na
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, tz=None, name=""):
+def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, tz=None, unit=None, name=""):
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -262,6 +268,8 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
       Value of the drift.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
     
@@ -300,12 +308,12 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, name=""):
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -336,6 +344,8 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
       List of coefficients.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
       
@@ -389,14 +399,14 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
 
 def arma(start_date, end_date, frequency, start_values,
-         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, tz=None, name=""):
+         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, tz=None, unit=None, name=""):
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -430,6 +440,8 @@ def arma(start_date, end_date, frequency, start_values,
       List of coefficients for the MA part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
     
@@ -483,13 +495,13 @@ def arma(start_date, end_date, frequency, start_values,
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
 
-def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, tz=None, name=""):
+def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, tz=None, unit=None, name=""):
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -520,6 +532,8 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
       
@@ -578,7 +592,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -588,7 +602,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, name=""):
+def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name=""):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -617,6 +631,8 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, name=""):
       Order of the process (i.e. value of M).
     coeffs : list
       List of coefficients of the process.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
       
@@ -682,12 +698,12 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, name=""):
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, name=""):
+def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name=""):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -721,6 +737,8 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
       Order of the sig_t part of the process (i.e. value of S).
     coeffs_sig : list
       List of coefficients of the sig_t part of the process.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
       
@@ -789,12 +807,12 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, name=""):
+def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, unit=None, name=""):
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -819,6 +837,8 @@ def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, n
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    unit : str or None
+      Unit of the time series values.
     name : str
       Name or nickname of the series.
       
@@ -872,7 +892,7 @@ def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, n
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, name=name)
+    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
