@@ -95,8 +95,9 @@ class Distribution(Generic[Distribution]):
         
         return None
 
-        
-# CONTINUOUS DISTRIBUTIONS
+
+
+# UTILITY FUNCTIONS
 
 def check_type_x(x: Union[int, float, list, np.ndarray]):
     """
@@ -140,37 +141,91 @@ def check_type_p(p: Union[int, float, list, np.ndarray]):
     return None
 
 
-def standard_normal_pdf(x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+def initialize_input(xorp: Union[int, float, list, np.ndarray]):
+    """
+    Returns an np.ndarray from x or p.
+
+    Parameters
+    ----------
+    xorp : int, float, list, np.ndarray
+    Argument to transform.
+
+    Returns
+    -------
+    np.ndarray
+      The transformed input.
+    """
+
+    if isinstance(xorp, np.ndarray):
+        return xorp
+    elif isinstance(xorp, list):
+        return np.array(xorp)
+    elif isinstance(xorp, (int, float)):
+        return np.array([xorp])
+
+
+
+
+# CONTINUOUS DISTRIBUTIONS
+
+
+def standard_normal_pdf(x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Implements the Probability Density Function (PDF)
     for the Standard Normal distribution.
     """
+
+    # Check
     check_type_x(x)
-    if isinstance(x, list):
-        x = np.array(x)
-    return np.exp(- x**2 / 2) / np.sqrt(2*np.pi)
+    x = initialize_input(x)
+
+    # Compute
+    pdf = np.exp(- x**2 / 2) / np.sqrt(2*np.pi)
+
+    # Return
+    if len(pdf) == 1:
+        return pdf[0]
+    else:
+        return pdf
 
 
-def standard_normal_cdf(x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+def standard_normal_cdf(x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Implements the Cumulative Distribution Function (CDF)
     for the Standard Normal distribution.
     """
+
+    # Check
     check_type_x(x)
-    if isinstance(x, list):
-        x = np.array(x)
-    return (1/2) * ( 1 + erf(x / np.sqrt(2)) )
+    x = initialize_input(x)
+
+    # Compute
+    cdf = (1/2) * ( 1 + erf(x / np.sqrt(2)) )
+
+    # Return
+    if len(cdf)==1:
+        return cdf[0]
+    else:
+        return cdf
 
 
-def standard_normal_quantile(p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+def standard_normal_quantile(p: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Returns the quantile associated to the Standard Normal distribution.
     """
-    check_type_p(p)
-    if isinstance(p, list):
-        p = np.array(p)
-    return np.sqrt(2) * erfinv(2*p-1)
 
+    # Check
+    check_type_p(p)
+    p = initialize_input(p)
+
+    # Compute
+    quantile = np.sqrt(2) * erfinv(2*p-1)
+
+    # Return
+    if len(quantile)==1:
+        return quantile[0]
+    else:
+        return quantile
 
 
 class Normal(Distribution):
@@ -244,49 +299,82 @@ class Normal(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Normal distribution.
         """
-        check_type_x(x)
-        if isinstance(x, list):
-            x = np.array(x)
-        pdf = np.exp(-(x-self.mu)**2 / (2 * self.sigma**2)) / (self.sigma * np.sqrt(2 * np.pi))
-        return pdf
 
-    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+        # Check
+        check_type_x(x)
+        x = initialize_input(x)
+
+        # Compute
+        pdf = np.exp(-(x-self.mu)**2 / (2 * self.sigma**2)) / (self.sigma * np.sqrt(2 * np.pi))
+
+        # Return
+        if len(pdf) == 1:
+            return pdf[0]
+        else:
+            return pdf
+
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Normal distribution.
         """
+
+        # Check
         check_type_x(x)
-        if isinstance(x, list):
-            x = np.array(x)
+        x = initialize_input(x)
+
+        # Compute
         cdf = (1/2) * (1 + erf((x - self.mu) / (self.sigma * np.sqrt(2))))
-        return cdf
+
+        # Return
+        if len(cdf)==1:
+            return cdf[0]
+        else:
+            return cdf
     
-    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Normal distribution.
         """
+        # Check
         check_type_p(p)
-        if isinstance(p, list):
-            p = np.array(p)
-        return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
+        p = initialize_input(p)
+
+        # Compute
+        quantile = self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
+
+        # Return
+        if len(quantile)==1:
+            return quantile[0]
+        else:
+            return quantile
     
     # Alias method
     var = quantile
         
-    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Normal distribution
         for a certain probability p.
         """
+
+        # Check
         check_type_p(p)
-        if isinstance(p, list):
-            p = np.array(p)
-        return self.mu + self.sigma * standard_normal_pdf(standard_normal_quantile(p)) / p
+        p = initialize_input(p)
+
+        # Compute
+        cvar = self.mu + self.sigma * standard_normal_pdf(standard_normal_quantile(p)) / p
+
+        # Return
+        if len(p)==1:
+            return cvar[0]
+        else:
+            return cvar
 
 
 class Uniform(Distribution):
@@ -334,7 +422,8 @@ class Uniform(Distribution):
         """
         Initializes the distribution.
         """
-        assert(a<b)
+        if not (a<b):
+            raise AssertionError("a < b is required.")
         
         # Type of distribution
         self.type = 'Uniform'
@@ -361,33 +450,57 @@ class Uniform(Distribution):
         # name (or nickname)
         self.name = name
         
-    def pdf(self, x):
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the uniform distribution.
         """
+
+        # Check
+        check_type_x(x)
+        x = initialize_input(x)
+
+        # Compute
         pdf = []
         for i in x:
-            if i>=self.a and i<=self.b:
+            if i >= self.a and i <= self.b:
                 pdf.append(1/(self.b-self.a))
             else:
                 pdf.append(0)
-        return pdf
+
+        # Return
+        if len(pdf) == 1:
+            return pdf[0]
+        else:
+            return np.array(pdf)
+
     
-    def cdf(self, x):
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the uniform distribution.
         """
+
+        # Check
+        check_type_x(x)
+        x = initialize_input(x)
+
+        # Compute
         cdf = []
         for i in x:
-            if i<self.a:
+            if i < self.a:
                 cdf.append(0)
-            elif i>=self.a and i<=self.b:
+            elif i >= self.a and i <= self.b:
                 cdf.append((i-self.a)/(self.b-self.a))
-            elif i>self.b:
+            elif i > self.b:
                 cdf.append(1)
-        return cdf
+
+        # Return
+        if len(cdf)==1:
+            return cdf[0]
+        else:
+            return np.array(cdf)
+
     
 
 class Weibull(Distribution):
@@ -431,12 +544,14 @@ class Weibull(Distribution):
       Default value for 'k' is 1, making it equal to an Exponential distribution.
     """
     
-    def __init__(self, k=1, lmbda=1, name=""):
+    def __init__(self, k: float=1, lmbda: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
-        assert(k>0)
-        assert(lmbda>0)
+        if not (k>0):
+            raise AssertionError("k>0 is required.")
+        if not (lmbda>0):
+            raise AssertionError("lmbda>0 is required.")
         
         # Type of distribution
         self.type = 'Weibull'
@@ -463,7 +578,7 @@ class Weibull(Distribution):
         # name (or nickname)
         self.name = name
         
-    def get_skewness(self, k, lmbda):
+    def get_skewness(self, k: float, lmbda: float) -> float:
         """
         Computes the skewness of the Weibull distribution.
         """
@@ -476,7 +591,7 @@ class Weibull(Distribution):
         skew = (g3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
         return skew
         
-    def get_kurtosis(self, k, lmbda):
+    def get_kurtosis(self, k: float, lmbda: float) -> float:
         """
         Computes the kurtosis of the Weibull distribution.
         """
@@ -491,7 +606,7 @@ class Weibull(Distribution):
                    * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
         return kurt
         
-    def get_mode(self, k, lmbda):
+    def get_mode(self, k: float, lmbda: float) -> float:
         """
         Computes the mode of the Weibull distribution.
         """
@@ -500,11 +615,17 @@ class Weibull(Distribution):
         else:
             return 0
         
-    def pdf(self, x):
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Weibull distribution.
         """
+
+        # Check
+        check_type_x(x)
+        x = initialize_input(x)
+
+        # Compute
         pdf = []
         for i in x:
             if i>=0:
@@ -512,28 +633,54 @@ class Weibull(Distribution):
                                                * np.exp(-np.power(i/self.lmbda,self.k)))
             else:
                 pdf.append(0)
-        return pdf
+
+        # Return
+        if len(pdf)==1:
+            return pdf[0]
+        else:
+            return np.array(pdf)
 
     def cdf(self, x):
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Weibull distribution.
         """
+
+        # Check
+        check_type_x(x)
+        x = initialize_input(x)
+
+        # Compute
         cdf = []
         for i in x:
             if i>=0:
                 cdf.append(1 - np.exp(-np.power(i/self.lmbda,self.k)))
             else:
                 cdf.append(0)
-        return cdf
+
+        # Return
+        if len(cdf) == 1:
+            return cdf[0]
+        else:
+            return np.array(cdf)
     
     def quantile(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Weibull distribution.
         """
-        if not (0 <= p <= 1):
-            raise AssertionError("p must be in [0,1].")
-        return self.lmbda * np.power(-np.log(1-p), 1/self.k)
+
+        # Check
+        check_type_p(p)
+        p = initialize_input(p)
+
+        # Compute
+        quantile = self.lmbda * np.power(-np.log(1-p), 1/self.k)
+
+        # Return
+        if len(quantile)==1:
+            return quantile[0]
+        else:
+            return quantile
     
     # Alias method
     var = quantile
@@ -543,9 +690,19 @@ class Weibull(Distribution):
         Returns the Conditional Value At Risk (CVaR) of the Weibull distribution
         for a certain probability p.
         """
-        if not (0 <= p <= 1):
-            raise AssertionError("p must be in [0,1].")
-        return (self.lmbda/(1-p)) * upper_incomplete_gamma(1 + 1/self.k, -np.log(1-p))
+
+        # Check
+        check_type_p(p)
+        p = initialize_input(p)
+
+        # Compute
+        cvar = (self.lmbda/(1-p)) * upper_incomplete_gamma(1 + 1/self.k, -np.log(1-p))
+
+        # Return
+        if len(cvar)==1:
+            return cvar[0]
+        else:
+            return cvar
 
 
 class Rayleigh(Distribution):
