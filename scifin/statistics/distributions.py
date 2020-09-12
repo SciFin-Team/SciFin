@@ -2,8 +2,8 @@
 
 # This module is for probability distributions.
 
-# Standard libray imports
-# /
+# Standard library imports
+from typing import TypeVar, Generic, Union
 
 # Third party imports
 import numpy as np
@@ -14,16 +14,16 @@ from scipy.special import erf, erfinv, gamma, zeta, gammaincc
 # Local application imports
 # /
 
+# Variables
+Distribution = TypeVar('Distribution')
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
-def upper_incomplete_gamma(a,z):
+def upper_incomplete_gamma(a: float, z: float) -> float:
     return gamma(a) * gammaincc(a, z)
 
 
-
-class Distribution:
+class Distribution(Generic[Distribution]):
     """
     Abtract class that reates a statistical distribution.
     
@@ -53,7 +53,7 @@ class Distribution:
       Name of nickname given to the distribution.
     """
     
-    def __init__(self, name=""):
+    def __init__(self, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -78,7 +78,7 @@ class Distribution:
         # name (or nickname)
         self.name = name
     
-    def info(self):
+    def info(self) -> None:
         """
         Prints the most relevant information about the distribution.
         """
@@ -93,34 +93,82 @@ class Distribution:
         print("Mode: \t\t", self.mode)
         print("Entropy: \t", self.entropy)
         
-        
+        return None
+
         
 # CONTINUOUS DISTRIBUTIONS
 
+def check_type_x(x: Union[int, float, list, np.ndarray]):
+    """
+    Checks if x has the right type.
 
-def standard_normal_pdf(x):
+    Parameters
+    ----------
+    x : int, long, float, list, np.ndarray
+      Argument to check.
+
+    Returns
+    -------
+    None
+      None
+    """
+    assert isinstance(x, (int, float, list, np.ndarray))
+    if isinstance(x, list):
+        if any(not isinstance(xi, (int, float)) for xi in x):
+            raise AssertionError("Some element of x is neither int nor float.")
+    return None
+
+
+def check_type_p(p: Union[int, float, list, np.ndarray]):
+    """
+    Checks if x has the right type.
+
+    Parameters
+    ----------
+    p : int, float, list, np.ndarray
+    Argument to check.
+
+    Returns
+    -------
+    None
+      None
+    """
+    assert isinstance(p, (int, float, list, np.ndarray))
+    if isinstance(p, list):
+        if any(not (isinstance(pi, (int, float)) and 0 <= pi <= 1) for pi in p):
+            raise AssertionError("Some element in p is inappropriate (either not int nor float, or not in [0,1].")
+    return None
+
+
+def standard_normal_pdf(x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
     """
     Implements the Probability Density Function (PDF)
     for the Standard Normal distribution.
     """
-    assert(isinstance(x,float) or isinstance(x, int))
+    check_type_x(x)
+    if isinstance(x, list):
+        x = np.array(x)
     return np.exp(- x**2 / 2) / np.sqrt(2*np.pi)
 
 
-def standard_normal_cdf(x):
+def standard_normal_cdf(x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
     """
     Implements the Cumulative Distribution Function (CDF)
     for the Standard Normal distribution.
     """
-    assert(isinstance(x,float) or isinstance(x, int))
+    check_type_x(x)
+    if isinstance(x, list):
+        x = np.array(x)
     return (1/2) * ( 1 + erf(x / np.sqrt(2)) )
 
 
-def standard_normal_quantile(p):
+def standard_normal_quantile(p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
     """
     Returns the quantile associated to the Standard Normal distribution.
     """
-    assert(p>=0 and p<=1)
+    check_type_p(p)
+    if isinstance(p, list):
+        p = np.array(p)
     return np.sqrt(2) * erfinv(2*p-1)
 
 
@@ -163,13 +211,11 @@ class Normal(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self, mu=0., sigma=1., name=""):
+    def __init__(self, mu: float=0., sigma: float=1., name: str="") -> None:
         """
         Initializes the distribution.
         """
-        try:
-            assert(sigma>0)
-        except AssertionError:
+        if not sigma>0:
             raise AssertionError('Value of sigma must be non-zero and positive.')
 
         # Type of distribution
@@ -197,39 +243,49 @@ class Normal(Distribution):
         
         # name (or nickname)
         self.name = name
-        
-    def pdf(self, x):
+
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Normal distribution.
         """
-        pdf = np.exp(-(np.array(x)-self.mu)**2 / (2 * self.sigma**2)) / (self.sigma * np.sqrt(2 * np.pi))
+        check_type_x(x)
+        if isinstance(x, list):
+            x = np.array(x)
+        pdf = np.exp(-(x-self.mu)**2 / (2 * self.sigma**2)) / (self.sigma * np.sqrt(2 * np.pi))
         return pdf
 
-    def cdf(self, x):
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Normal distribution.
         """
-        cdf = [(1/2) * (1 + erf((x_el - self.mu) / (self.sigma * np.sqrt(2)))) for x_el in x]
+        check_type_x(x)
+        if isinstance(x, list):
+            x = np.array(x)
+        cdf = (1/2) * (1 + erf((x - self.mu) / (self.sigma * np.sqrt(2))))
         return cdf
     
-    def quantile(self, p):
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
         """
         Returns the quantile associated to the Normal distribution.
         """
-        assert(p>0 and p<1)
+        check_type_p(p)
+        if isinstance(p, list):
+            p = np.array(p)
         return self.mu + self.sigma * np.sqrt(2) * erfinv(2*p-1)
     
     # Alias method
     var = quantile
         
-    def cvar(self, p):
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[int, float, list, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Normal distribution
         for a certain probability p.
         """
-        assert(p>0 and p<1)
+        check_type_p(p)
+        if isinstance(p, list):
+            p = np.array(p)
         return self.mu + self.sigma * standard_normal_pdf(standard_normal_quantile(p)) / p
 
 
@@ -274,7 +330,7 @@ class Uniform(Distribution):
       Requires b>a.
     """
     
-    def __init__(self, a=0., b=1., name=""):
+    def __init__(self, a: float=0., b: float=1., name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -471,22 +527,24 @@ class Weibull(Distribution):
                 cdf.append(0)
         return cdf
     
-    def quantile(self, p):
+    def quantile(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Weibull distribution.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         return self.lmbda * np.power(-np.log(1-p), 1/self.k)
     
     # Alias method
     var = quantile
         
-    def cvar(self, p):
+    def cvar(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Weibull distribution
         for a certain probability p.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         return (self.lmbda/(1-p)) * upper_incomplete_gamma(1 + 1/self.k, -np.log(1-p))
 
 
@@ -524,7 +582,7 @@ class Rayleigh(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self, sigma=1, name=""):
+    def __init__(self, sigma: float=1, name: str=""):
         """
         Initializes the distribution.
         """
@@ -671,22 +729,24 @@ class Exponential(Distribution):
                 cdf.append(0)
         return cdf
     
-    def quantile(self, p):
+    def quantile(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Exponential distribution.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         return - np.log(1 - p) / self.lmbda
     
     # Alias method
     var = quantile
         
-    def cvar(self, p):
+    def cvar(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Exponential distribution
         for a certain probability p.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         return (-np.log(1-p)+1)/self.lmbda
     
     
@@ -777,11 +837,12 @@ class Gumbel(Distribution):
         cdf = np.exp(-np.exp(-z))
         return cdf
     
-    def quantile(self, p):
+    def quantile(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Gumbel distribution.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         return self.mu - self.beta * np.log(-np.log(p))
 
     # Alias method
@@ -876,11 +937,12 @@ class Laplace(Distribution):
                 cdf.append(1 - 0.5 * np.exp(-(i-self.mu)/self.b))
         return cdf
     
-    def quantile(self, p):
+    def quantile(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the quantile associated to the Laplace distribution.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         if p <= 1/2:
             return self.mu + self.b * np.log(2*p)
         else:
@@ -889,12 +951,13 @@ class Laplace(Distribution):
     # Alias method
     var = quantile
         
-    def cvar(self, p):
+    def cvar(self, p: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Laplace distribution
         for a certain probability p.
         """
-        assert(p>0 and p<1)
+        if not (0 <= p <= 1):
+            raise AssertionError("p must be in [0,1].")
         if p <= 1/2:
             return self.mu + self.b * p / (1-p) * (1 - np.log(2*p))
         else:
