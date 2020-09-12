@@ -18,7 +18,7 @@ from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
 
 # Local application imports
-from .. import timeseries
+from .. import timeseries as ts
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -60,7 +60,7 @@ def euclidean_distance(ts1, ts2):
     
     
     
-def dtw_distance(ts1, ts2, window=None):
+def dtw_distance(ts1, ts2, window=None, verbose=False):
     """
     Returns the Dynamic Time Warping (DTW) distance between two TimeSeries.
     A locality constraint can be used by specifying the size of a window.
@@ -89,29 +89,30 @@ def dtw_distance(ts1, ts2, window=None):
     """
     
     # Checks
-    try:
-        assert(ts1.type=='TimeSeries' and ts2.type=='TimeSeries')
-    except TypeError:
-        raise TypeError("Series have to be of type TimeSeries.")
+    if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
+        raise AssertionError("Series have to be of type TimeSeries.")
         
     # Initializations
+    # Window size
     N1 = len(ts1.data.index.tolist())
     N2 = len(ts2.data.index.tolist())
-    if window is not None:
-        assert(isinstance(window, int))
-        w = window
-    else:
-        w = N2
-    
+    if window is None:
+        window = 0
+    w = max(window, abs(N2-N1))
+    # Prepare dtw matrix
     dtw = np.full(shape=(N1+1,N2+1), fill_value=np.inf)
     dtw[0,0] = 0
+    for i in range(1, N1+1, 1):
+        for j in range(max(1,i-w), min(N2,i+w)+1, 1):
+            dtw[i,j] = 0
 
     # Loop
-    for i in range(0, N1, 1):
-        # for j in range(0, N2, 1):
-        for j in range(max(0,int(i-w)), min(N2,int(i+w)), 1):
-            square = (ts1.data.values[i] - ts2.data.values[j])**2
-            dtw[i+1,j+1] = square + min(dtw[i,j+1], dtw[i+1,j], dtw[i,j])
+    for i in range(1, N1+1, 1):
+        for j in range(max(1,i-w), min(N2,i+w)+1, 1):
+            cost = abs(ts1.data.values[i-1] - ts2.data.values[j-1])
+            dtw[i,j] = cost + min(dtw[i-1,j], dtw[i,j-1], dtw[i-1,j-1])
+    if verbose:
+        print(dtw)
             
     # Return distance
     return np.sqrt(dtw[N1, N2])
