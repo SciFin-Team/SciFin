@@ -1743,7 +1743,7 @@ class Binomial(Distribution):
         Initializes the distribution.
         """
         # Checks
-        if not isinstance(n,int) and not (n>=0):
+        if not isinstance(n,int) or not (n>=0):
             raise AssertionError("n must be integer and n>=0.")
         if not (0. <= p <= 1.):
             raise AssertionError("p must be in [0,1].")
