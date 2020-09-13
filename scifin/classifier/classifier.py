@@ -60,7 +60,7 @@ def euclidean_distance(ts1, ts2):
     
     
     
-def dtw_distance(ts1, ts2, window=None, verbose=False):
+def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     """
     Returns the Dynamic Time Warping (DTW) distance between two TimeSeries.
     A locality constraint can be used by specifying the size of a window.
@@ -73,6 +73,8 @@ def dtw_distance(ts1, ts2, window=None, verbose=False):
       Second time series.
     window : int
       Size of restrictive search window.
+    mode : str
+      Mode to choose from ('abs' or 'square').
       
     Returns
     -------
@@ -91,7 +93,9 @@ def dtw_distance(ts1, ts2, window=None, verbose=False):
     # Checks
     if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
         raise AssertionError("Series have to be of type TimeSeries.")
-        
+    if not isinstance(mode, str) and not mode in ['abs', 'square']:
+        raise AssertionError("mode must be a string, either 'abs' or 'square'.")
+
     # Initializations
     # Window size
     N1 = len(ts1.data.index.tolist())
@@ -109,13 +113,19 @@ def dtw_distance(ts1, ts2, window=None, verbose=False):
     # Loop
     for i in range(1, N1+1, 1):
         for j in range(max(1,i-w), min(N2,i+w)+1, 1):
-            cost = abs(ts1.data.values[i-1] - ts2.data.values[j-1])
+            if mode=='abs':
+                cost = abs(ts1.data.values[i-1] - ts2.data.values[j-1])
+            elif mode=='square':
+                cost = (ts1.data.values[i-1] - ts2.data.values[j-1])**2
             dtw[i,j] = cost + min(dtw[i-1,j], dtw[i,j-1], dtw[i-1,j-1])
     if verbose:
         print(dtw)
             
     # Return distance
-    return np.sqrt(dtw[N1, N2])
+    if mode=='abs':
+        return dtw[N1, N2]
+    elif mode=='square':
+        return np.sqrt(dtw[N1, N2])
 
 
 # KMEANS CLUSTERING
