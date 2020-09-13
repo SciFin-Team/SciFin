@@ -110,8 +110,8 @@ class Series:
             # Deal with time
             if type(data.index[0]) == 'str':
                 data.index = pd.to_datetime(data.index, format=fmt)
-                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
-                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.start_utc = datetime.strptime(str(data.index[0]), fmt)
+                self.end_utc = datetime.strptime(str(data.index[-1]), fmt)
                 self.nvalues = data.shape[0]
             else:
                 self.start_utc = data.index[0]
