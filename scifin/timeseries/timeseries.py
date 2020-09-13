@@ -19,7 +19,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 from statsmodels.api import OLS
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import acf, pacf
 
 
 # Local application imports
