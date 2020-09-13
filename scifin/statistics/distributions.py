@@ -99,7 +99,7 @@ class Distribution(Generic[Distribution]):
 
 # UTILITY FUNCTIONS
 
-def check_type_x(x: Union[int, float, list, np.ndarray]):
+def check_type_x(x: Union[int, float, list, np.ndarray]) -> None:
     """
     Checks if x has the right type.
 
@@ -120,9 +120,9 @@ def check_type_x(x: Union[int, float, list, np.ndarray]):
     return None
 
 
-def check_type_p(p: Union[int, float, list, np.ndarray]):
+def check_type_p(p: Union[int, float, list, np.ndarray]) -> None:
     """
-    Checks if x has the right type.
+    Checks if p has the right type.
 
     Parameters
     ----------
@@ -141,7 +141,28 @@ def check_type_p(p: Union[int, float, list, np.ndarray]):
     return None
 
 
-def initialize_input(xorp: Union[int, float, list, np.ndarray]):
+def check_type_k(k: Union[int, list, range, np.ndarray]) -> None:
+    """
+    Checks if k has the right type.
+
+    Parameters
+    ----------
+    k : int, list, np.ndarray
+    Argument to check.
+
+    Returns
+    -------
+    None
+      None
+    """
+    assert isinstance(k, (int, list, range, np.ndarray))
+    if isinstance(k, list):
+        if any(not (isinstance(ki,int)) for ki in k):
+            raise AssertionError("Some element in k is not int.")
+    return None
+
+
+def initialize_input(xorp: Union[int, float, list, np.ndarray]) -> np.ndarray:
     """
     Returns an np.ndarray from x or p.
 
@@ -162,6 +183,8 @@ def initialize_input(xorp: Union[int, float, list, np.ndarray]):
         return np.array(xorp)
     elif isinstance(xorp, (int, float)):
         return np.array([xorp])
+    elif isinstance(xorp, range):
+        return np.array(xorp)
 
 
 
@@ -1552,7 +1575,7 @@ class Poisson(Distribution):
         if not (lmbda>0):
             raise AssertionError("lmbda>0 is required.")
         if not isinstance(k_max,int) and not (k_max>0):
-            raise AssertionError("kmax must be integer and k_max>0.")
+            raise AssertionError("k_max must be integer and k_max>0.")
         
         # Type of distribution
         self.type = 'Poisson'
@@ -1592,36 +1615,44 @@ class Poisson(Distribution):
                 break
         if k==self.k_max:
             print("Careful. Sum probably did not converge.")
+
         return lmbda * (1-np.log(lmbda)) + np.exp(-lmbda) * tmp_sum
         
-    def pmf(self, klist):
+    def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Probability Mass Function (PMF)
         for the Poisson distribution.
         """
-        assert(len(klist)>0)
-        
-        for x in klist:
-            assert(isinstance(x,int))
-        pmf = [ np.power(self.lmbda,x) * np.exp(-self.lmbda) 
-                                       / np.math.factorial(x) for x in klist]
-        return pmf
 
-    def cdf(self, klist):
+        # Check
+        check_type_k(k)
+        k = initialize_input(k)
+
+        # Compute
+        factorials = np.array([np.math.factorial(ki) for ki in k])
+        pmf = np.power(self.lmbda, k) * np.exp(-self.lmbda) / factorials
+
+        # Return
+        if len(pmf)==1:
+            return pmf[0]
+        else:
+            return pmf
+
+    def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Poisson distribution.
         """
-        # Checks
-        assert(len(klist)>0)
-        N = len(klist)
-        for x in klist:
-            assert(isinstance(x,int))
+
+        # Check
+        check_type_k(k)
+        k = initialize_input(k)
+        N = len(k)
             
         # Check if k's are consecutive
         ks_consecutive = True
         for i in range(N-1):
-            if (klist[i+1] != klist[i]+1):
+            if (k[i+1] != k[i]+1):
                 ks_consecutive = False
                 break
         
@@ -1630,9 +1661,9 @@ class Poisson(Distribution):
         if N==1:
             ks_consecutive = False
         
-        # Computing the list of elements to sum
+        # Compute the list of elements to sum
         t = []
-        k_range = np.floor(klist)
+        k_range = np.floor(k)
         if ks_consecutive==True:
             tmp_sum = sum([ np.power(self.lmbda,i) / np.math.factorial(i) 
                             for i in range(int(np.floor(k_range[0]+1))) ])
@@ -1647,7 +1678,13 @@ class Poisson(Distribution):
                 t.append(tmp_sum)
         
         # Completing the calculation
-        return np.exp(-self.lmbda) * np.array(t)
+        cdf = np.exp(-self.lmbda) * np.array(t)
+
+        # Return
+        if len(cdf)==1:
+            return cdf[0]
+        else:
+            return cdf
     
 
 class Binomial(Distribution):
@@ -1701,14 +1738,15 @@ class Binomial(Distribution):
       valid at order O(1/n).
     """
     
-    def __init__(self, n=1, p=0.5, name=""):
+    def __init__(self, n: int=1, p: float=0.5, name: str="") -> None:
         """
         Initializes the distribution.
         """
         # Checks
-        assert(n>=0)
-        assert(isinstance(n,int))
-        assert(p>=0 and p<=1)
+        if not isinstance(n,int) and not (n>=0):
+            raise AssertionError("n must be integer and n>=0.")
+        if not (0. <= p <= 1.):
+            raise AssertionError("p must be in [0,1].")
         
         # Type of distribution
         self.type = 'Binomial'
@@ -1734,7 +1772,7 @@ class Binomial(Distribution):
         # name (or nickname)
         self.name = name
         
-    def get_mode(self, n, p):
+    def get_mode(self, n: int, p: float) -> int:
         """
         Computes the mode of the Binomial distribution.
         """
@@ -1747,7 +1785,7 @@ class Binomial(Distribution):
         elif test_value == n+1:
             return n
 
-    def get_median(self, n, p):
+    def get_median(self, n: int, p: float) -> Union[float, None]:
         """
         Partially computes the median of the Binomial distribution.
         """
@@ -1759,36 +1797,45 @@ class Binomial(Distribution):
                   np.ceil(test_value), "].")
             return None
     
-    def pmf(self, klist):
+    def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Probability Mass Function (PMF)
         for the binomial distribution.
         """
-        assert(len(klist)>0)
-        for x in klist:
-            assert(isinstance(x,int))
-            assert(x>=0 and x<=self.n)
+
+        # Check
+        check_type_k(k)
+        k = initialize_input(k)
+        for ki in k:
+            assert(ki>=0 and ki<=self.n)
+
+        # Compute
         pmf = [ np.math.factorial(self.n)
                 / (np.math.factorial(x) * np.math.factorial(self.n-x)) 
                 * np.power(self.p,x) * np.power(1-self.p,self.n-x) 
-                for x in klist ]
-        return pmf
+                for x in k ]
+
+        # Return
+        if len(pmf)==1:
+            return pmf[0]
+        else:
+            return pmf
     
-    def cdf(self, klist):
+    def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the binomial distribution.
         """
-        # Checks
-        assert(len(klist)>0)
-        N = len(klist)
-        for x in klist:
-            assert(isinstance(x,int))
+
+        # Check
+        check_type_k(k)
+        k = initialize_input(k)
+        N = len(k)
             
         # Check if k's are consecutive
         ks_consecutive = True
         for i in range(N-1):
-            if (klist[i+1] != klist[i]+1):
+            if (k[i+1] != k[i]+1):
                 ks_consecutive = False
                 break
         
@@ -1797,9 +1844,9 @@ class Binomial(Distribution):
         if N==1:
             ks_consecutive = False
         
-        # Computing the list of elements to sum
+        # Compute the list of elements to sum
         t = []
-        k_range = np.floor(klist)
+        k_range = np.floor(k)
         if ks_consecutive==True:
             tmp_sum = sum([ np.math.factorial(self.n) \
                            / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
@@ -1820,7 +1867,12 @@ class Binomial(Distribution):
                 t.append(tmp_sum)
         
         # Completing the calculation
-        return np.array(t)
-    
+        cdf = np.array(t)
+
+        # Return
+        if len(cdf)==1:
+            return cdf[0]
+        else:
+            return cdf
     
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
