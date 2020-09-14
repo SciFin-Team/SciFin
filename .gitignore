@@ -18,3 +18,8 @@ dist/
 docs/source/
 docs/_build/
 
+# Others
+.idea/
+docs/Makefile
+docs/make.bat
+
