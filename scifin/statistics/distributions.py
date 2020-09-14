@@ -4,6 +4,7 @@
 
 # Standard library imports
 from typing import TypeVar, Generic, Union
+from typeguard import typechecked
 
 # Third party imports
 import numpy as np
@@ -19,7 +20,20 @@ Distribution = TypeVar('Distribution')
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
+
+@typechecked
 def upper_incomplete_gamma(a: float, z: float) -> float:
+    """
+
+    Parameters
+    ----------
+    a
+    z
+
+    Returns
+    -------
+
+    """
     return gamma(a) * gammaincc(a, z)
 
 
