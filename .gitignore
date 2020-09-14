@@ -1,6 +1,7 @@
 # Cache
 __pycache__/
 
+.idea
 
 # Packaging
 notebooks/
