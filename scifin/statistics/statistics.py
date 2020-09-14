@@ -132,27 +132,33 @@ def covariance_from_ts(list_ts, **kwargs):
     # Checks
     N = len(list_ts)
     T = list_ts[0].nvalues
+
     # Indexes must be identical
     idx = list_ts[0].data.index
     for i in range(1,N,1):
         if (list_ts[i].data.index != idx).all():
             raise AssertionError("Time series must have same index values.")
-    # Names must be different
+
+    # Forming a list of names
+    list_names = []
     set_names = set()
     for i in range(N):
+        list_names.append(list_ts[i].name)
         set_names.add(list_ts[i].name)
+
+    # Names must be different
     if len(set_names) != N:
         raise AssertionError("Names of time series must be different")
-            
+
     # Make a data frame
-    df = pd.DataFrame(index=idx, data=None)
+    df = pd.DataFrame(index=idx, data=None, columns=list_names)
     for i in range(N):
-        df[list_ts[i].name] = list_ts[i].data
-    
+        df[list_names[i]] = list_ts[i].data
+
     # Compute the covariance matrix
     cov = df.cov(**kwargs)
     
-    return np.array(cov)
+    return cov
 
 
 def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1000):

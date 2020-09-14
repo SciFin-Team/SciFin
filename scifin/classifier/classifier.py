@@ -6,6 +6,7 @@
 from datetime import datetime
 from datetime import timedelta
 import random as random
+import itertools
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -159,9 +160,16 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
     
-    # Define the observations matrix X
+    # Define the observations matrix
     X = ((1 - corr.fillna(0))/2.)**.5                                           ### REQUIRES CHECKING
-    
+
+    # Modify it to get an Euclidean distance matrix                             ### REQUIRES CHECKING
+    Dmat = X.values
+    X = np.zeros(shape=Dmat.shape)
+    for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
+        X[i,j] = np.sqrt( sum((Dmat[i,:] - Dmat[j,:])**2) )
+    X = pd.DataFrame(data=X, index=names_features, columns=names_features)
+
     # Loop to generate different initializations
     #for init in range(n_init):                                                 ### REQUIRES CHECKING
         # Loop to generate different numbers of clusters
