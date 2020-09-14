@@ -160,31 +160,33 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
     silh_score = pd.Series()
     
     # Define the observations matrix X
-    X = ((1 - corr.fillna(0))/2.)**.5
+    X = ((1 - corr.fillna(0))/2.)**.5                                           ### REQUIRES CHECKING
     
     # Loop to generate different initializations
-    for init in range(n_init):
-        
+    #for init in range(n_init):                                                 ### REQUIRES CHECKING
         # Loop to generate different numbers of clusters
-        for i in range(2, max_num_clusters+1):
-            
-            # Define model and fit
-            kmeans_ = KMeans(n_clusters=i, n_jobs=1, n_init=n_init).fit(X)
-            
-            # Compute silhouette coefficients
-            silh_ = silhouette_samples(X, kmeans_.labels_)
-            
-            # Compute clustering quality q (t-statistic of silhouette score)
-            stat = (silh_.mean()/silh_.std(), silh_score.mean()/silh_score.std())
-            if np.isnan(stat[1]) or (stat[0]>stat[1]):
-                silh_score, kmeans = silh_, kmeans_
-                
+    for i in range(2, max_num_clusters+1):
+
+        # Define model and fit
+        kmeans_current = KMeans(n_clusters=i, n_jobs=1, n_init=n_init).fit(X)   ### REQUIRES CHECKING
+
+        # Compute silhouette score
+        silh_current = silhouette_samples(X, kmeans_current.labels_)
+
+        # Compute clustering quality q (t-statistic of silhouette score)
+        quality_current = silh_current.mean()/silh_current.std()
+        quality = silh_score.mean()/silh_score.std()
+
+        # Keep best quality scores and clustering
+        if np.isnan(quality) or (quality_current > quality):
+            silh_score = silh_current
+            kmeans = kmeans_current
+
     # Extract index according to sorted labels
     new_idx = np.argsort(kmeans.labels_)
     
-    # Reorder rows
+    # Reorder rows and columns
     clustered_corr = corr.iloc[new_idx]
-    # Reorder columns
     clustered_corr = clustered_corr.iloc[:,new_idx]
     
     # Form clusters
