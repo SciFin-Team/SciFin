@@ -19,7 +19,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 from statsmodels.api import OLS
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import acf, pacf
 
 
 # Local application imports
@@ -110,8 +109,8 @@ class Series:
             # Deal with time
             if type(data.index[0]) == 'str':
                 data.index = pd.to_datetime(data.index, format=fmt)
-                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
-                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.start_utc = datetime.strptime(str(data.index[0]), fmt)
+                self.end_utc = datetime.strptime(str(data.index[-1]), fmt)
                 self.nvalues = data.shape[0]
             else:
                 self.start_utc = data.index[0]
