@@ -48,7 +48,8 @@ class TestDistances(unittest.TestCase):
         
         # Test distances are the same
         self.assertEqual(cl.euclidean_distance(rs1,rs2), np.sqrt(rs1.nvalues))
-        self.assertEqual(cl.dtw_distance(rs1,rs2), np.sqrt(rs1.nvalues))
+        self.assertEqual(cl.dtw_distance(rs1,rs2,mode='abs'), rs1.nvalues)
+        self.assertEqual(cl.dtw_distance(rs1,rs2,mode='square'), np.sqrt(rs1.nvalues))
 
         
     def test_order_irrelevance_contant_ts(self):
