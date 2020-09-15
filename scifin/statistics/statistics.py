@@ -128,31 +128,28 @@ def covariance_from_ts(list_ts, **kwargs):
       Makes use of pandas.DataFrame.cov(), more information here:
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
     """
-    
-    # Checks
-    N = len(list_ts)
-    T = list_ts[0].nvalues
 
-    # Indexes must be identical
+    # Initializations
+    N = len(list_ts)
     idx = list_ts[0].data.index
-    for i in range(1,N,1):
+    list_names = []
+    df = pd.DataFrame(index=idx, data=None)
+
+    # Loop over values
+    for i in range(N):
+
+        # Indexes must be identical
         if (list_ts[i].data.index != idx).all():
             raise AssertionError("Time series must have same index values.")
 
-    # Forming a list of names
-    list_names = []
-    set_names = set()
-    for i in range(N):
-        list_names.append(list_ts[i].name)
-        set_names.add(list_ts[i].name)
+        # Names must be different, then we save them
+        time_series_name = list_ts[i].name
+        if time_series_name in list_names:
+            raise AssertionError("Names of time series must be different")
+        else:
+            list_names.append(time_series_name)
 
-    # Names must be different
-    if len(set_names) != N:
-        raise AssertionError("Names of time series must be different")
-
-    # Make a data frame
-    df = pd.DataFrame(index=idx, data=None, columns=list_names)
-    for i in range(N):
+        # Add time series data to the DataFrame
         df[list_names[i]] = list_ts[i].data
 
     # Compute the covariance matrix

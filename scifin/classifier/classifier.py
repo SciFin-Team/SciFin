@@ -124,11 +124,14 @@ def dtw_distance(ts1, ts2, window=None):
 # KMEANS CLUSTERING
 
 @typechecked
-def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features: list=None,
-                           max_num_clusters: int=10, **kwargs) -> (pd.DataFrame, dict, pd.Series):
+def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
+                           names_features: list=None,
+                           max_num_clusters: int=10,
+                           **kwargs
+                           ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform base clustering with Kmeans.
-    
+
     Arguments
     ---------
     corr: numpy.array or pd.DataFrame
@@ -139,7 +142,7 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
       Maximum number of clusters.
     **kwargs
         Arbitrary keyword arguments for sklearn.cluster.KMeans().
-    
+
     Returns
     -------
     pd.DataFrame
@@ -148,7 +151,7 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
       List of clusters and their content.
     pd.Series
       Silhouette scores.
-    
+
     Notes
     -----
       Function adapted from "Machine Learning for Asset Managers",
@@ -157,23 +160,22 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
       To learn more about sklearn.cluster.KMeans():
       https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
-    
+
     # Checks
     if not isinstance(max_num_clusters, int):
         raise AssertionError("max_num_clusters must be integer.")
-    
+
     # Initializations
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
-    
+
     # Define the observations matrix
-    X = ((1 - corr.fillna(0))/2.)**.5
+    Xobs = ( ((1 - corr.fillna(0))/2.)**.5 ).values
 
     # Modify it to get an Euclidean distance matrix
-    D = X.values
-    X = np.zeros(shape=D.shape)
+    X = np.zeros(shape=Xobs.shape)
     for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
-        X[i,j] = np.sqrt( sum((D[i,:] - D[j,:])**2) )
+        X[i,j] = np.sqrt( sum((Xobs[i,:] - Xobs[j,:])**2) )
     X = pd.DataFrame(data=X, index=names_features, columns=names_features)
 
     # Loop to generate different numbers of clusters
@@ -196,15 +198,15 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
 
     # Extract index according to sorted labels
     new_idx = np.argsort(kmeans.labels_)
-    
+
     # Reorder rows and columns
     clustered_corr = corr.iloc[new_idx]
     clustered_corr = clustered_corr.iloc[:,new_idx]
-    
+
     # Form clusters
     clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist()
                 for i in np.unique(kmeans.labels_)}
-    
+
     # Define a series with the silhouette score
     silh_score = pd.Series(silh_score, index=X.index)
 
@@ -213,12 +215,14 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
 
 
 @typechecked
-def make_new_outputs(corr: Union[np.array, pd.DataFrame], clusters: dict, clusters2: dict)\
-        -> (pd.DataFrame, dict, pd.Series):
+def make_new_outputs(corr: Union[np.array, pd.DataFrame],
+                     clusters: dict,
+                     clusters2: dict
+                     ) -> (pd.DataFrame, dict, pd.Series):
     """
     Makes new outputs for kmeans_advanced_clustering() by recombining two sets of clusters
     together, recomputing their correlation matrix, distance matrix, kmeans labels and silhouette scores.
-    
+
     Arguments
     ---------
     corr : numpy.array or pd.DataFrame
@@ -256,13 +260,12 @@ def make_new_outputs(corr: Union[np.array, pd.DataFrame], clusters: dict, cluste
     corr_new = corr.loc[new_idx, new_idx]
 
     # Compute the observation matrix
-    X = ((1-corr.fillna(0))/2.)**.5
+    Xobs = ( ((1-corr.fillna(0))/2.)**.5 ).values
 
     # Compute the Euclidean distance matrix
-    D = X.values
-    X = np.zeros(shape=D.shape)
+    X = np.zeros(shape=Xobs.shape)
     for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
-        X[i,j] = np.sqrt( sum((D[i,:] - D[j,:])**2) )
+        X[i,j] = np.sqrt( sum((Xobs[i,:] - Xobs[j,:])**2) )
     new_names_features = corr_new.columns.tolist()
     X = pd.DataFrame(data=X, index=new_names_features, columns=new_names_features)
 
@@ -274,13 +277,16 @@ def make_new_outputs(corr: Union[np.array, pd.DataFrame], clusters: dict, cluste
 
     # Compute the silhouette scores
     silh_new = pd.Series(silhouette_samples(X, kmeans_labels), index=X.index)
-    
+
     return corr_new, clusters_new, silh_new
 
 
 @typechecked
-def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features: list=None,
-                               max_num_clusters: int=None, **kwargs) -> (pd.DataFrame, dict, pd.Series):
+def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
+                               names_features: list=None,
+                               max_num_clusters: int=None,
+                               **kwargs
+                               ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform advanced clustering with Kmeans.
     The base clustering is used first, then clusters quality is evaluated.
