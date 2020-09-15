@@ -5,8 +5,10 @@
 # Standard library imports
 from datetime import datetime
 from datetime import timedelta
-import random as random
 import itertools
+from typing import Union
+import random as random
+
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -17,6 +19,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
+from typeguard import typechecked
 
 # Local application imports
 from .. import timeseries
@@ -120,20 +123,22 @@ def dtw_distance(ts1, ts2, window=None):
 
 # KMEANS CLUSTERING
 
-def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_init=10):
+@typechecked
+def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features: list=None,
+                           max_num_clusters: int=10, **kwargs) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform base clustering with Kmeans.
     
     Arguments
     ---------
-    corr: numpy.array
+    corr: numpy.array or pd.DataFrame
       Correlation matrix.
     names_features : list of str
       List of names for features.
     max_num_clusters: int
       Maximum number of clusters.
-    n_init : int
-      Initial value n_init for KMeans.
+    **kwargs
+        Arbitrary keyword arguments for sklearn.cluster.KMeans().
     
     Returns
     -------
@@ -148,35 +153,34 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
+
+      To learn more about sklearn.cluster.KMeans():
+      https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
     
     # Checks
     if not isinstance(max_num_clusters, int):
         raise AssertionError("max_num_clusters must be integer.")
-    if not isinstance(n_init, int):
-        raise AssertionError("n_init must be integer.")
     
     # Initializations
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
     
     # Define the observations matrix
-    X = ((1 - corr.fillna(0))/2.)**.5                                           ### REQUIRES CHECKING
+    X = ((1 - corr.fillna(0))/2.)**.5
 
-    # Modify it to get an Euclidean distance matrix                             ### REQUIRES CHECKING
+    # Modify it to get an Euclidean distance matrix
     Dmat = X.values
     X = np.zeros(shape=Dmat.shape)
     for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
         X[i,j] = np.sqrt( sum((Dmat[i,:] - Dmat[j,:])**2) )
     X = pd.DataFrame(data=X, index=names_features, columns=names_features)
 
-    # Loop to generate different initializations
-    #for init in range(n_init):                                                 ### REQUIRES CHECKING
-        # Loop to generate different numbers of clusters
+    # Loop to generate different numbers of clusters
     for i in range(2, max_num_clusters+1):
 
         # Define model and fit
-        kmeans_current = KMeans(n_clusters=i, n_jobs=1, n_init=n_init).fit(X)   ### REQUIRES CHECKING
+        kmeans_current = KMeans(n_clusters=i, **kwargs).fit(X)
 
         # Compute silhouette score
         silh_current = silhouette_samples(X, kmeans_current.labels_)
@@ -198,7 +202,8 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
     clustered_corr = clustered_corr.iloc[:,new_idx]
     
     # Form clusters
-    clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist() for i in np.unique(kmeans.labels_)}
+    clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist()
+                for i in np.unique(kmeans.labels_)}
     
     # Define a series with the silhouette score
     silh_score = pd.Series(silh_score, index=X.index)
@@ -217,6 +222,7 @@ def make_new_outputs(corr, clusters, clusters2):
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
+
     clusters_new = {}
     for i in clusters.keys():
         clusters_new[len(clusters_new.keys())] = list(clusters[i])
@@ -238,11 +244,11 @@ def make_new_outputs(corr, clusters, clusters2):
 
 
 
-def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None, n_init=10):
+def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None, **kwargs):
     """
     Perform advanced clustering with Kmeans.
     The base clustering is used first, then clusters quality is evaluated.
-    For clusters whose quality less than the averaged quality,
+    For clusters whose quality is less than the averaged quality,
     the clustering is reran.
     
     Arguments
@@ -253,8 +259,8 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
       List of names for features.
     max_num_clusters: int
       Maximum number of clusters.
-    n_init : int
-      Initial value n_init for KMeans.
+    **kwargs
+        Arbitrary keyword arguments for sklearn.cluster.KMeans().
     
     Returns
     -------
@@ -269,44 +275,62 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
+
+      To learn more about sklearn.cluster.KMeans():
+      https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
     
     # Checks
     if (max_num_clusters is not None) and (not isinstance(max_num_clusters, int)):
         raise AssertionError("max_num_clusters must be integer.")
-    if not isinstance(n_init, int):
-        raise AssertionError("n_init must be integer.")
       
     # Initializations
     if max_num_clusters==None:
         max_num_clusters = corr.shape[1]-1
+
     # Using base clustering as initial step
     corr1, clusters, silh = kmeans_base_clustering(corr,
                                                    names_features=names_features,
                                                    max_num_clusters=min(max_num_clusters, corr.shape[1]-1),
-                                                   n_init=n_init)
+                                                   **kwargs)
     
     # Compute t-stat for each cluster
     cluster_tstats = {i: np.mean(silh[clusters[i]]) / np.std(silh[clusters[i]]) for i in clusters.keys()}
-    # Obtain the mean over clusters
-    tstat_mean = sum(cluster_tstats.values()) / len(cluster_tstats)
-    # Select the clusters which have a t-stat below the mean
-    redo_clusters = [i for i in cluster_tstats.keys() if cluster_tstats[i] < tstat_mean]
 
-    # Only one cluster
-    if len(redo_clusters)<=1:
+    # Obtain the mean t-stat over clusters
+    tstat_mean = sum(cluster_tstats.values()) / len(cluster_tstats)
+
+    # Select the clusters having a t-stat below the mean
+    clusters_to_redo = [i for i in cluster_tstats.keys() if cluster_tstats[i] < tstat_mean]
+
+    # Only one cluster to redo, nothing to do
+    if len(clusters_to_redo)<=1:
         return corr1, clusters, silh
-    # More than one cluster
+
+    # More than one cluster to redo
     else:
-        keys_redo = [j for i in redo_clusters for j in clusters[i]]
+        # Get the key name of concerned clusters
+        keys_redo = [j for i in clusters_to_redo for j in clusters[i]]
+
+        # Compute their correlation
         corr_tmp = corr.loc[keys_redo, keys_redo]
-        tstat_mean = np.mean([cluster_tstats[i] for i in redo_clusters])
-        corr2, clusters2, silh2 = kmeans_advanced_clustering(corr_tmp, max_num_clusters=min(max_num_clusters, corr_tmp.shape[1]-1), n_init=n_init)
-        
+
+        # Compute their mean t-stat
+        tstat_mean = np.mean([cluster_tstats[i] for i in clusters_to_redo])
+
+        # Redo the advanced clustering
+        corr2, clusters2, silh2 = kmeans_advanced_clustering(corr_tmp,
+                                                             max_num_clusters=min(max_num_clusters, corr_tmp.shape[1]-1),
+                                                             **kwargs)
         # Make new outputs, if necessary
-        corr_new, clusters_new, silh_new = make_new_outputs(corr, {i: clusters[i] for i in clusters.keys() if i not in redo_clusters}, clusters2)
-        new_tstat_mean = np.mean([ np.mean(silh_new[clusters_new[i]]) / np.std(silh_new[clusters_new[i]]) for i in clusters_new.keys() ])
-        
+        clusters_not_redone = {i: clusters[i] for i in clusters.keys() if i not in clusters_to_redo}
+        corr_new, clusters_new, silh_new = make_new_outputs(corr, clusters_not_redone, clusters2)
+
+        # Compute the new t-stat mean
+        new_tstat_mean = np.mean([ np.mean(silh_new[clusters_new[i]]) / np.std(silh_new[clusters_new[i]])
+                                   for i in clusters_new.keys() ])
+
+        # Return the improved clusters (if improved)
         if new_tstat_mean <= tstat_mean:
             return corr1, clusters, silh
         else:
