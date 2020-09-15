@@ -101,8 +101,9 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     N1 = len(ts1.data.index.tolist())
     N2 = len(ts2.data.index.tolist())
     if window is None:
-        window = 0
+        window = N2
     w = max(window, abs(N2-N1))
+
     # Prepare dtw matrix
     dtw = np.full(shape=(N1+1,N2+1), fill_value=np.inf)
     dtw[0,0] = 0
