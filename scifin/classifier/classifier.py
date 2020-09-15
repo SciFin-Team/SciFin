@@ -170,10 +170,10 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
     X = ((1 - corr.fillna(0))/2.)**.5
 
     # Modify it to get an Euclidean distance matrix
-    Dmat = X.values
-    X = np.zeros(shape=Dmat.shape)
+    D = X.values
+    X = np.zeros(shape=D.shape)
     for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
-        X[i,j] = np.sqrt( sum((Dmat[i,:] - Dmat[j,:])**2) )
+        X[i,j] = np.sqrt( sum((D[i,:] - D[j,:])**2) )
     X = pd.DataFrame(data=X, index=names_features, columns=names_features)
 
     # Loop to generate different numbers of clusters
@@ -212,39 +212,75 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features
 
 
 
-
-def make_new_outputs(corr, clusters, clusters2):
+@typechecked
+def make_new_outputs(corr: Union[np.array, pd.DataFrame], clusters: dict, clusters2: dict)\
+        -> (pd.DataFrame, dict, pd.Series):
     """
-    Makes new outputs for kmeans_advanced_clustering().
+    Makes new outputs for kmeans_advanced_clustering() by recombining two sets of clusters
+    together, recomputing their correlation matrix, distance matrix, kmeans labels and silhouette scores.
     
+    Arguments
+    ---------
+    corr : numpy.array or pd.DataFrame
+      Correlation matrix.
+    clusters : dict
+      First set of clusters.
+    clusters2 : dict
+      Second set of clusters.
+
+    Returns
+    -------
+    pd.DataFrame
+      Clustered correlation matrix.
+    dictionary
+      List of clusters and their content.
+    pd.Series
+      Silhouette scores.
+
     Notes
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
 
+    # Initializations
+    # Add clusters keys to the new cluster
     clusters_new = {}
     for i in clusters.keys():
         clusters_new[len(clusters_new.keys())] = list(clusters[i])
     for i in clusters2.keys():
         clusters_new[len(clusters_new.keys())] = list(clusters2[i])
-        
-    new_idx = [j for i in clusters_new for j in clusters_new[i]] 
+
+    # Compute new correlation matrix
+    new_idx = [j for i in clusters_new for j in clusters_new[i]]
     corr_new = corr.loc[new_idx, new_idx]
-    x = ((1-corr.fillna(0))/2.)**.5
-    
-    kmeans_labels = np.zeros(len(x.columns))
+
+    # Compute the observation matrix
+    X = ((1-corr.fillna(0))/2.)**.5
+
+    # Compute the Euclidean distance matrix
+    D = X.values
+    X = np.zeros(shape=D.shape)
+    for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
+        X[i,j] = np.sqrt( sum((D[i,:] - D[j,:])**2) )
+    new_names_features = corr_new.columns.tolist()
+    X = pd.DataFrame(data=X, index=new_names_features, columns=new_names_features)
+
+    # Add labels together
+    kmeans_labels = np.zeros(len(X.columns))
     for i in clusters_new.keys():
-        idxs = [x.index.get_loc(k) for k in clusters_new[i]]
+        idxs = [X.index.get_loc(k) for k in clusters_new[i]]
         kmeans_labels[idxs] = i
 
-    silh_new = pd.Series(silhouette_samples(x, kmeans_labels), index=x.index)
+    # Compute the silhouette scores
+    silh_new = pd.Series(silhouette_samples(X, kmeans_labels), index=X.index)
     
     return corr_new, clusters_new, silh_new
 
 
-
-def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None, **kwargs):
+@typechecked
+def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame], names_features: list=None,
+                               max_num_clusters: int=None, **kwargs) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform advanced clustering with Kmeans.
     The base clustering is used first, then clusters quality is evaluated.
@@ -287,6 +323,8 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
     # Initializations
     if max_num_clusters==None:
         max_num_clusters = corr.shape[1]-1
+    if names_features is None:
+        names_features = corr.columns.tolist()
 
     # Using base clustering as initial step
     corr1, clusters, silh = kmeans_base_clustering(corr,
@@ -298,6 +336,7 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
     cluster_tstats = {i: np.mean(silh[clusters[i]]) / np.std(silh[clusters[i]]) for i in clusters.keys()}
 
     # Obtain the mean t-stat over clusters
+    print(cluster_tstats)
     tstat_mean = sum(cluster_tstats.values()) / len(cluster_tstats)
 
     # Select the clusters having a t-stat below the mean
