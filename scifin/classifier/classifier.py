@@ -74,7 +74,9 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     window : int
       Size of restrictive search window.
     mode : str
-      Mode to choose from ('abs' or 'square').
+      Mode to choose among:
+      - 'abs' for absolute value distance based calculation.
+      - 'square' for squared value distance based calculation, with sqrt taken at the end.
       
     Returns
     -------
@@ -93,7 +95,7 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     # Checks
     if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
         raise AssertionError("Series have to be of type TimeSeries.")
-    if not isinstance(mode, str) and not mode in ['abs', 'square']:
+    if not isinstance(mode, str) and not mode in ('abs', 'square'):
         raise AssertionError("mode must be a string, either 'abs' or 'square'.")
 
     # Initializations
