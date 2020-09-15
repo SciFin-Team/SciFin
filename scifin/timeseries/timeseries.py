@@ -110,8 +110,8 @@ class Series:
             # Deal with time
             if type(data.index[0]) == 'str':
                 data.index = pd.to_datetime(data.index, format=fmt)
-                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
-                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.start_utc = datetime.strptime(str(data.index[0]), fmt)
+                self.end_utc = datetime.strptime(str(data.index[-1]), fmt)
                 self.nvalues = data.shape[0]
             else:
                 self.start_utc = data.index[0]
@@ -139,7 +139,7 @@ class Series:
         
     def get_start_date_local(self):
         """
-        Returns the attribute UTC start date in local time zone defined by attribute timezine.
+        Returns the attribute UTC start date in local time zone defined by attribute timezone.
         """
         start_tmp = datetime.strptime(str(self.start_utc), fmt).astimezone(self.timezone)
         return datetime.strftime(start_tmp, format=fmtz)
@@ -147,7 +147,7 @@ class Series:
     
     def get_end_date_local(self):
         """
-        Returns the attribute UTC end date in local time zone defined by attribute timezine.
+        Returns the attribute UTC end date in local time zone defined by attribute timezone.
         """
         end_tmp = datetime.strptime(str(self.end_utc), fmt).astimezone(self.timezone)
         return datetime.strftime(end_tmp, format=fmtz)
@@ -414,7 +414,7 @@ class TimeSeries(Series):
             tmp_name = " "
         else:
             tmp_name = self.name
-        title = "Lag plot of time series" + tmp_name
+        title = "Lag plot of time series " + tmp_name
         plt.gca().set(title=title, xlabel="x(t)", ylabel="x(t+"+str(lag)+")")
         plt.show()
         
