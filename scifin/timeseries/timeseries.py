@@ -1228,7 +1228,7 @@ class TimeSeries(Series):
         # Extract the linear trend
         lin_trend_y = model.predict(X)
         lin_trend_data = pd.Series(index=data.index, data=lin_trend_y)
-        lin_trend_ts = TimeSeries(lin_trend_data, tz=self.tz)
+        lin_trend_ts = TimeSeries(lin_trend_data, tz=self.tz, name=self.name+"-Linear")
         
         # Remove the linear trend to the initial time series
         nonlin_y = y - lin_trend_y
@@ -1239,7 +1239,7 @@ class TimeSeries(Series):
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
             polyn_comp_data = pd.Series(index=data.index, data=polyn_component_y)
-            polyn_comp_ts = TimeSeries(polyn_comp_data, tz=self.tz)
+            polyn_comp_ts = TimeSeries(polyn_comp_data, tz=self.tz, name=self.name+"-Polynomial")
         
         # Generate the resting part time series
         if polyn_order is not None:
@@ -1247,7 +1247,7 @@ class TimeSeries(Series):
         else:
             rest_y = nonlin_y
         rest_data = pd.Series(index=data.index, data=rest_y)
-        rest_ts = TimeSeries(rest_data, tz=self.tz)
+        rest_ts = TimeSeries(rest_data, tz=self.tz, name=self.name+"-Rest")
         
         # Extracting seasonality
         if extract_seasonality==True:
@@ -1282,12 +1282,12 @@ class TimeSeries(Series):
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
             seasonal_data = pd.Series(index=data.index, data=seasonal_y)
-            seasonal_ts = TimeSeries(seasonal_data, tz=self.tz)
+            seasonal_ts = TimeSeries(seasonal_data, tz=self.tz, name=self.name+"-Seasonal")
 
             # Build the residue time series
             residue_y = rest_y - seasonal_y
             residue_data = pd.Series(index=data.index, data=residue_y)
-            residue_ts = TimeSeries(residue_data, tz=self.tz)
+            residue_ts = TimeSeries(residue_data, tz=self.tz, name=self.name+str("-Residue"))
         
         # Return results
         if polyn_order is not None:
