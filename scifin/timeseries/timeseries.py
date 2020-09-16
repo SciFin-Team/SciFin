@@ -894,35 +894,44 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def add_cst(self, cst=0):
+    def add_cst(self, cst=0, name=None):
         """
         Method that adds a constant to the time series.
         """
         new_data = self.data + cst
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
     
-    def mult_by_cst(self, cst=1):
+    def mult_by_cst(self, cst=1, name=None):
         """
         Method that multiplies the time series by a constant.
         """
         new_data = self.data * cst
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
     
-    def linear_combination(self, other_ts, factor1=1, factor2=1):
+    def linear_combination(self, other_ts, factor1=1, factor2=1, name=None):
         """
         Method that adds a time series to the current one
         according to linear combination:
         factor1 * current_ts + factor2 * other_ts.
         """
+        # Checks
+        if (self.unit != other_ts.unit):
+            raise AssertionError("Time series to combine must have same unit.")
+
+        # Compute linear combination
         new_data = factor1 * np.array(self.data.values) + factor2 * np.array(other_ts.data.values)
         new_data = pd.Series(index=self.data.index, data=new_data)
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
