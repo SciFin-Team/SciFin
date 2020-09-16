@@ -47,9 +47,9 @@ def random_covariance_matrix(n_features, n_obs):
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_obs, int):
-        raise AssertionError("Argument n_obs for number of observations must be integer.")
+        raise TypeError("Argument n_obs for number of observations must be integer.")
     
     # Generate random numbers
     w = np.random.normal(size=(n_features, n_obs))
@@ -132,7 +132,6 @@ def covariance_from_ts(list_ts, **kwargs):
     # Initializations
     N = len(list_ts)
     idx = list_ts[0].data.index
-    list_names = []
     df = pd.DataFrame(index=idx, data=None)
 
     # Loop over values
@@ -142,15 +141,8 @@ def covariance_from_ts(list_ts, **kwargs):
         if (list_ts[i].data.index != idx).all():
             raise AssertionError("Time series must have same index values.")
 
-        # Names must be different, then we save them
-        time_series_name = list_ts[i].name
-        if time_series_name in list_names:
-            raise AssertionError("Names of time series must be different")
-        else:
-            list_names.append(time_series_name)
-
         # Add time series data to the DataFrame
-        df[list_names[i]] = list_ts[i].data
+        df[list_ts[i].name] = list_ts[i].data
 
     # Compute the covariance matrix
     cov = df.cov(**kwargs)

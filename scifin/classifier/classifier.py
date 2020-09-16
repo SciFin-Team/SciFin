@@ -163,7 +163,7 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
 
     # Checks
     if not isinstance(max_num_clusters, int):
-        raise AssertionError("max_num_clusters must be integer.")
+        raise TypeError("max_num_clusters must be integer.")
 
     # Initializations
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
@@ -324,7 +324,7 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
     
     # Checks
     if (max_num_clusters is not None) and (not isinstance(max_num_clusters, int)):
-        raise AssertionError("max_num_clusters must be integer.")
+        raise TypeError("max_num_clusters must be integer.")
       
     # Initializations
     if max_num_clusters==None:
@@ -421,9 +421,9 @@ def generate_random_classification(n_features, n_informative, n_redundant, n_sam
     for arg in [('n_features',n_features), ('n_informative',n_informative), ('n_redundant',n_redundant),
                 ('n_samples',n_samples), ('random_state',random_state)]:
         if not isinstance(arg[1],int):
-            raise AssertionError(arg[0] + " must be integer.")
+            raise TypeError(arg[0] + " must be integer.")
     if not isinstance(arg[1], float) and not isinstance(arg[1], int):
-        raise AssertionError("sigma_std must be float.")
+        raise TypeError("sigma_std must be float.")
     
     # Initializations
     np.random.seed(random_state)
@@ -520,9 +520,9 @@ def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
     
     # Checks
     if not isinstance(X, pd.DataFrame):
-        raise AssertionError("X must be pandas.DataFrame.")
+        raise TypeError("X must be pandas.DataFrame.")
     if not isinstance(y, pd.Series):
-        raise AssertionError("y must be pandas.Series.")
+        raise TypeError("y must be pandas.Series.")
     
     # Fit
     fit = classifier.fit(X,y)
@@ -581,9 +581,9 @@ def feature_importance_mda(classifier, X, y, n_splits=10, plot=False, figsize=(1
     
     # Checks
     if not isinstance(X, pd.DataFrame):
-        raise AssertionError("X must be pandas.DataFrame.")
+        raise TypeError("X must be pandas.DataFrame.")
     if not isinstance(y, pd.Series):
-        raise AssertionError("y must be pandas.Series.")
+        raise TypeError("y must be pandas.Series.")
     
     # Generate K-fold cross validation
     cv_gen = KFold(n_splits=n_splits)
