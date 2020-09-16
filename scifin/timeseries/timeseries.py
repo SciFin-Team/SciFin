@@ -936,7 +936,7 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def convolve(self, func, x_min, x_max, n_points, normalize=False):
+    def convolve(self, func, x_min, x_max, n_points, normalize=False, name=None):
         """
         Performs a convolution of the time series with a function 'func'.
         The 'normalize' option allows to renormalize 'func' such that
@@ -970,10 +970,14 @@ class TimeSeries(Series):
         if normalize==True:
             sum_vals = np.array(func_vals).sum()
             func_vals /= sum_vals
-        
+
+        # Dealing with name
+        if name is None:
+            name = self.name + str('-Convolved')
+
         # Generate convolved values
         convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
-        convolved_ts = TimeSeries(pd.Series(index=self.data.index, data=convolved_vals), tz=self.tz)
+        convolved_ts = TimeSeries(pd.Series(index=self.data.index, data=convolved_vals), tz=self.tz, name=name)
         
         return convolved_ts
     
@@ -1371,14 +1375,15 @@ class TimeSeries(Series):
         # Plot the result
         if plotting==True:
             plt.figure(figsize=figsize, dpi=dpi)
-            plt.plot(self.data.index, y_mean, color='k', lw=3)
-            plt.plot(self.data.index, y_std_m, color='k')
-            plt.plot(self.data.index, y_std_p, color='k')
+            plt.plot(self.data.index, y_mean, color='k', lw=3, label="Mean")
+            plt.plot(self.data.index, y_std_m, color='k', label="Mean - 1-sigma")
+            plt.plot(self.data.index, y_std_p, color='k', label="Mean + 1-sigma")
             plt.fill_between(self.data.index, y_std_m, y_std_p, alpha=0.5, color='gray')
-            plt.plot(self.data.index, self.data.values, color='r')
+            plt.plot(self.data.index, self.data.values, color='r', label=self.name)
             title = "Gaussian Process Regression: \n Time series " \
                     + " from " + str(self.start_utc)[:10] + " to " + str(self.end_utc)[:10]
             plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+            plt.legend()
             plt.show()
         
         # Returning the time series
