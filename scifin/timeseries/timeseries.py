@@ -830,8 +830,10 @@ class TimeSeries(Series):
         # General case
         assert(l < data.shape[0])
         shifted_data = data.shift(l)
-        numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
-        denominator = data.std() * shifted_data.std()
+        mu = data.mean()
+        sigma = data.std()
+        numerator = np.mean((data - mu) * (shifted_data - mu))
+        denominator = sigma**2
         
         return numerator / denominator
     
