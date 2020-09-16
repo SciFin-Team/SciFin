@@ -5,7 +5,10 @@
 # Standard library imports
 from datetime import datetime
 from datetime import timedelta
+import itertools
+from typing import Union
 import random as random
+
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -16,6 +19,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
+from typeguard import typechecked
 
 # Local application imports
 from .. import timeseries as ts
@@ -133,21 +137,26 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
 
 # KMEANS CLUSTERING
 
-def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_init=10):
+@typechecked
+def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
+                           names_features: list=None,
+                           max_num_clusters: int=10,
+                           **kwargs
+                           ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform base clustering with Kmeans.
-    
+
     Arguments
     ---------
-    corr: numpy.array
+    corr: numpy.array or pd.DataFrame
       Correlation matrix.
     names_features : list of str
       List of names for features.
     max_num_clusters: int
       Maximum number of clusters.
-    n_init : int
-      Initial value n_init for KMeans.
-    
+    **kwargs
+        Arbitrary keyword arguments for sklearn.cluster.KMeans().
+
     Returns
     -------
     pd.DataFrame
@@ -156,54 +165,62 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
       List of clusters and their content.
     pd.Series
       Silhouette scores.
-    
+
     Notes
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
+
+      To learn more about sklearn.cluster.KMeans():
+      https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
-    
+
     # Checks
     if not isinstance(max_num_clusters, int):
-        raise AssertionError("max_num_clusters must be integer.")
-    if not isinstance(n_init, int):
-        raise AssertionError("n_init must be integer.")
-    
+        raise TypeError("max_num_clusters must be integer.")
+
     # Initializations
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
-    
-    # Define the observations matrix X
-    X = ((1 - corr.fillna(0))/2.)**.5
-    
-    # Loop to generate different initializations
-    for init in range(n_init):
-        
-        # Loop to generate different numbers of clusters
-        for i in range(2, max_num_clusters+1):
-            
-            # Define model and fit
-            kmeans_ = KMeans(n_clusters=i, n_jobs=1, n_init=n_init).fit(X)
-            
-            # Compute silhouette coefficients
-            silh_ = silhouette_samples(X, kmeans_.labels_)
-            
-            # Compute clustering quality q (t-statistic of silhouette score)
-            stat = (silh_.mean()/silh_.std(), silh_score.mean()/silh_score.std())
-            if np.isnan(stat[1]) or (stat[0]>stat[1]):
-                silh_score, kmeans = silh_, kmeans_
-                
+
+    # Define the observations matrix
+    Xobs = ( ((1 - corr.fillna(0))/2.)**.5 ).values
+
+    # Modify it to get an Euclidean distance matrix
+    X = np.zeros(shape=Xobs.shape)
+    for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
+        X[i,j] = np.sqrt( sum((Xobs[i,:] - Xobs[j,:])**2) )
+    X = pd.DataFrame(data=X, index=names_features, columns=names_features)
+
+    # Loop to generate different numbers of clusters
+    for i in range(2, max_num_clusters+1):
+
+        # Define model and fit
+        kmeans_current = KMeans(n_clusters=i, **kwargs).fit(X)
+
+        # Compute silhouette score
+        silh_current = silhouette_samples(X, kmeans_current.labels_)
+
+        # Compute clustering quality q (t-statistic of silhouette score)
+        quality_current = silh_current.mean()/silh_current.std()
+        quality = silh_score.mean()/silh_score.std()
+
+        # Keep best quality scores and clustering
+        if np.isnan(quality) or (quality_current > quality):
+            silh_score = silh_current
+            kmeans = kmeans_current
+
     # Extract index according to sorted labels
     new_idx = np.argsort(kmeans.labels_)
-    
-    # Reorder rows
+
+    # Reorder rows and columns
     clustered_corr = corr.iloc[new_idx]
-    # Reorder columns
     clustered_corr = clustered_corr.iloc[:,new_idx]
-    
+
     # Form clusters
-    clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist() for i in np.unique(kmeans.labels_)}
-    
+    clusters = {i: clustered_corr.columns[np.where(kmeans.labels_==i)[0]].tolist()
+                for i in np.unique(kmeans.labels_)}
+
     # Define a series with the silhouette score
     silh_score = pd.Series(silh_score, index=X.index)
 
@@ -211,42 +228,83 @@ def kmeans_base_clustering(corr, names_features=None, max_num_clusters=10, n_ini
 
 
 
-
-def make_new_outputs(corr, clusters, clusters2):
+@typechecked
+def make_new_outputs(corr: Union[np.array, pd.DataFrame],
+                     clusters: dict,
+                     clusters2: dict
+                     ) -> (pd.DataFrame, dict, pd.Series):
     """
-    Makes new outputs for kmeans_advanced_clustering().
-    
+    Makes new outputs for kmeans_advanced_clustering() by recombining two sets of clusters
+    together, recomputing their correlation matrix, distance matrix, kmeans labels and silhouette scores.
+
+    Arguments
+    ---------
+    corr : numpy.array or pd.DataFrame
+      Correlation matrix.
+    clusters : dict
+      First set of clusters.
+    clusters2 : dict
+      Second set of clusters.
+
+    Returns
+    -------
+    pd.DataFrame
+      Clustered correlation matrix.
+    dictionary
+      List of clusters and their content.
+    pd.Series
+      Silhouette scores.
+
     Notes
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
+
+    # Initializations
+    # Add clusters keys to the new cluster
     clusters_new = {}
     for i in clusters.keys():
         clusters_new[len(clusters_new.keys())] = list(clusters[i])
     for i in clusters2.keys():
         clusters_new[len(clusters_new.keys())] = list(clusters2[i])
-        
-    new_idx = [j for i in clusters_new for j in clusters_new[i]] 
+
+    # Compute new correlation matrix
+    new_idx = [j for i in clusters_new for j in clusters_new[i]]
     corr_new = corr.loc[new_idx, new_idx]
-    x = ((1-corr.fillna(0))/2.)**.5
-    
-    kmeans_labels = np.zeros(len(x.columns))
+
+    # Compute the observation matrix
+    Xobs = ( ((1-corr.fillna(0))/2.)**.5 ).values
+
+    # Compute the Euclidean distance matrix
+    X = np.zeros(shape=Xobs.shape)
+    for i,j in itertools.product(range(X.shape[0]), range(X.shape[1])):
+        X[i,j] = np.sqrt( sum((Xobs[i,:] - Xobs[j,:])**2) )
+    new_names_features = corr_new.columns.tolist()
+    X = pd.DataFrame(data=X, index=new_names_features, columns=new_names_features)
+
+    # Add labels together
+    kmeans_labels = np.zeros(len(X.columns))
     for i in clusters_new.keys():
-        idxs = [x.index.get_loc(k) for k in clusters_new[i]]
+        idxs = [X.index.get_loc(k) for k in clusters_new[i]]
         kmeans_labels[idxs] = i
 
-    silh_new = pd.Series(silhouette_samples(x, kmeans_labels), index=x.index)
-    
+    # Compute the silhouette scores
+    silh_new = pd.Series(silhouette_samples(X, kmeans_labels), index=X.index)
+
     return corr_new, clusters_new, silh_new
 
 
-
-def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None, n_init=10):
+@typechecked
+def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
+                               names_features: list=None,
+                               max_num_clusters: int=None,
+                               **kwargs
+                               ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform advanced clustering with Kmeans.
     The base clustering is used first, then clusters quality is evaluated.
-    For clusters whose quality less than the averaged quality,
+    For clusters whose quality is less than the averaged quality,
     the clustering is reran.
     
     Arguments
@@ -257,8 +315,8 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
       List of names for features.
     max_num_clusters: int
       Maximum number of clusters.
-    n_init : int
-      Initial value n_init for KMeans.
+    **kwargs
+        Arbitrary keyword arguments for sklearn.cluster.KMeans().
     
     Returns
     -------
@@ -273,44 +331,65 @@ def kmeans_advanced_clustering(corr, names_features=None, max_num_clusters=None,
     -----
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
+
+      To learn more about sklearn.cluster.KMeans():
+      https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
     
     # Checks
     if (max_num_clusters is not None) and (not isinstance(max_num_clusters, int)):
-        raise AssertionError("max_num_clusters must be integer.")
-    if not isinstance(n_init, int):
-        raise AssertionError("n_init must be integer.")
+        raise TypeError("max_num_clusters must be integer.")
       
     # Initializations
     if max_num_clusters==None:
         max_num_clusters = corr.shape[1]-1
+    if names_features is None:
+        names_features = corr.columns.tolist()
+
     # Using base clustering as initial step
     corr1, clusters, silh = kmeans_base_clustering(corr,
                                                    names_features=names_features,
                                                    max_num_clusters=min(max_num_clusters, corr.shape[1]-1),
-                                                   n_init=n_init)
+                                                   **kwargs)
     
     # Compute t-stat for each cluster
     cluster_tstats = {i: np.mean(silh[clusters[i]]) / np.std(silh[clusters[i]]) for i in clusters.keys()}
-    # Obtain the mean over clusters
-    tstat_mean = sum(cluster_tstats.values()) / len(cluster_tstats)
-    # Select the clusters which have a t-stat below the mean
-    redo_clusters = [i for i in cluster_tstats.keys() if cluster_tstats[i] < tstat_mean]
 
-    # Only one cluster
-    if len(redo_clusters)<=1:
+    # Obtain the mean t-stat over clusters
+    print(cluster_tstats)
+    tstat_mean = sum(cluster_tstats.values()) / len(cluster_tstats)
+
+    # Select the clusters having a t-stat below the mean
+    clusters_to_redo = [i for i in cluster_tstats.keys() if cluster_tstats[i] < tstat_mean]
+
+    # Only one cluster to redo, nothing to do
+    if len(clusters_to_redo)<=1:
         return corr1, clusters, silh
-    # More than one cluster
+
+    # More than one cluster to redo
     else:
-        keys_redo = [j for i in redo_clusters for j in clusters[i]]
+        # Get the key name of concerned clusters
+        keys_redo = [j for i in clusters_to_redo for j in clusters[i]]
+
+        # Compute their correlation
         corr_tmp = corr.loc[keys_redo, keys_redo]
-        tstat_mean = np.mean([cluster_tstats[i] for i in redo_clusters])
-        corr2, clusters2, silh2 = kmeans_advanced_clustering(corr_tmp, max_num_clusters=min(max_num_clusters, corr_tmp.shape[1]-1), n_init=n_init)
-        
+
+        # Compute their mean t-stat
+        tstat_mean = np.mean([cluster_tstats[i] for i in clusters_to_redo])
+
+        # Redo the advanced clustering
+        corr2, clusters2, silh2 = kmeans_advanced_clustering(corr_tmp,
+                                                             max_num_clusters=min(max_num_clusters, corr_tmp.shape[1]-1),
+                                                             **kwargs)
         # Make new outputs, if necessary
-        corr_new, clusters_new, silh_new = make_new_outputs(corr, {i: clusters[i] for i in clusters.keys() if i not in redo_clusters}, clusters2)
-        new_tstat_mean = np.mean([ np.mean(silh_new[clusters_new[i]]) / np.std(silh_new[clusters_new[i]]) for i in clusters_new.keys() ])
-        
+        clusters_not_redone = {i: clusters[i] for i in clusters.keys() if i not in clusters_to_redo}
+        corr_new, clusters_new, silh_new = make_new_outputs(corr, clusters_not_redone, clusters2)
+
+        # Compute the new t-stat mean
+        new_tstat_mean = np.mean([ np.mean(silh_new[clusters_new[i]]) / np.std(silh_new[clusters_new[i]])
+                                   for i in clusters_new.keys() ])
+
+        # Return the improved clusters (if improved)
         if new_tstat_mean <= tstat_mean:
             return corr1, clusters, silh
         else:
@@ -356,9 +435,9 @@ def generate_random_classification(n_features, n_informative, n_redundant, n_sam
     for arg in [('n_features',n_features), ('n_informative',n_informative), ('n_redundant',n_redundant),
                 ('n_samples',n_samples), ('random_state',random_state)]:
         if not isinstance(arg[1],int):
-            raise AssertionError(arg[0] + " must be integer.")
+            raise TypeError(arg[0] + " must be integer.")
     if not isinstance(arg[1], float) and not isinstance(arg[1], int):
-        raise AssertionError("sigma_std must be float.")
+        raise TypeError("sigma_std must be float.")
     
     # Initializations
     np.random.seed(random_state)
@@ -455,9 +534,9 @@ def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
     
     # Checks
     if not isinstance(X, pd.DataFrame):
-        raise AssertionError("X must be pandas.DataFrame.")
+        raise TypeError("X must be pandas.DataFrame.")
     if not isinstance(y, pd.Series):
-        raise AssertionError("y must be pandas.Series.")
+        raise TypeError("y must be pandas.Series.")
     
     # Fit
     fit = classifier.fit(X,y)
@@ -516,9 +595,9 @@ def feature_importance_mda(classifier, X, y, n_splits=10, plot=False, figsize=(1
     
     # Checks
     if not isinstance(X, pd.DataFrame):
-        raise AssertionError("X must be pandas.DataFrame.")
+        raise TypeError("X must be pandas.DataFrame.")
     if not isinstance(y, pd.Series):
-        raise AssertionError("y must be pandas.Series.")
+        raise TypeError("y must be pandas.Series.")
     
     # Generate K-fold cross validation
     cv_gen = KFold(n_splits=n_splits)

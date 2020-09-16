@@ -47,9 +47,9 @@ def random_covariance_matrix(n_features, n_obs):
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_obs, int):
-        raise AssertionError("Argument n_obs for number of observations must be integer.")
+        raise TypeError("Argument n_obs for number of observations must be integer.")
     
     # Generate random numbers
     w = np.random.normal(size=(n_features, n_obs))
@@ -128,31 +128,26 @@ def covariance_from_ts(list_ts, **kwargs):
       Makes use of pandas.DataFrame.cov(), more information here:
       https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.cov.html
     """
-    
-    # Checks
+
+    # Initializations
     N = len(list_ts)
-    T = list_ts[0].nvalues
-    # Indexes must be identical
     idx = list_ts[0].data.index
-    for i in range(1,N,1):
+    df = pd.DataFrame(index=idx, data=None)
+
+    # Loop over values
+    for i in range(N):
+
+        # Indexes must be identical
         if (list_ts[i].data.index != idx).all():
             raise AssertionError("Time series must have same index values.")
-    # Names must be different
-    set_names = set()
-    for i in range(N):
-        set_names.add(list_ts[i].name)
-    if len(set_names) != N:
-        raise AssertionError("Names of time series must be different")
-            
-    # Make a data frame
-    df = pd.DataFrame(index=idx, data=None)
-    for i in range(N):
+
+        # Add time series data to the DataFrame
         df[list_ts[i].name] = list_ts[i].data
-    
+
     # Compute the covariance matrix
     cov = df.cov(**kwargs)
     
-    return np.array(cov)
+    return cov
 
 
 def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1000):
@@ -180,7 +175,7 @@ def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1
     
     # Checks
     if not isinstance(n_obs, int):
-        raise AssertionError("n_obs must be integers.")
+        raise TypeError("n_obs must be integers.")
     
     # Initialization
     n_features = cov.shape[0]
@@ -241,9 +236,9 @@ def get_subcovariance(n_features, n_obs, sigma, random_state=None):
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_obs, int):
-        raise AssertionError("Argument n_obs for number of observations must be integer.")
+        raise TypeError("Argument n_obs for number of observations must be integer.")
     
     # Initializations
     rng = check_random_state(random_state)
@@ -289,11 +284,11 @@ def random_block_covariance(n_features, n_blocks, min_block_size=1, sigma=1., ra
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_blocks, int):
-        raise AssertionError("Argument n_blocks for number of blocks must be integer.")
+        raise TypeError("Argument n_blocks for number of blocks must be integer.")
     if not isinstance(min_block_size, int):
-        raise AssertionError("Argument min_block_size for number of blocks must be integer.")
+        raise TypeError("Argument min_block_size for number of blocks must be integer.")
     
     # Initializations
     rng = check_random_state(random_state)
@@ -447,9 +442,9 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     
     # Check
     if (not isinstance(n_features, int)) or (not isinstance(n_obs, int)):
-        raise AssertionError("n_features and n_obs must be integers.")
+        raise TypeError("n_features and n_obs must be integers.")
     if not isinstance(n_pts, int):
-        raise AssertionError("n_pts must be integer.")
+        raise TypeError("n_pts must be integer.")
         
     # Initializations
     ratio = n_obs / n_features
@@ -719,7 +714,7 @@ def entropy_info(X, Y, bins, returns=None, verbose=False):
     if len(X) != len(Y):
         raise AssertionError("Vectors X and Y must have same length.")
     if not isinstance(bins, int):
-        raise AssertionError("Value of bins must be integer.")
+        raise TypeError("Value of bins must be integer.")
     
     # Initializations
     X = np.array(X)
