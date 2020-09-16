@@ -881,13 +881,15 @@ class TimeSeries(Series):
     
     ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
     
-    def trim(self, new_start, new_end):
+    def trim(self, new_start, new_end, name=None):
         """
         Method that trims the time series to the desired dates
         and send back a new time series.
         """
         new_data = self.data[new_start:new_end]
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
