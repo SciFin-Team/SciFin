@@ -2182,7 +2182,7 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
             
         # If the series is a TimeSeries
         elif Series[i].type == 'TimeSeries':
-            plt.plot(Series[i].data.index, Series[i].data.values)
+            plt.plot(Series[i].data.index, Series[i].data.values, label=Series[i].name)
         
     # Make it cute
     title = "Multiplot of time series from " + str(min_date)[:10] \
@@ -2192,6 +2192,7 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
     else:
         xlabel = 'Date (' + Series[0].tz + ')'
     plt.gca().set(title=title, xlabel=xlabel, ylabel="Value")
+    plt.legend()
     plt.show()
         
     return None
