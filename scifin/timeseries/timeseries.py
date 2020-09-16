@@ -1245,8 +1245,7 @@ class TimeSeries(Series):
                 assert(period)
                 assert(isinstance(period, int))
             except AssertionError:
-                raise AssertionError("Period must be specified for \
-                                        extrac_seasonality=True mode.")
+                raise AssertionError("Period must be specified for extrac_seasonality=True mode.")
             P = period
 
             # Cut the series into seasonality-period chunks
@@ -1927,7 +1926,7 @@ def linear_tvalue(data):
     
     # Checks
     if not isinstance(data, list) and not isinstance(data, np.ndarray) and not isinstance(data, pd.Series):
-        raise AssertionError("data must be a list, a numpy.ndarray or a pandas.Series.")
+        raise TypeError("Argument data must be a list, a numpy.ndarray or a pandas.Series.")
     
     # Initializations
     if isinstance(data, list):
@@ -2040,7 +2039,7 @@ def tick_imbalance(ts, name=None):
     
     # Checks
     if not isinstance(ts, TimeSeries):
-        raise AssertionError("ts must be a TimeSeries.")
+        raise TypeError("ts must be a TimeSeries.")
     
     # Initialization
     delta = ts.percent_change()
@@ -2091,7 +2090,7 @@ def imbalance(tick_imb_ts, ts=None, name=None):
     
     # Checks
     if not isinstance(tick_imb_ts, TimeSeries):
-        raise AssertionError('tick_imb_ts must be a TimeSeries.')
+        raise TypeError('tick_imb_ts must be a TimeSeries.')
     assert(tick_imb_ts.data.values[1:].max()==1) # First value is NaN
     assert(tick_imb_ts.data.values[1:].min()==-1) # First value is NaN
     if ts is not None:

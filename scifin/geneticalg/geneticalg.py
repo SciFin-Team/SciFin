@@ -1309,7 +1309,7 @@ def plot_compare_genomes(indiv1, indiv2, names=("Indiv1", "Indiv2")):
     try:
         assert(indiv1.genes_names == indiv2.genes_names)
     except:
-        raise AssertionError("indiv1 and indiv2 must have the name names for genes.")
+        raise AssertionError("indiv1 and indiv2 must have the same names for genes.")
         
     # Build a data frame
     tmp = pd.DataFrame(columns=indiv1.genes_names)

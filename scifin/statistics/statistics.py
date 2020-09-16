@@ -47,9 +47,9 @@ def random_covariance_matrix(n_features, n_obs):
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_obs, int):
-        raise AssertionError("Argument n_obs for number of observations must be integer.")
+        raise TypeError("Argument n_obs for number of observations must be integer.")
     
     # Generate random numbers
     w = np.random.normal(size=(n_features, n_obs))
@@ -180,7 +180,7 @@ def denoise_covariance(cov, n_obs, sigma_ini, bwidth, kernel='gaussian', n_pts=1
     
     # Checks
     if not isinstance(n_obs, int):
-        raise AssertionError("n_obs must be integers.")
+        raise TypeError("n_obs must be integers.")
     
     # Initialization
     n_features = cov.shape[0]
@@ -241,9 +241,9 @@ def get_subcovariance(n_features, n_obs, sigma, random_state=None):
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_obs, int):
-        raise AssertionError("Argument n_obs for number of observations must be integer.")
+        raise TypeError("Argument n_obs for number of observations must be integer.")
     
     # Initializations
     rng = check_random_state(random_state)
@@ -289,11 +289,11 @@ def random_block_covariance(n_features, n_blocks, min_block_size=1, sigma=1., ra
     
     # Checks
     if not isinstance(n_features, int):
-        raise AssertionError("Argument n_features for matrix dimension must be integer.")
+        raise TypeError("Argument n_features for matrix dimension must be integer.")
     if not isinstance(n_blocks, int):
-        raise AssertionError("Argument n_blocks for number of blocks must be integer.")
+        raise TypeError("Argument n_blocks for number of blocks must be integer.")
     if not isinstance(min_block_size, int):
-        raise AssertionError("Argument min_block_size for number of blocks must be integer.")
+        raise TypeError("Argument min_block_size for number of blocks must be integer.")
     
     # Initializations
     rng = check_random_state(random_state)
@@ -447,9 +447,9 @@ def marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts=100, verbose=False):
     
     # Check
     if (not isinstance(n_features, int)) or (not isinstance(n_obs, int)):
-        raise AssertionError("n_features and n_obs must be integers.")
+        raise TypeError("n_features and n_obs must be integers.")
     if not isinstance(n_pts, int):
-        raise AssertionError("n_pts must be integer.")
+        raise TypeError("n_pts must be integer.")
         
     # Initializations
     ratio = n_obs / n_features
@@ -719,7 +719,7 @@ def entropy_info(X, Y, bins, returns=None, verbose=False):
     if len(X) != len(Y):
         raise AssertionError("Vectors X and Y must have same length.")
     if not isinstance(bins, int):
-        raise AssertionError("Value of bins must be integer.")
+        raise TypeError("Value of bins must be integer.")
     
     # Initializations
     X = np.array(X)
