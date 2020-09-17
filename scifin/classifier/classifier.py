@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
-from sklearn.cluster import KMeans
+from sklearn import cluster
 from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
@@ -142,7 +142,8 @@ def dtw_distance(ts1: ts.TimeSeries,
 @typechecked
 def dtw_distance_matrix_from_ts(list_ts: list,
                                 window: int=None,
-                                mode: str='abs'
+                                mode: str='abs',
+                                normalize: bool=False
                                 ) -> pd.DataFrame:
     """
     Computes the dtw distance between time series of a list.
@@ -183,7 +184,12 @@ def dtw_distance_matrix_from_ts(list_ts: list,
             dtw_matrix.iloc[j,i] = dist_ij
 
     # Return matrix
-    return dtw_matrix
+    if normalize:
+        dtw_matrix_min = dtw_matrix.values.min()
+        dtw_matrix_max = dtw_matrix.values.max()
+        return 2 * (dtw_matrix - dtw_matrix_min) / (dtw_matrix_max - dtw_matrix_min) - 1.
+    else:
+        return dtw_matrix
 
 
 
@@ -248,7 +254,7 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
     for i in range(2, max_num_clusters+1):
 
         # Define model and fit
-        kmeans_current = KMeans(n_clusters=i, **kwargs).fit(X)
+        kmeans_current = cluster.KMeans(n_clusters=i, **kwargs).fit(X)
 
         # Compute silhouette score
         silh_current = silhouette_samples(X, kmeans_current.labels_)
@@ -446,6 +452,101 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
         else:
             return corr_new, clusters_new, silh_new
         
+
+
+def cluster_observation_matrix(X: pd.DataFrame,
+                               n_clust_range: range,
+                               model: sklearn.cluster,
+                               **kwargs
+                               ) -> None:
+    """
+    Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
+
+    Parameters
+    ----------
+    X : pd.DataFrame
+      The Observation matrix on which the clustering is based.
+    n_clust_range: range
+      Range of integer values for the number of clusters to be tested.
+    model : sklearn.cluster
+      The clustering model to be used from sklearn.
+    **kwargs :
+      Arguments for the clustering model.
+
+    Returns
+    -------
+    None
+      None
+
+    Notes
+    -----
+      To learn more about sklearn.cluster:
+      https://scikit-learn.org/stable/modules/classes.html?highlight=cluster#module-sklearn.cluster
+    """
+
+    # Initialization
+    save_labels = []
+    qualities = []
+    n_clust_range_max = n_clust_range[-1]
+
+    # Looping
+    for k in n_clust_range:
+
+        # Build clusters
+        fitted_model = model(n_clusters=k, **kwargs).fit(X)
+        save_labels.append(fitted_model.labels_.tolist())
+
+        # Compute scores
+        silh = silhouette_samples(X, fitted_model.labels_)
+        qualities.append(silh.mean() / silh.std())
+
+    # Plot qualities
+    plt.xticks(ticks=n_clust_range)
+    plt.plot(n_clust_range, qualities)
+
+    # Make it cute
+    plt.title("Normalized Silhouette Score")
+    plt.xlabel("Number of clusters")
+    plt.ylabel("Score")
+
+
+    # Make bars containing the clusters composition
+    m = len(save_labels)
+    assert(m == len(n_clust_range))
+    bars = np.zeros(shape=(m,n_clust_range_max))
+
+    # Loop over max number of clusters
+    for i in range(m):
+
+        # Count appearing values
+        count_vals = []
+        for j in range(n_clust_range_max):
+            count_vals.append(int(save_labels[i].count(j)))
+
+        # Distribute these values to build bars
+        for k in range(n_clust_range_max):
+            if k<len(count_vals):
+                bars[i,k] = count_vals[k]
+
+
+    # Plot clusters compositions with bar plot
+    plt.figure(figsize=(10,5))
+    m = bars.shape[0]
+    sum_bars = [0] * m
+
+    for i in range(n_clust_range_max):
+        if i>0:
+            sum_bars += bars[:,i-1]
+        plt.bar(n_clust_range, bars[:,i], width=0.8, bottom=sum_bars)
+
+    # Make it cute
+    plt.xticks(ticks=n_clust_range)
+    plt.title("Composition of clusters")
+    plt.xlabel("Number of clusters")
+    plt.ylabel("Composition")
+
+    return None
+
 
         
 # FEATURE IMPORTANCE
