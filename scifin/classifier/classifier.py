@@ -12,10 +12,13 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.cluster import KMeans
+from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
+from sklearn.tree import DecisionTreeClassifier
 from typeguard import typechecked
+import statsmodels.discrete.discrete_model
 
 # Local application imports
 from .. import timeseries as ts
@@ -25,7 +28,8 @@ from .. import timeseries as ts
 
 # DISTANCES
 
-def euclidean_distance(ts1, ts2):
+@typechecked
+def euclidean_distance(ts1: ts.TimeSeries, ts2: ts.TimeSeries) -> float:
     """
     Returns the Euclidean distance between two TimeSeries.
     
@@ -52,8 +56,7 @@ def euclidean_distance(ts1, ts2):
         assert(ts1.data.index.tolist() == ts2.data.index.tolist())
     except IndexError:
         raise IndexError("Time series do not have the same index.")
-    
-        
+
     # Return distance
     squares = (ts1.data - ts2.data)**2
     return np.sqrt(float(squares.sum()))
@@ -172,13 +175,15 @@ def dtw_distance_matrix_from_ts(list_ts: list,
 
     # Compute dtw distances
     for i in range(N):
+        # Diagonal elements left untouched (null by definition)
         for j in range(i+1,N,1):
             dist_ij = dtw_distance(list_ts[i], list_ts[j], window=window, mode=mode)
             dtw_matrix.iloc[i,j] = dist_ij
+            # Use symmetry
             dtw_matrix.iloc[j,i] = dist_ij
 
+    # Return matrix
     return dtw_matrix
-
 
 
 
@@ -272,7 +277,6 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
     silh_score = pd.Series(silh_score, index=X.index)
 
     return clustered_corr, clusters, silh_score
-
 
 
 @typechecked
@@ -446,7 +450,14 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
         
 # FEATURE IMPORTANCE
 
-def generate_random_classification(n_features, n_informative, n_redundant, n_samples, random_state=0, sigma_std=0.):
+@typechecked
+def generate_random_classification(n_features: int,
+                                   n_informative: int,
+                                   n_redundant: int,
+                                   n_samples: int,
+                                   random_state: int=0,
+                                   sigma_std: float=0.
+                                   ) -> (pd.DataFrame, pd.Series):
     """
     Generate a random dataset for a classification problem.
     
@@ -512,9 +523,13 @@ def generate_random_classification(n_features, n_informative, n_redundant, n_sam
         X['R_' + str(k)] = X['I_' + str(j)] + np.random.normal(size=X.shape[0]) * sigma_std
         
     return X, y
-        
-        
-def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
+
+
+@typechecked
+def feature_importance_pvalues(fit: statsmodels.discrete.discrete_model.BinaryResultsWrapper,
+                               plot: bool=False,
+                               figsize: (float,float)=(10,10)
+                               ) -> pd.DataFrame:
     """
     Plot the p-values of features from a fit.
     
@@ -551,7 +566,13 @@ def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
     return pvals_df
 
 
-def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
+@typechecked
+def feature_importance_mdi(classifier: BaggingClassifier,
+                           X: pd.DataFrame,
+                           y: pd.Series,
+                           plot: bool=False,
+                           figsize: (float,float)=(10,10)
+                           ) -> pd.DataFrame:
     """
     Feature importance based on in-sample Mean-Decrease Impurity (MDI).
     
@@ -610,9 +631,16 @@ def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
         plt.show()
     
     return fimp_df
-        
-    
-def feature_importance_mda(classifier, X, y, n_splits=10, plot=False, figsize=(10,10)):
+
+
+@typechecked
+def feature_importance_mda(classifier: DecisionTreeClassifier,
+                           X: pd.DataFrame,
+                           y: pd.Series,
+                           n_splits: int=10,
+                           plot: bool=False,
+                           figsize: (float,float)=(10,10)
+                           ) -> pd.DataFrame:
     """
     Feature importance based out-of-sample Mean-Decrease Accuracy (MDA).
     
