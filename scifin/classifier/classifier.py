@@ -456,7 +456,7 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
 
 def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
-                               model: sklearn.cluster,
+                               model: cluster,
                                **kwargs
                                ) -> None:
     """
@@ -545,7 +545,8 @@ def cluster_observation_matrix(X: pd.DataFrame,
     plt.xlabel("Number of clusters")
     plt.ylabel("Composition")
 
-    return None
+    # Return labels
+    return save_labels
 
 
         
