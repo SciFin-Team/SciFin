@@ -3,12 +3,8 @@
 # This module is for analysing and classifying time series and other objects.
 
 # Standard library imports
-from datetime import datetime
-from datetime import timedelta
 import itertools
 from typing import Union
-import random as random
-
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -63,8 +59,13 @@ def euclidean_distance(ts1, ts2):
     return np.sqrt(float(squares.sum()))
     
     
-    
-def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
+@typechecked
+def dtw_distance(ts1: ts.TimeSeries,
+                 ts2: ts.TimeSeries,
+                 window: int=None,
+                 mode: str='abs',
+                 verbose: bool=False
+                 ) -> float:
     """
     Returns the Dynamic Time Warping (DTW) distance between two TimeSeries.
     A locality constraint can be used by specifying the size of a window.
@@ -98,8 +99,8 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     
     # Checks
     if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
-        raise AssertionError("Series have to be of type TimeSeries.")
-    if not isinstance(mode, str) and not mode in ('abs', 'square'):
+        raise TypeError("Series have to be of type TimeSeries.")
+    if (not isinstance(mode, str)) or (not mode in ('abs', 'square')):
         raise AssertionError("mode must be a string, either 'abs' or 'square'.")
 
     # Initializations
@@ -133,6 +134,52 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
         return dtw[N1, N2]
     elif mode=='square':
         return np.sqrt(dtw[N1, N2])
+
+
+@typechecked
+def dtw_distance_matrix_from_ts(list_ts: list,
+                                window: int=None,
+                                mode: str='abs'
+                                ) -> pd.DataFrame:
+    """
+    Computes the dtw distance between time series of a list.
+
+    Parameters
+    ----------
+    list_ts : list
+      List of time series.
+    window : int
+      Size of restrictive search window.
+    mode : str
+      Mode to choose among:
+      - 'abs' for absolute value distance based calculation.
+      - 'square' for squared value distance based calculation, with sqrt taken at the end.
+
+    Returns
+    -------
+    pd.DataFrame
+      DataFrame containing dtw-distances between time series.
+    """
+
+    # Checks
+    N = len(list_ts)
+    if N < 2:
+        raise AssertionError("Argument list_ts must have at least 2 time series in it.")
+
+    # Initialization
+    list_names = [list_ts[i].name for i in range(N)]
+    dtw_matrix = pd.DataFrame(index=list_names, data=np.zeros((N,N)), columns=list_names)
+
+    # Compute dtw distances
+    for i in range(N):
+        for j in range(i+1,N,1):
+            dist_ij = dtw_distance(list_ts[i], list_ts[j], window=window, mode=mode)
+            dtw_matrix.iloc[i,j] = dist_ij
+            dtw_matrix.iloc[j,i] = dist_ij
+
+    return dtw_matrix
+
+
 
 
 # KMEANS CLUSTERING
