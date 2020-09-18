@@ -313,7 +313,7 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -348,7 +348,9 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
       Unit of the time series values.
     name : str
       Name or nickname of the series.
-      
+    verbose : bool
+      Verbose option.
+
     Returns
     -------
     TimeSeries
@@ -389,13 +391,14 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
                 x[t] -= coeffs[q] * a[t-q-1]
     
     # Compute theoretical values
-    V = 1.
-    for q in range(Q):
-        V += coeffs[q]**2
-    V *= sigma**2
-    print("The expected value for this MA(" + str(Q) + ") model is: " + str(cst))
-    print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
-          " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
+    if verbose:
+        V = 1.
+        for q in range(Q):
+            V += coeffs[q]**2
+        V *= sigma**2
+        print("The expected value for this MA(" + str(Q) + ") model is: " + str(cst))
+        print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
+              " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -703,7 +706,7 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
     return rs
 
 
-def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name=""):
+def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name="", verbose=False):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -741,6 +744,8 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose options.
       
     Returns
     -------
@@ -801,9 +806,10 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
         a[t] = sig[t] * eps[t]
 
     # Compute theoretical values
-    V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
-    print("The theoretical standard deviation for this GARCH(" + str(M) \
-          + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+    if verbose:
+        V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
+        print("The theoretical standard deviation for this GARCH(" + str(M) \
+              + "," + str(S) + ") model is: " + str(np.sqrt(V)))
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
