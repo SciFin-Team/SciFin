@@ -610,7 +610,6 @@ def print_clusters_content(list_ts: list, labels: list) -> None:
     clusters = {}
     for i in range(len(masks)):
         clusters[i] = [list_ts_names[k] for k in range(len(list_ts_names)) if masks[i][k]]
-    print(clusters)
 
     # Group time series according to clusters and print them
     for label in np.unique(labels):
@@ -757,7 +756,7 @@ def feature_importance_mdi(classifier: BaggingClassifier,
     
     Arguments
     ---------
-    classifier : tree classifier
+    classifier : sklearn.ensemble._bagging.BaggingClassifier
       Tree classifier to apply on data.
     X : pandas.DataFrame
       Data Frame with features as columns and samples as rows.
@@ -813,7 +812,7 @@ def feature_importance_mdi(classifier: BaggingClassifier,
 
 
 @typechecked
-def feature_importance_mda(classifier: DecisionTreeClassifier,
+def feature_importance_mda(classifier: BaggingClassifier,
                            X: pd.DataFrame,
                            y: pd.Series,
                            n_splits: int=10,
@@ -825,7 +824,7 @@ def feature_importance_mda(classifier: DecisionTreeClassifier,
     
     Arguments
     ---------
-    classifier : tree classifier
+    classifier : sklearn.ensemble._bagging.BaggingClassifier
       Tree classifier to apply on data.
     X : pandas.DataFrame
       Data Frame with features as columns and samples as rows.
