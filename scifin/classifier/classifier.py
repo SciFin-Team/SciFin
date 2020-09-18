@@ -475,8 +475,8 @@ def cluster_observation_matrix(X: pd.DataFrame,
 
     Returns
     -------
-    None
-      None
+    dict
+      Labels corresponding to the different clusters.
 
     Notes
     -----
@@ -485,16 +485,18 @@ def cluster_observation_matrix(X: pd.DataFrame,
     """
 
     # Initialization
-    save_labels = []
+    save_labels = {}
     qualities = []
+    n_clust_range_min = n_clust_range[0]
     n_clust_range_max = n_clust_range[-1]
+    n_clust_range_step = int(n_clust_range[-1] - n_clust_range[-2])
 
     # Looping
     for k in n_clust_range:
 
         # Build clusters
         fitted_model = model(n_clusters=k, **kwargs).fit(X)
-        save_labels.append(fitted_model.labels_.tolist())
+        save_labels[k] = fitted_model.labels_.tolist()
 
         # Compute scores
         silh = silhouette_samples(X, fitted_model.labels_)
@@ -516,17 +518,16 @@ def cluster_observation_matrix(X: pd.DataFrame,
     bars = np.zeros(shape=(m,n_clust_range_max))
 
     # Loop over max number of clusters
-    for i in range(m):
+    for k in n_clust_range:
 
         # Count appearing values
         count_vals = []
         for j in range(n_clust_range_max):
-            count_vals.append(int(save_labels[i].count(j)))
+            count_vals.append(int(save_labels[k].count(j)))
 
         # Distribute these values to build bars
-        for k in range(n_clust_range_max):
-            if k<len(count_vals):
-                bars[i,k] = count_vals[k]
+        for i in range(n_clust_range_max):
+            bars[(k-n_clust_range_min)//n_clust_range_step,i] = count_vals[i]
 
 
     # Plot clusters compositions with bar plot
