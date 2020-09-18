@@ -581,6 +581,50 @@ def reorganize_observation_matrix(X: pd.DataFrame, labels: list) -> pd.DataFrame
     return clustered_X
 
 
+@typechecked
+def print_clusters_content(list_ts: list, labels: list) -> None:
+    """
+    Print clusters content and cluster times series for a set of labels.
+
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    labels : list of int
+      Labels to apply to the time series.
+
+    Returns
+    -------
+    None
+      None
+    """
+
+    # Checks
+    if len(list_ts) != len(labels):
+        raise AssertionError("Arguments list_ts and labels must have same length.")
+
+    # Get the clusters for this clustering
+    list_ts_names = [tsi.name for tsi in list_ts]
+    # print(list_ts_names)
+    masks = [(labels==i) for i in np.unique(labels)]
+    clusters = {}
+    for i in range(len(masks)):
+        clusters[i] = [list_ts_names[k] for k in range(len(list_ts_names)) if masks[i][k]]
+    print(clusters)
+
+    # Group time series according to clusters and print them
+    for label in np.unique(labels):
+        # Print cluster content names
+        print("Composition of cluster " + str(label))
+        print(clusters[label])
+        # Plot cluster content time series
+        cluster_idx = np.argsort(labels)[np.sort(labels)==label]
+        cluster = [list_ts[idx] for idx in cluster_idx]
+        print()
+        print("Plotting cluster " + str(label))
+        ts.multi_plot(cluster)
+
+    return None
 
 
 # FEATURE IMPORTANCE
