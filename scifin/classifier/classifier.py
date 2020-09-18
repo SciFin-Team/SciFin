@@ -550,7 +550,39 @@ def cluster_observation_matrix(X: pd.DataFrame,
     return save_labels
 
 
-        
+@typechecked
+def reorganize_observation_matrix(X: pd.DataFrame, labels: list) -> pd.DataFrame:
+    """
+    Reorganize a square observation matrix from labels obtained from clustering.
+
+    Parameters
+    ----------
+    X : pd.DataFrame
+      Observation matrix to reorganize.
+    labels : list of int
+      Labels to use to reorganize the matrix.
+
+    Returns
+    -------
+    pd.DataFrame
+      Reorganized observation matrix.
+    """
+
+    # Checks
+    if X.shape[0] != X.shape[1]:
+        raise AssertionError("The observation matrix must be a square matrix.")
+    if X.shape[0] != len(labels):
+        raise AssertionError("Argument labels must have the same dimension as the observation matrix side.")
+
+    # Reoganize X according to this clustering
+    new_idx = np.argsort(labels)
+    clustered_X = X.iloc[new_idx].iloc[:, new_idx]
+
+    return clustered_X
+
+
+
+
 # FEATURE IMPORTANCE
 
 @typechecked
