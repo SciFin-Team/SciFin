@@ -628,6 +628,58 @@ def print_clusters_content(list_ts: list, labels: list) -> None:
     return None
 
 
+@typechecked
+def show_clustering_results(list_ts: list, labels: list, expected_truth: list) -> pd.DataFrame:
+    """
+    Compute the data frame showing the cluster content from a clustering.
+
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    labels : list of int
+      Labels to apply to the time series.
+    expected_truth : list of str
+      Name of expected clusters true content.
+
+    Returns
+    -------
+    pd.DataFrame
+      Data Frame showing the content of clusters.
+    """
+
+    # Checks
+    if len(list_ts) != len(labels):
+        raise AssertionError("Arguments list_ts and labels must have same length.")
+
+    # Initializations
+    k = len(np.unique(labels))
+    N = len(expected_truth)
+
+    # Get the clusters for this clustering
+    list_ts_names = [tsi.name for tsi in list_ts]
+    masks = [(labels==i) for i in np.unique(labels)]
+    clusters = {}
+    for i in range(len(masks)):
+        clusters[i] = [list_ts_names[k] for k in range(len(list_ts_names)) if masks[i][k]]
+
+    # Analyse clusters content
+    resu = np.zeros(shape=(N,k))
+    reverse_dict = dict(zip(expected_truth, range(len(expected_truth))))
+    for i in clusters.keys():
+        for name in clusters[i]:
+            resu[i,reverse_dict[name[:2]]] += 1
+
+    # Build a DataFrame
+    resu_df = pd.DataFrame(index=["Cluster " + str(i) for i in range(k)],
+                           data=resu,
+                           columns=expected_truth)
+    resu_df.astype(int)
+
+    return resu_df
+
+
+
 # FEATURE IMPORTANCE
 
 @typechecked
