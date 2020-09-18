@@ -477,6 +477,8 @@ def cluster_observation_matrix(X: pd.DataFrame,
     -------
     dict
       Labels corresponding to the different clusters.
+    dict
+      Quality corresponding to the different clusters.
 
     Notes
     -----
@@ -486,7 +488,7 @@ def cluster_observation_matrix(X: pd.DataFrame,
 
     # Initialization
     save_labels = {}
-    qualities = []
+    save_quality = {}
     n_clust_range_min = n_clust_range[0]
     n_clust_range_max = n_clust_range[-1]
     n_clust_range_step = int(n_clust_range[-1] - n_clust_range[-2])
@@ -500,11 +502,11 @@ def cluster_observation_matrix(X: pd.DataFrame,
 
         # Compute scores
         silh = silhouette_samples(X, fitted_model.labels_)
-        qualities.append(silh.mean() / silh.std())
+        save_quality[k] = silh.mean() / silh.std()
 
     # Plot qualities
     plt.xticks(ticks=n_clust_range)
-    plt.plot(n_clust_range, qualities)
+    plt.plot(n_clust_range, list(save_quality.values()))
 
     # Make it cute
     plt.title("Normalized Silhouette Score")
@@ -547,7 +549,7 @@ def cluster_observation_matrix(X: pd.DataFrame,
     plt.ylabel("Composition")
 
     # Return labels
-    return save_labels
+    return save_labels, save_quality
 
 
 @typechecked
