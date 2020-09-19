@@ -491,7 +491,7 @@ def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
                                model: cluster,
                                **kwargs
-                               ) -> None:
+                               ) -> (dict, dict):
     """
     Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
 
