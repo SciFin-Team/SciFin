@@ -705,9 +705,8 @@ def show_clustering_results(list_ts: list, labels: list, expected_truth: list) -
 
     # Build a DataFrame
     resu_df = pd.DataFrame(index=["Cluster " + str(i) for i in range(k)],
-                           data=resu,
+                           data=resu.astype(int),
                            columns=expected_truth)
-    resu_df.astype(int)
 
     return resu_df
 
