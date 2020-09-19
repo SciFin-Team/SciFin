@@ -2113,7 +2113,7 @@ def imbalance(tick_imb_ts, ts=None, name=None):
     return tickval_imb_ts
 
 
-def multi_plot(Series, figsize=(12,5), dpi=100):
+def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
     """
     Plots multiple time series together.
     
@@ -2125,6 +2125,13 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
       Dimensions of the figure.
     dpi : int
       Dots-per-inch definition of the figure.
+    title : str
+      New title to eventually use.
+
+    Returns
+    -------
+    None
+      None
     """
 
     # Checks
@@ -2184,8 +2191,8 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
             plt.plot(Series[i].data.index, Series[i].data.values)
         
     # Make it cute
-    title = "Multiplot of time series from " + str(min_date)[:10] \
-            + " to " + str(max_date)[:10]
+    if title is None:
+        title = "Multiplot of time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
     if Series[0].tz is None:
         xlabel = 'Date'
     else:

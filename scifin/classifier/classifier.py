@@ -661,7 +661,7 @@ def print_clusters_content(list_ts: list, labels: list) -> None:
         cluster = [list_ts[idx] for idx in cluster_idx]
         print()
         print("Plotting cluster " + str(label))
-        ts.multi_plot(cluster)
+        ts.multi_plot(cluster, title="Content of cluster"+str(label))
 
     return None
 
