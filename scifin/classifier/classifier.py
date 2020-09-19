@@ -490,7 +490,8 @@ def convert_clusters_into_list_of_labels(list_ts: list, clusters: dict) -> list:
 def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
                                model: cluster,
-                               **kwargs
+                               **kwargs,
+                               verbose=True
                                ) -> (dict, dict):
     """
     Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
@@ -538,13 +539,14 @@ def cluster_observation_matrix(X: pd.DataFrame,
         save_quality[k] = silh.mean() / silh.std()
 
     # Plot qualities
-    plt.xticks(ticks=n_clust_range)
-    plt.plot(n_clust_range, list(save_quality.values()))
+    if verbose:
+        plt.xticks(ticks=n_clust_range)
+        plt.plot(n_clust_range, list(save_quality.values()))
 
-    # Make it cute
-    plt.title("Normalized Silhouette Score")
-    plt.xlabel("Number of clusters")
-    plt.ylabel("Score")
+        # Make it cute
+        plt.title("Normalized Silhouette Score")
+        plt.xlabel("Number of clusters")
+        plt.ylabel("Score")
 
 
     # Make bars containing the clusters composition
@@ -566,20 +568,21 @@ def cluster_observation_matrix(X: pd.DataFrame,
 
 
     # Plot clusters compositions with bar plot
-    plt.figure(figsize=(10,5))
-    m = bars.shape[0]
-    sum_bars = [0] * m
+    if verbose:
+        plt.figure(figsize=(10,5))
+        m = bars.shape[0]
+        sum_bars = [0] * m
 
-    for i in range(n_clust_range_max):
-        if i>0:
-            sum_bars += bars[:,i-1]
-        plt.bar(n_clust_range, bars[:,i], width=0.8, bottom=sum_bars)
+        for i in range(n_clust_range_max):
+            if i>0:
+                sum_bars += bars[:,i-1]
+            plt.bar(n_clust_range, bars[:,i], width=0.8, bottom=sum_bars)
 
-    # Make it cute
-    plt.xticks(ticks=n_clust_range)
-    plt.title("Composition of clusters")
-    plt.xlabel("Number of clusters")
-    plt.ylabel("Composition")
+        # Make it cute
+        plt.xticks(ticks=n_clust_range)
+        plt.title("Composition of clusters")
+        plt.xlabel("Number of clusters")
+        plt.ylabel("Composition")
 
     # Return labels
     return save_labels, save_quality
