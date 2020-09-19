@@ -453,7 +453,40 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
             return corr_new, clusters_new, silh_new
         
 
+@typechecked
+def convert_clusters_into_list_of_labels(list_ts: list, clusters: dict) -> list:
+    """
 
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    clusters : dict
+      Dictionary containing the labels and time series names.
+
+    Returns
+    -------
+    list of int
+      List with the clustering labels.
+    """
+
+    # Get the names and labels as they were returned from clustering
+    clustered_names = []
+    clustered_labels = []
+    for cluster in clusters.items():
+        for name in cluster[1]:
+            clustered_names.append(name)
+            clustered_labels.append(cluster[0])
+
+    # Reorganise them in the same way as it is in list_ts
+    labels = []
+    for tsi in list_ts:
+        labels.append(clustered_labels[clustered_names.index(tsi.name)])
+
+    return labels
+
+
+@typechecked
 def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
                                model: cluster,
