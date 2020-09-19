@@ -93,7 +93,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
 # These models describe the evolution of time series.
 
 
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -125,6 +125,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose option.
     
     Returns
     -------
@@ -168,9 +170,10 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
             x[t] += coeffs[p] * x[t-p-1]
     
     # Compute theoretical expectation value
-    E = cst / (1 - sum(coeffs))
-    print("Under stationarity assumption, the expected value for this AR("
-          + str(P) + ") model is: " + str(E) + "\n")
+    if verbose:
+        E = cst / (1 - sum(coeffs))
+        print("Under stationarity assumption, the expected value for this AR("
+              + str(P) + ") model is: " + str(E) + "\n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -605,7 +608,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name=""):
+def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name="", verbose=False):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -638,6 +641,8 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose option.
       
     Returns
     -------
@@ -692,12 +697,13 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
         a[t] = sig * eps[t]
     
     # Compute theoretical values
-    print("The expected value for this ARCH(" + str(M) \
-          + ") model is 0, like any other ARCH model, and the estimated value is : " \
-          + str(np.mean(a)))
-    V = cst / (1 - sum(coeffs))
-    print("The theoretical standard deviation value for this ARCH(" + str(M) \
-          + ") model is: " + str(V))
+    if verbose:
+        print("The expected value for this ARCH(" + str(M) \
+              + ") model is 0, like any other ARCH model, and the estimated value is : " \
+              + str(np.mean(a)))
+        V = cst / (1 - sum(coeffs))
+        print("The theoretical standard deviation value for this ARCH(" + str(M) \
+              + ") model is: " + str(V))
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
@@ -745,7 +751,7 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     name : str
       Name or nickname of the series.
     verbose : bool
-      Verbose options.
+      Verbose option.
       
     Returns
     -------
