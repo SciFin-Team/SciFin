@@ -490,8 +490,8 @@ def convert_clusters_into_list_of_labels(list_ts: list, clusters: dict) -> list:
 def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
                                model: cluster,
-                               **kwargs,
-                               verbose=True
+                               verbose: bool=True,
+                               **kwargs
                                ) -> (dict, dict):
     """
     Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
@@ -504,6 +504,8 @@ def cluster_observation_matrix(X: pd.DataFrame,
       Range of integer values for the number of clusters to be tested.
     model : sklearn.cluster
       The clustering model to be used from sklearn.
+    verbose : bool
+      Verbose option.
     **kwargs :
       Arguments for the clustering model.
 
