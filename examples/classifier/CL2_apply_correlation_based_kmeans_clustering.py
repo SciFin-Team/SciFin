@@ -2,8 +2,6 @@
 import sys
 new_path = sys.path[0][:-len("/examples/timeseries")]
 sys.path.append(new_path)
-import warnings
-warnings.filterwarnings(("ignore"))
 
 # Third party imports
 import seaborn as sns
@@ -41,6 +39,7 @@ plt.title("Clustered correlation matrix")
 plt.show()
 
 # Print clusters content
+print()
 labels1 = cl.convert_clusters_into_list_of_labels(mc1, clusters1)
 cl.print_clusters_content(mc1, labels1)
 plt.show()

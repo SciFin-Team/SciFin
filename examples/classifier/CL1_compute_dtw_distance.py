@@ -2,8 +2,6 @@
 import sys
 new_path = sys.path[0][:-len("/examples/timeseries")]
 sys.path.append(new_path)
-import warnings
-warnings.filterwarnings(("ignore"))
 
 # Third party imports
 # /
@@ -26,8 +24,8 @@ ts.multi_plot([rs1, rs2])
 print()
 print("COMPUTING DISTANCES:")
 print("====================")
-print("Euclidean distance: \t\t\t\t\t", cl.euclidean_distance(rs1, rs2))
-print("Dynamic Time Warping distance with mode 'abs': \t\t", cl.dtw_distance(rs1, rs2, mode='abs'))
-print("Dynamic Time Warping distance with mode 'square': \t", cl.dtw_distance(rs1, rs2, mode='square'))
+print(f"Euclidean distance: \t\t\t\t\t {cl.euclidean_distance(rs1, rs2)}")
+print(f"Dynamic Time Warping distance with mode 'abs': \t\t {cl.dtw_distance(rs1, rs2, mode='abs')}")
+print(f"Dynamic Time Warping distance with mode 'square': \t {cl.dtw_distance(rs1, rs2, mode='square')}")
 print()
 

@@ -2,8 +2,6 @@
 import sys
 new_path = sys.path[0][:-len("/examples/timeseries")]
 sys.path.append(new_path)
-import warnings
-warnings.filterwarnings(("ignore"))
 
 # Third party imports
 import itertools
@@ -78,6 +76,7 @@ for perm in name_perms:
         expected_truth = list(perm)
 
 # Show results
+print()
 resu1 = cl.show_clustering_results(mc1, labels1, expected_truth)
 print("Quality: ", quality1)
 print("Trace: ", np.trace(resu1.values))
