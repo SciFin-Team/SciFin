@@ -172,8 +172,7 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     # Compute theoretical expectation value
     if verbose:
         E = cst / (1 - sum(coeffs))
-        print("Under stationarity assumption, the expected value for this AR("
-              + str(P) + ") model is: " + str(E) + "\n")
+        print("Under stationarity assumption, the expected value for this AR({str(P)}) model is: {str(E)} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -399,9 +398,9 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
         for q in range(Q):
             V += coeffs[q]**2
         V *= sigma**2
-        print("The expected value for this MA(" + str(Q) + ") model is: " + str(cst))
-        print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
-              " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
+        print(f"The expected value for this MA({str(Q)}") model is: {str(cst)}")
+        print(f"The estimation of the variance for this MA({str(Q)}) model is: {str(V)}" + \
+              f" , i.e. a standard deviation of: {str(np.sqrt(V))} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -698,12 +697,10 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
     
     # Compute theoretical values
     if verbose:
-        print("The expected value for this ARCH(" + str(M) \
-              + ") model is 0, like any other ARCH model, and the estimated value is : " \
-              + str(np.mean(a)))
+        print(f"The expected value for this ARCH({str(M)}) model is 0, like any other ARCH model," \
+              + f" and the estimated value is: {str(np.mean(a))}")
         V = cst / (1 - sum(coeffs))
-        print("The theoretical standard deviation value for this ARCH(" + str(M) \
-              + ") model is: " + str(V))
+        print(f"The theoretical standard deviation value for this ARCH({str(M)}) model is: {str(V)}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
@@ -814,8 +811,7 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     # Compute theoretical values
     if verbose:
         V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
-        print("The theoretical standard deviation for this GARCH(" + str(M) \
-              + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+        print(f"The theoretical standard deviation for this GARCH({str(M)}, {str(S)}) model is: {str(np.sqrt(V))}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)

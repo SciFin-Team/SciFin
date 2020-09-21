@@ -26,11 +26,7 @@ mc_Garch = mc.generate_series(n=N, names_base="Garch-", series_model=ts.garch,
                          cst=0.2, order_a=1, coeffs_a=[0.2], order_sig=1, coeffs_sig=[0.1])
 
 # Combining them together
-mc1 = []
-for tsi in mc_MA:
-    mc1.append(tsi)
-for tsi in mc_Garch:
-    mc1.append(tsi)
+mc1 = [*mc_MA, *mc_Garch]
 
 # Plot
 ts.multi_plot(mc1)

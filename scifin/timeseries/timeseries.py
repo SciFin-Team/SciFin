@@ -110,8 +110,8 @@ class Series:
             # Deal with time
             if type(data.index[0]) == 'str':
                 data.index = pd.to_datetime(data.index, format=fmt)
-                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
-                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.start_utc = datetime.strptime(str(data.index[0]), fmt)
+                self.end_utc = datetime.strptime(str(data.index[-1]), fmt)
                 self.nvalues = data.shape[0]
             else:
                 self.start_utc = data.index[0]
@@ -1120,8 +1120,7 @@ class TimeSeries(Series):
         
         # Check if actually we need to do something
         if self.is_sampling_uniform() == True:
-            print("Time series already has a uniform sampling. \
-                  Returning the same time series.")
+            print("Time series already has a uniform sampling. Returning the same time series.")
             return self
         
         # Prepare the new index
@@ -2192,7 +2191,7 @@ def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
         
     # Make it cute
     if title is None:
-        title = "Multiplot of time series from " + str(min_date)[:10] + " to " + str(max_date)[:10]
+        title = f"Multi-plot of time series from {str(min_date)[:10]} to {str(max_date)[:10]}"
     if Series[0].tz is None:
         xlabel = 'Date'
     else:

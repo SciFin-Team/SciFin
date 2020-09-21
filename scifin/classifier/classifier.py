@@ -101,10 +101,8 @@ def dtw_distance(ts1: ts.TimeSeries,
     """
     
     # Checks
-    if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
-        raise TypeError("Series have to be of type TimeSeries.")
-    if (not isinstance(mode, str)) or (not mode in ('abs', 'square')):
-        raise AssertionError("mode must be a string, either 'abs' or 'square'.")
+    if mode not in ('abs', 'square'):
+        raise AssertionError("Argument mode must be a string, either 'abs' or 'square'.")
 
     # Initializations
     # Window size
