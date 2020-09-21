@@ -398,7 +398,7 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
         for q in range(Q):
             V += coeffs[q]**2
         V *= sigma**2
-        print(f"The expected value for this MA({str(Q)}") model is: {str(cst)}")
+        print(f"The expected value for this MA({str(Q)}) model is: {str(cst)}")
         print(f"The estimation of the variance for this MA({str(Q)}) model is: {str(V)}" + \
               f" , i.e. a standard deviation of: {str(np.sqrt(V))} \n")
     
