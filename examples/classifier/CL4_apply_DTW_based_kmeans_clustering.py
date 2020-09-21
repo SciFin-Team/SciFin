@@ -45,7 +45,7 @@ plt.title("Initial DTW distance matrix")
 plt.show()
 
 # Fit the model
-n_clust_range = range(2,4,1)
+n_clust_range = range(2,4)
 save_labels1, save_quality1 = cl.cluster_observation_matrix(X=obs1,
                                                             n_clust_range=n_clust_range,
                                                             model=cluster.KMeans,
