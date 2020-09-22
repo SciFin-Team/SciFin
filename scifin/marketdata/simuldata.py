@@ -5,14 +5,14 @@
 # Standard library imports
 from datetime import datetime
 from datetime import timedelta
-import random as random
-from typeguard import typechecked
+from typing import TypeVar, Generic, Union
 
 # Third party imports
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytz
-import matplotlib.pyplot as plt
+from typeguard import typechecked
 
 # Local application imports
 from . import marketdata
@@ -62,7 +62,15 @@ class Market:
       Unit of the market data columns.
     """
     
-    def __init__(self, df: pd.DataFrame=None, tz: str=None, units=None, name=""):
+    def __init__(self,
+                 df: pd.DataFrame=None,
+                 tz: str=None,
+                 units: Union[str, list]=None,
+                 name: str=""
+                 ) -> None:
+        """
+        Initializes the Market.
+        """
 
         # Deal with DataFrame
         if (df is None) or (df.empty == True):
@@ -112,13 +120,13 @@ class Market:
             self.timezone = pytz.timezone(tz)
 
 
-    def is_index_valid(self):
+    def is_index_valid(self) -> bool:
         """
         Checks if the market has a correct index, meaning no date value is repeated.
 
         Parameters
         ----------
-        market : DataFrame
+        self : DataFrame
           The market to be used.
 
         Returns
@@ -136,7 +144,7 @@ class Market:
         return True
     
     
-    def reset_index(self, new_index):
+    def reset_index(self, new_index: pd.DatetimeIndex) -> None:
         """
         Resets the index with a new one given in argument.
         """
@@ -152,7 +160,7 @@ class Market:
         
         return None
 
-
+    # TO DO: typecheck this function
     def to_list(self, start_date=None, end_date=None):
         """
         Converts the Market data frame into a list of TimeSeries.
@@ -174,6 +182,8 @@ class Market:
         
         # Initialization
         list_ts = []
+        print(self.data.index)
+        print(type(self.data.index[0]))
         new_index = pd.to_datetime(self.data.index[start_date:end_date])
         
         # Forming a list of timeseries
