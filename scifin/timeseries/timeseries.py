@@ -4,6 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
+from typeguard import typechecked
 import warnings
 
 # Third party imports

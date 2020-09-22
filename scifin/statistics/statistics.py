@@ -3,7 +3,7 @@
 # This module is for simple statistics.
 
 # Standard library imports
-# /
+from typeguard import typechecked
 
 # Third party imports
 import matplotlib.pyplot as plt

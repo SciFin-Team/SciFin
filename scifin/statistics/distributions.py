@@ -8,8 +8,6 @@ from typeguard import typechecked
 
 # Third party imports
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from scipy.special import erf, erfinv, gamma, zeta, gammaincc
 
 # Local application imports
@@ -24,16 +22,31 @@ Distribution = TypeVar('Distribution')
 @typechecked
 def upper_incomplete_gamma(a: float, z: float) -> float:
     """
+    Implements the Upper Incomplete Gamma function with parameter a
+    at the value z.
 
     Parameters
     ----------
-    a
-    z
+    a: float
+      Evaluation parameter.
+    z: float
+      Evaluation variable.
 
     Returns
     -------
+    float
+      Evaluation of the upper incomplete gamma function.
 
+    Notes
+    -----
+      For more information, consult the following:
+      https://en.wikipedia.org/wiki/Incomplete_gamma_function
     """
+
+    # Checks
+    if a < 0:
+        raise AssertionError("Argument a must be positive.")
+
     return gamma(a) * gammaincc(a, z)
 
 
