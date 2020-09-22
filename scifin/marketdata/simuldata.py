@@ -62,7 +62,7 @@ class Market:
       Unit of the market data columns.
     """
     
-    def __init__(self, df=None, tz=None, units=None, name=""):
+    def __init__(self, df: pd.DataFrame=None, tz: str=None, units=None, name=""):
 
         # Deal with DataFrame
         if (df is None) or (df.empty == True):
