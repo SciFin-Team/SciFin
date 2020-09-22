@@ -23,11 +23,12 @@ from statsmodels.tsa.stattools import acf, pacf
 
 
 # Local application imports
-from .. import exceptions
+from scifin.exceptions.exceptions import SamplingError
 
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
+# TODO: why this? move to config if possible
 DPOA = {'D': 365, 'B': 252, 'W': 52,
         'SM': 24, 'SMS': 24, 
         'BM': 12, 'BMS': 12, 'M': 12, 'MS': 12,
@@ -42,16 +43,14 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
+# TODO: Why this function here?
 def get_list_timezones():
     """
     Lists all the time zone names that can be used.
     """
     print(pytz.all_timezones)
     return None
-        
 
-
-# CLASS Series
 
 class Series:
     """
@@ -99,7 +98,9 @@ class Series:
             # with just an index and one column for values
             if isinstance(data, pd.DataFrame):
                 if data.shape[1]!=1:
-                    raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
+                    raise AssertionError(
+                        "Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column."
+                    )
                 else:
                     self.data = pd.Series(data.iloc[:,0])
             elif not isinstance(data, pd.Series):
@@ -387,7 +388,7 @@ class TimeSeries(Series):
         Returns the sampling interval for a uniformly-sampled time series.
         """
         if(self.is_sampling_uniform()==False):
-            raise exceptions.SamplingError("Time series is not uniformly sampled.")
+            raise SamplingError("Time series is not uniformly sampled.")
         else:
             idx1 = self.data.index[1]
             idx0 = self.data.index[0]
