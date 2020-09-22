@@ -5,6 +5,7 @@
 # Standard library imports
 import itertools
 from typing import Union
+import multiprocessing as mp
 
 # Third party imports
 import matplotlib.pyplot as plt
@@ -182,6 +183,118 @@ def dtw_distance_matrix_from_ts(list_ts: list,
             dtw_matrix.iloc[j,i] = dist_ij
 
     # Return matrix
+    if normalize:
+        dtw_matrix_min = dtw_matrix.values.min()
+        dtw_matrix_max = dtw_matrix.values.max()
+        return 2 * (dtw_matrix - dtw_matrix_min) / (dtw_matrix_max - dtw_matrix_min) - 1.
+    else:
+        return dtw_matrix
+
+
+@typechecked
+def support_dtw_distance_matrix_from_ts_multi_proc(info: (np.ndarray, list, list, int, int, str)) -> np.ndarray:
+    """
+    Support function for dtw_distance_matrix_from_ts_multi_proc().
+    Performs the DTW distance matrix calculation for the time series of interest.
+    The calculation is done by one processor, through all the rows that are requested
+    by 'parts' and restricting the evaluations to the upper triangle part of the matrix.
+
+    Arguments
+    ---------
+    info : np.ndarray, list, list, int, int, str
+      All necessary variables for the evaluation:
+      - block: the empty matrix to be filled.
+      - list_ts: the time series to be used for that.
+      - parts: the list of values defining the matrix segmentation.
+      - k: the part to be computed in this block.
+      - window: value of window for dtw_distance().
+      - mode: value of mode for dtw_distance().
+
+    Returns
+    -------
+    np.ndarray
+      Array corresponding to the segmented block of the DTW distance matrix.
+    """
+
+    # Unpacking the transferred quantities for a single processor calculation
+    block, list_ts, parts, k, window, mode = info
+
+    # Compute dtw distances
+    # Run over the block's rows
+    for i in range(block.shape[0]):
+        # Run over the block's columns,
+        # avoiding some part of the matrix lower triangle
+        for j in range(parts[k-1]+i, block.shape[1]):
+            block[i,j] = dtw_distance(list_ts[parts[k-1]+i], list_ts[j], window=window, mode=mode)
+
+    return np.array(block)
+
+
+@typechecked
+def dtw_distance_matrix_from_ts_multi_proc(list_ts: list,
+                                           window: int=None,
+                                           mode: str='abs',
+                                           normalize: bool=False,
+                                           n_proc: int=2
+                                          ) -> pd.DataFrame:
+    """
+    Computes the dtw distance between time series of a list. It uses multi-processing
+    with n_proc processors in parallel.
+
+    Parameters
+    ----------
+    list_ts : list
+      List of time series.
+    window : int
+      Size of restrictive search window.
+    mode : str
+      Mode to choose among:
+      - 'abs' for absolute value distance based calculation.
+      - 'square' for squared value distance based calculation, with sqrt taken at the end.
+    n_proc : int
+      Number of processors to use.
+
+    Returns
+    -------
+    pd.DataFrame
+      DataFrame containing dtw-distances between time series.
+    """
+
+    # Checks
+    N = len(list_ts)
+    if N < 2:
+        raise AssertionError("Argument list_ts must have at least 2 time series in it.")
+
+    # Initializations
+    list_names = [list_ts[i].name for i in range(N)]
+    parts = np.ceil(np.linspace(0, N, min(n_proc, N)+1)).astype(int)
+
+    # Creating the jobs
+    jobs = []
+    for k in range(1, len(parts)):
+        block = np.zeros(shape=(parts[k]-parts[k-1],N))
+        jobs.append((block, list_ts, parts, k, window, mode))
+
+    # Running the jobs and combining results
+    pool = mp.Pool(processes=n_proc)
+    outputs = pool.map(support_dtw_distance_matrix_from_ts_multi_proc, jobs)
+    is_started = False
+    for output_block in outputs:
+        if not is_started:
+            matrix = output_block.copy()
+            is_started = True
+        else:
+            matrix = np.concatenate((matrix, output_block))
+    pool.close()
+    pool.join()
+
+    # Copying the upper triangle into the lower triangle
+    for i in range(1,N):
+        for j in range(0,i):
+            matrix[i,j] = matrix[j,i]
+
+    # Return matrix
+    dtw_matrix = pd.DataFrame(index=list_names, data=matrix, columns=list_names)
     if normalize:
         dtw_matrix_min = dtw_matrix.values.min()
         dtw_matrix_max = dtw_matrix.values.max()
