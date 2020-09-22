@@ -1,7 +1,5 @@
 # Standard library imports
-import sys
-new_path = sys.path[0][:-len("/examples/timeseries")]
-sys.path.append(new_path)
+# /
 
 # Third party imports
 # /

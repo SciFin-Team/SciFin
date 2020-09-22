@@ -1,7 +1,5 @@
 # Standard library imports
-import sys
-new_path = sys.path[0][:-len("/examples/timeseries")]
-sys.path.append(new_path)
+# /
 
 # Third party imports
 import itertools
@@ -73,10 +71,10 @@ for perm in name_perms:
 
 # Show results
 print()
-resu1 = cl.show_clustering_results(mc1, labels1, expected_truth)
+clustering_results1 = cl.show_clustering_results(mc1, labels1, expected_truth)
 print("Quality: ", quality1)
-print("Trace: ", np.trace(resu1.values))
-print(resu1)
+print("Trace: ", np.trace(clustering_results1.values))
+print(clustering_results1)
 print()
 
 # Eventually plot the clusters content
