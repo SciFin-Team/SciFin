@@ -50,6 +50,7 @@ def upper_incomplete_gamma(a: float, z: float) -> float:
     return gamma(a) * gammaincc(a, z)
 
 
+@typechecked
 class Distribution(Generic[Distribution]):
     """
     Abtract class that reates a statistical distribution.
@@ -79,7 +80,8 @@ class Distribution(Generic[Distribution]):
     name : str
       Name of nickname given to the distribution.
     """
-    
+
+    @typechecked
     def __init__(self, name: str="") -> None:
         """
         Initializes the distribution.
@@ -126,6 +128,7 @@ class Distribution(Generic[Distribution]):
 
 # UTILITY FUNCTIONS
 
+@typechecked
 def check_type_x(x: Union[int, float, list, np.ndarray]) -> None:
     """
     Checks if x has the right type.
@@ -140,13 +143,15 @@ def check_type_x(x: Union[int, float, list, np.ndarray]) -> None:
     None
       None
     """
-    assert isinstance(x, (int, float, list, np.ndarray))
+
     if isinstance(x, list):
         if any(not isinstance(xi, (int, float)) for xi in x):
             raise AssertionError("Some element of x is neither int nor float.")
+
     return None
 
 
+@typechecked
 def check_type_p(p: Union[int, float, list, np.ndarray]) -> None:
     """
     Checks if p has the right type.
@@ -161,13 +166,15 @@ def check_type_p(p: Union[int, float, list, np.ndarray]) -> None:
     None
       None
     """
-    assert isinstance(p, (int, float, list, np.ndarray))
+
     if isinstance(p, list):
         if any(not (isinstance(pi, (int, float)) and 0 <= pi <= 1) for pi in p):
             raise AssertionError("Some element in p is inappropriate (either not int nor float, or not in [0,1].")
+
     return None
 
 
+@typechecked
 def check_type_k(k: Union[int, list, range, np.ndarray]) -> None:
     """
     Checks if k has the right type.
@@ -182,13 +189,15 @@ def check_type_k(k: Union[int, list, range, np.ndarray]) -> None:
     None
       None
     """
-    assert isinstance(k, (int, list, range, np.ndarray))
+
     if isinstance(k, list):
         if any(not (isinstance(ki,int)) for ki in k):
             raise AssertionError("Some element in k is not int.")
+
     return None
 
 
+@typechecked
 def initialize_input(xorp: Union[int, float, list, np.ndarray]) -> np.ndarray:
     """
     Returns an np.ndarray from x or p.
@@ -196,7 +205,7 @@ def initialize_input(xorp: Union[int, float, list, np.ndarray]) -> np.ndarray:
     Parameters
     ----------
     xorp : int, float, list, np.ndarray
-    Argument to transform.
+      Argument to transform.
 
     Returns
     -------
@@ -218,11 +227,20 @@ def initialize_input(xorp: Union[int, float, list, np.ndarray]) -> np.ndarray:
 
 # CONTINUOUS DISTRIBUTIONS
 
-
+@typechecked
 def standard_normal_pdf(x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
-    Implements the Probability Density Function (PDF)
-    for the Standard Normal distribution.
+    Implements the Probability Density Function (PDF) for the Standard Normal distribution.
+
+    Arguments
+    ---------
+    x : int, float, list, np.ndarray
+      Evaluation value(s).
+
+    Returns
+    -------
+    float, np.ndarray
+      Standard normal PDF for evaluation value(s).
     """
 
     # Check
@@ -239,10 +257,20 @@ def standard_normal_pdf(x: Union[int, float, list, np.ndarray]) -> Union[float, 
         return pdf
 
 
+@typechecked
 def standard_normal_cdf(x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
-    Implements the Cumulative Distribution Function (CDF)
-    for the Standard Normal distribution.
+    Implements the Cumulative Distribution Function (CDF) for the Standard Normal distribution.
+
+    Arguments
+    ---------
+    x : int, float, list, np.ndarray
+      Evaluation value(s).
+
+    Returns
+    -------
+    float, np.ndarray
+      Standard normal CDF for evaluation value(s).
     """
 
     # Check
@@ -259,9 +287,20 @@ def standard_normal_cdf(x: Union[int, float, list, np.ndarray]) -> Union[float, 
         return cdf
 
 
+@typechecked
 def standard_normal_quantile(p: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Returns the quantile associated to the Standard Normal distribution.
+
+    Arguments
+    ---------
+    x : int, float, list, np.ndarray
+      Evaluation value(s).
+
+    Returns
+    -------
+    float, np.ndarray
+      Standard normal PDF for evaluation value(s).
     """
 
     # Check
@@ -278,6 +317,7 @@ def standard_normal_quantile(p: Union[int, float, list, np.ndarray]) -> Union[fl
         return quantile
 
 
+@typechecked
 class Normal(Distribution):
     """
     Implements the normal distribution of mean 'mu' and standard deviation 'sigma'.
@@ -315,7 +355,7 @@ class Normal(Distribution):
     name : str
       Name of nickname given to the distribution.
     """
-    
+
     def __init__(self, mu: float=0., sigma: float=1., name: str="") -> None:
         """
         Initializes the distribution.
@@ -391,6 +431,7 @@ class Normal(Distribution):
         """
         Returns the quantile associated to the Normal distribution.
         """
+
         # Check
         check_type_p(p)
         p = initialize_input(p)
@@ -427,6 +468,7 @@ class Normal(Distribution):
             return cvar
 
 
+@typechecked
 class Uniform(Distribution):
     """
     Implements the uniform distribution taking a non-zero value
@@ -524,7 +566,6 @@ class Uniform(Distribution):
         else:
             return np.array(pdf)
 
-    
     def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
@@ -552,7 +593,7 @@ class Uniform(Distribution):
             return np.array(cdf)
 
     
-
+@typechecked
 class Weibull(Distribution):
     """
     Implements the Weibull distribution with shape parameter 'k' (>0)
@@ -755,6 +796,7 @@ class Weibull(Distribution):
             return cvar
 
 
+@typechecked
 class Rayleigh(Distribution):
     """
     Implements the Rayleigh distribution with scale parameter 'sigma'.
@@ -869,6 +911,7 @@ class Rayleigh(Distribution):
             return cdf
 
 
+@typechecked
 class Exponential(Distribution):
     """
     Implements the Exponential distribution with rate parameter 'lmbda' (>0).
@@ -1022,7 +1065,8 @@ class Exponential(Distribution):
         else:
             return cvar
     
-    
+
+@typechecked
 class Gumbel(Distribution):
     """
     Implements the Gumbel distribution with mode 'mu' and parameter 'beta' (>0).
@@ -1154,7 +1198,8 @@ class Gumbel(Distribution):
     # Alias method
     var = quantile
     
-    
+
+@typechecked
 class Laplace(Distribution):
     """
     Implements the Laplace distribution with mean 'mu' and scale parameter 'b' (>0).
@@ -1317,6 +1362,7 @@ class Laplace(Distribution):
             return cvar
 
 
+@typechecked
 class Levy(Distribution):
     """
     Implements the Lévy distribution with location parameter 'mu'
@@ -1438,6 +1484,7 @@ class Levy(Distribution):
             return cdf
 
 
+@typechecked
 class Cauchy(Distribution):
     """
     Implements the Cauchy distribution with mode/median 'a'
@@ -1547,12 +1594,11 @@ class Cauchy(Distribution):
         else:
             return cdf
         
-        
-        
-        
+
     
 # DISCRETE DISTRIBUTIONS
-    
+
+@typechecked
 class Poisson(Distribution):
     """
     Implements the Poisson distribution
@@ -1647,8 +1693,7 @@ class Poisson(Distribution):
         
     def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
-        Implements the Probability Mass Function (PMF)
-        for the Poisson distribution.
+        Implements the Probability Mass Function (PMF) for the Poisson distribution.
         """
 
         # Check
@@ -1667,8 +1712,7 @@ class Poisson(Distribution):
 
     def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
-        Implements the Cumulative Distribution Function (CDF)
-        for the Poisson distribution.
+        Implements the Cumulative Distribution Function (CDF) for the Poisson distribution.
         """
 
         # Check
@@ -1714,6 +1758,7 @@ class Poisson(Distribution):
             return cdf
     
 
+@typechecked
 class Binomial(Distribution):
     """
     Implements the binomial distribution of "successes" having
@@ -1826,8 +1871,7 @@ class Binomial(Distribution):
     
     def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
-        Implements the Probability Mass Function (PMF)
-        for the binomial distribution.
+        Implements the Probability Mass Function (PMF) for the binomial distribution.
         """
 
         # Check
@@ -1850,8 +1894,7 @@ class Binomial(Distribution):
     
     def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, np.ndarray]:
         """
-        Implements the Cumulative Distribution Function (CDF)
-        for the binomial distribution.
+        Implements the Cumulative Distribution Function (CDF) for the binomial distribution.
         """
 
         # Check
