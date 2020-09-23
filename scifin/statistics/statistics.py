@@ -22,7 +22,6 @@ from typeguard import typechecked
 # /
 
 
-
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
@@ -46,13 +45,7 @@ def random_covariance_matrix(n_features: int, n_obs: int) -> np.ndarray:
     numpy.array
       Covariance matrix.
     """
-    
-    # Checks
-    if not isinstance(n_features, int):
-        raise TypeError("Argument n_features for matrix dimension must be integer.")
-    if not isinstance(n_obs, int):
-        raise TypeError("Argument n_obs for number of observations must be integer.")
-    
+
     # Generate random numbers
     w = np.random.normal(size=(n_features, n_obs))
     
@@ -66,13 +59,13 @@ def random_covariance_matrix(n_features: int, n_obs: int) -> np.ndarray:
 
 
 @typechecked
-def covariance_to_correlation(cov: Union[list, np.ndarray]) -> np.ndarray:
+def covariance_to_correlation(cov: Union[list, np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
     """
     Derive the correlation matrix from the covariance matrix.
     
     Arguments
     ---------
-    cov : numpy.array or list of lists
+    cov : list of lists, np.array, pd.DataFrame
       Covariance matrix.
       
     Returns
@@ -109,6 +102,8 @@ def correlation_to_covariance(corr: Union[list, np.ndarray], std: float) -> np.n
     ---------
     corr : numpy.array or list of lists
       Correlation matrix.
+    std : float
+      Standard deviation.
 
     Returns
     -------
@@ -317,7 +312,7 @@ def random_block_covariance(n_features: int,
     try:
         assert(n_features - (min_block_size-1) * n_blocks > 0)
     except AssertionError:
-        raise AssertionError("n_features - (min_block_size-1) * n_blocks = ", n_features - (min_block_size-1) * n_blocks, " !")
+        raise AssertionError(f"n_features - (min_block_size-1) * n_blocks = {n_features - (min_block_size-1) * n_blocks} !")
         
     # Generate parts
     parts = rng.choice(range(1, n_features - (min_block_size-1) * n_blocks), n_blocks-1, replace=False)
@@ -338,6 +333,7 @@ def random_block_covariance(n_features: int,
     return cov
 
 
+@typechecked
 def random_block_correlation(n_features: int,
                              n_blocks: int,
                              min_block_size: int=1,
@@ -347,7 +343,7 @@ def random_block_correlation(n_features: int,
                              ) -> pd.DataFrame:
     """
     Form block random correlation matrix of dimension n_features x n_features with n_blocks blocks.
-    Mininum block size and noise levels can be specified.
+    Minimum block size and noise levels can be specified.
     
     Parameters
     ----------
@@ -374,6 +370,8 @@ def random_block_correlation(n_features: int,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
+
+    # Initializations
     rng = check_random_state(random_state)
 
     # Initial random block covariance matrix

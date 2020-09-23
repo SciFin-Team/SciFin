@@ -4,7 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
-from typeguard import typechecked
+from typing import Any, Generic, TypeVar, Union
 import warnings
 
 # Third party imports
@@ -20,7 +20,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 from statsmodels.api import OLS
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-
+from typeguard import typechecked
 
 # Local application imports
 from .. import exceptions
@@ -38,6 +38,9 @@ DPOA = {'D': 365, 'B': 252, 'W': 52,
 fmt = "%Y-%m-%d %H:%M:%S"
 fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
+# New Variables Types
+T_Series = TypeVar('T_Series')
+T_TimeSeries = TypeVar('T_TimeSeries')
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 

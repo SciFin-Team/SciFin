@@ -3,24 +3,24 @@
 # This module is for generating Monte Carlo simulations.
 
 # Standard library imports
-from datetime import datetime
-from datetime import timedelta
-import random as random
-from typeguard import typechecked
+from typing import Any
 
 # Third party imports
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+from typeguard import typechecked
 
 # Local application imports
-from .. import timeseries
+from ..timeseries.timeseries import T_TimeSeries
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
- 
-def generate_series(n=1, generate_names=True, names_base="rs", series_model=None, **kwargs):
+@typechecked
+def generate_series(n: int=1,
+                    generate_names: bool=True,
+                    names_base: str="rs",
+                    series_model: T_TimeSeries=None,
+                    **kwargs: Any
+                    ) -> list:
     """
     Generate a list of `n` series of the type `series_model`.
     Here all series have the same building parameters.
@@ -29,6 +29,10 @@ def generate_series(n=1, generate_names=True, names_base="rs", series_model=None
     ----------
     n : int
       Number of time series to be generated.
+    generate_names : bool
+      Option to generate names.
+    names_base : str
+      Base for the names.
     series_model : function
       TimeSeries generating function.
     **kwargs

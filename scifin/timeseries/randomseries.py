@@ -4,12 +4,12 @@
 
 # Standard library imports
 from datetime import datetime
-from typeguard import typechecked
+from typing import Any, Union
 
 # Third party imports
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from typeguard import typechecked
 
 # Local application imports
 from . import TimeSeries
@@ -181,8 +181,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     
     return rs
 
-
-def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, unit=None, name=""):
+@typechecked
+def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, unit=None, name="") -> TimeSeries:
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.

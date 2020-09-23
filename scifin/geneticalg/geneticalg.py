@@ -6,12 +6,12 @@
 import copy
 from datetime import datetime
 import random as random
-from typeguard import typechecked
 from typing import TypeVar, Generic, Union
 
 # Third party imports
 import numpy as np
 import pandas as pd
+from typeguard import typechecked
 
 # Local application imports
 from .. import marketdata
