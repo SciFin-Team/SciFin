@@ -18,9 +18,9 @@ from typeguard import typechecked
 from . import marketdata
 from ..timeseries import TimeSeries
 
-
 # New Variables Types
-Market = TypeVar('Market')
+T_Individual = TypeVar('T_Individual')
+T_Market = TypeVar('T_Market')
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
@@ -40,7 +40,7 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 # CLASS FOR MARKET
 
 @typechecked
-class Market(Generic[Market]):
+class Market(Generic[T_Market]):
     """
     Creates a market.
     
@@ -66,7 +66,7 @@ class Market(Generic[Market]):
       Unit of the market data columns.
     """
 
-    def __init__(self,
+    def __init__(self: T_Market,
                  df: pd.DataFrame=None,
                  tz: str=None,
                  units: Union[str, list]=None,
@@ -77,7 +77,7 @@ class Market(Generic[Market]):
         """
 
         # Deal with DataFrame
-        if (df is None) or (df.empty == True):
+        if (df is None) or (df.empty is True):
             self.data = pd.DataFrame(index=None, data=None)
             self.start_utc = None
             self.end_utc = None
@@ -124,7 +124,7 @@ class Market(Generic[Market]):
             self.timezone = pytz.timezone(tz)
 
 
-    def is_index_valid(self) -> bool:
+    def is_index_valid(self: T_Market) -> bool:
         """
         Checks if the market has a correct index, meaning no date value is repeated.
 
@@ -148,7 +148,7 @@ class Market(Generic[Market]):
         return True
     
     
-    def reset_index(self, new_index: pd.DatetimeIndex) -> None:
+    def reset_index(self: T_Market, new_index: list) -> None:
         """
         Resets the index with a new one given in argument.
         """
@@ -166,7 +166,7 @@ class Market(Generic[Market]):
 
     # TO DO: This function is broken. Needs repair.
     # Typechecking must also be done. Need to decide the date format.
-    def to_list(self, start_date=None, end_date=None):
+    def to_list(self: T_Market, start_date=None, end_date=None):
         """
         Converts the Market data frame into a list of TimeSeries.
 
@@ -344,8 +344,6 @@ def create_market_returns(r_ini: float,
       Specifies nature of the jump between two dates ('D' for days, 'M' for months, 'Y' for years).
     tz : str
       Timezone name.
-    timezone : pytz timezone
-      Timezone associated with dates.
     units : List of str
       Unit of the market data columns.
 
@@ -433,7 +431,7 @@ def create_market_shares(market: Market, mean: float=100000, stdv: float=10000) 
 
 # VISUALIZATION METHODS
 
-def plot_market_components(market, dims=(10,5), legend=True):
+def plot_market_components(market: Market, dims: (int,int)=(10,5), legend: bool=True) -> None:
     """
     Plots the assets contribution to the Equally-Weighted (EW) index.
     
@@ -474,7 +472,7 @@ def plot_market_components(market, dims=(10,5), legend=True):
     
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
-def propagate_individual(individual, environment, name_indiv="Portfolio"):
+def propagate_individual(individual: T_Individual, environment: Market, name_indiv: str="Portfolio") -> None:
     """
     Propagates the initial individual over time by computing its sum of gene values.
 
@@ -504,16 +502,12 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     
     # Checks
     first_row = environment.data.iloc[0]
-    is_uniform = True
     first_value = first_row[0]
     for x in first_row:
         if x != first_value:
             raise ValueError("First row of environment must be uniform in value.")
     
-    # Initializations
-    Ngenes = individual.ngenes
-    
-    # Propagating individuals
+    # Propagate individuals
     portfolio = environment.data / first_value * individual.genes
     
     # Summing contributions
@@ -521,8 +515,8 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     
     return None
 
-
-def evaluation_dates(environment, n_dates=10, interval_type='M'):
+@typechecked
+def evaluation_dates(environment: Market, n_dates: int=10, interval_type: str='M'):
     """
     Produces a number of equally spaced dates
     at which the individuals will be evaluated.
@@ -569,7 +563,7 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     return special_dates
 
 
-def find_tick_before_eval(environment_dates, eval_date):
+def find_tick_before_eval(environment_dates: list, eval_date: str) -> str:
     """
     Returns the tick before the evaluation date.
     

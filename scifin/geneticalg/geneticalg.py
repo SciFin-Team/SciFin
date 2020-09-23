@@ -5,23 +5,26 @@
 # Standard library imports
 import copy
 from datetime import datetime
-from datetime import timedelta
 import random as random
 from typeguard import typechecked
+from typing import TypeVar, Generic, Union
 
 # Third party imports
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 # Local application imports
 from .. import marketdata
 
+# New Variables Types
+T_Individual = TypeVar('T_Individual')
+T_Population = TypeVar('T_Population')
+
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
-class Individual:
+@typechecked
+class Individual(Generic[T_Individual]):
     """
     Defines an individual.
     
@@ -37,7 +40,12 @@ class Individual:
       Name of the individual.
     """
 
-    def __init__(self, genes_names=None, genes=None, birth_date=None, name=""):
+    def __init__(self: T_Individual,
+                 genes: Union[list, np.ndarray]=None,
+                 genes_names: list=None,
+                 birth_date: Union[str, datetime.timestamp]=None,
+                 name: str=""
+                 ) -> None:
         """
         Initializes the Individual.
         """
@@ -57,7 +65,13 @@ class Individual:
     
     
     @classmethod
-    def generate_random_genes(cls, n_genes, lower_limit, upper_limit, sum_target=None, birth_date=None, name="") -> 'Individual' :
+    def generate_random_genes(cls: T_Individual,
+                              n_genes: int,
+                              lower_limit: float,
+                              upper_limit: float,
+                              sum_target: float=None,
+                              birth_date: Union[str, datetime.timestamp]=None,
+                              name: str="") -> T_Individual:
         """
         Generates genes values randomly between upper_limit and lower_limit
         (values before normalization), with possibility to impose a target value for their sum.
@@ -95,16 +109,12 @@ class Individual:
           For a portfolio application, this means long positions become short, and conversely.
           To prevent this from happening, an exception is raised.
         """
-
-        # Checks
-        assert(isinstance(n_genes, int))
         
         # Generate gene names
         genes_names = [str('Asset ' + str(x)) for x in range(n_genes)]
         
         # Generate individual's genes
-        genes = [ random.random() * (upper_limit-lower_limit) 
-                       + lower_limit for x in range(n_genes) ]
+        genes = [random.random() * (upper_limit-lower_limit) + lower_limit for x in range(n_genes)]
         
         # Compute normalization (if requested)
         if sum_target is not None:
@@ -114,22 +124,21 @@ class Individual:
                 print("         Normalization with thus flip sign of all genes.")
             normalization = sum_genes / sum_target
             cls_genes = np.array(genes) / normalization
-            
         # Otherwise just set the genes
         else:
             cls_genes = np.array(genes)
 
         return cls(genes_names=genes_names, genes=cls_genes, birth_date=birth_date, name=name)
 
-    
-    
-class Population:
+
+@typechecked
+class Population(Generic[T_Population]):
     """
     Creates a population, i.e. a table of individuals
-    with there respective genes values.
+    with their respective genes values.
     """
     
-    def __init__(self, df=None, n_genes=None, name=""):
+    def __init__(self: T_Population, df: pd.DataFrame=None, n_genes: int=None, name: str="") -> None:
 
         # Basic features of a population
         if (df is None) or (df.empty == True):
@@ -147,14 +156,14 @@ class Population:
         self.history = None
         
         
-    def get_individual(self, num=None, name=None):
+    def get_individual(self: T_Population, num: int=None, name: str=None) -> Individual:
         """
         Returns an individual from a position in the population.
         """
         
         # Checks
         if (num is None and name is None):
-            raise ArgumentsError("Arguments 'num' and 'name' cannot be both None.")
+            raise AssertionError("Arguments 'num' and 'name' cannot be both None.")
             
         else:
             # Obtain individual from index number

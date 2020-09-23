@@ -17,7 +17,6 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
-from sklearn.tree import DecisionTreeClassifier
 from typeguard import typechecked
 import statsmodels.discrete.discrete_model
 
