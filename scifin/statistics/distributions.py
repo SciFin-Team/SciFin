@@ -13,7 +13,7 @@ from typeguard import typechecked
 # Local application imports
 # /
 
-# Variables
+# New Variables Types
 Distribution = TypeVar('Distribution')
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

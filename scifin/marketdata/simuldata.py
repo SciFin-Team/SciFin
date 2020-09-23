@@ -16,8 +16,11 @@ from typeguard import typechecked
 
 # Local application imports
 from . import marketdata
-from .. import timeseries
+from ..timeseries import TimeSeries
 
+
+# New Variables Types
+Market = TypeVar('Market')
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
@@ -36,7 +39,8 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 # CLASS FOR MARKET
 
-class Market:
+@typechecked
+class Market(Generic[Market]):
     """
     Creates a market.
     
@@ -61,7 +65,7 @@ class Market:
     units : List of str
       Unit of the market data columns.
     """
-    
+
     def __init__(self,
                  df: pd.DataFrame=None,
                  tz: str=None,
@@ -153,21 +157,22 @@ class Market:
         try:
             assert(len(new_index) == self.data.shape[0])
         except AssertionError:
-            AssertionEror("New index should have same dimension as current index.")
+            AssertionError("New index should have same dimension as current index.")
     
         # Replacing index
         self.data.index = new_index
         
         return None
 
-    # TO DO: typecheck this function
+    # TO DO: This function is broken. Needs repair.
+    # Typechecking must also be done. Need to decide the date format.
     def to_list(self, start_date=None, end_date=None):
         """
         Converts the Market data frame into a list of TimeSeries.
 
         Parameters
         ----------
-        market : Market
+        self : Market
           Market to convert.
         start_date : str or datetime
           Starting date we want for the time series.
@@ -179,13 +184,11 @@ class Market:
         List of TimeSeries
           The list of times series extracted from the data frame.
         """
-        
+
         # Initialization
         list_ts = []
-        print(self.data.index)
-        print(type(self.data.index[0]))
         new_index = pd.to_datetime(self.data.index[start_date:end_date])
-        
+
         # Forming a list of timeseries
         i=0
         for c in self.data.columns:
@@ -194,7 +197,7 @@ class Market:
                 tmp_unit = None
             else:
                 tmp_unit = self.units[i]
-            tmp_ts = timeseries.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
+            tmp_ts = TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
             list_ts.append(tmp_ts)
             i+=1
 
@@ -205,8 +208,12 @@ class Market:
     
 # GENERAL FUNCTIONS RELATED TO MARKET
 
-
-def set_market_names(data, date, date_type="end", interval_type='D'):
+@typechecked
+def set_market_names(data: pd.DataFrame,
+                     date: str,
+                     date_type: str="end",
+                     interval_type: str='D'
+                     ) -> None:
     """
     Sets the column and row names of the market dataframe.
       
@@ -294,11 +301,19 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     
     return None
 
-
-def create_market_returns(r_ini, drift, sigma, n_years,
-                          steps_per_year, n_components,
-                          date, date_type, interval_type='D',
-                          tz=None, units=None, name=""):
+@typechecked
+def create_market_returns(r_ini: float,
+                          drift: float,
+                          sigma: float,
+                          n_years: int,
+                          steps_per_year: int,
+                          n_components: int,
+                          date: str,
+                          date_type: str,
+                          interval_type: str='D',
+                          tz: str=None,
+                          units: list=None,
+                          name: str=""):
     """
     Creates a market from a Geometric Brownian process for each stock.
     
@@ -317,26 +332,44 @@ def create_market_returns(r_ini, drift, sigma, n_years,
       Volatility of the process.
     n_years : int
       Number of years to generate.
-    step_per_year : int
+    steps_per_year : int
       Number of steps per year.
     n_components : int
       Number of components of the market.
-    
+    date : str
+      A specific date.
+    date_type : str
+      Value "end" for 'date' specifying the data end date, "start" for the start date.
+    interval_type : str or DateOffset
+      Specifies nature of the jump between two dates ('D' for days, 'M' for months, 'Y' for years).
+    tz : str
+      Timezone name.
+    timezone : pytz timezone
+      Timezone associated with dates.
+    units : List of str
+      Unit of the market data columns.
+
     Notes
     -----
       All stocks are assumed to be in the same time zone.
+
+      The two ways ("end" and "start") of specifying the dates are approximative.
+      Uncertainty on the dates are of the order of the interval type.
+
+      For offset aliases available see:
+      https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
     
     Returns
     -------
     Market
       Market of returns for the market.
     """
-    
+
     # Checks
-    assert(isinstance(n_years, int))
-    assert(isinstance(steps_per_year, int))
-    assert(isinstance(n_components, int))
-    
+    for unit in units:
+        if not isinstance(unit, str):
+            raise TypeError("Argument units must be a list of 'str'.")
+
     # Initialization
     dt = 1/steps_per_year
     n_steps = int(n_years * steps_per_year) + 1
@@ -357,7 +390,8 @@ def create_market_returns(r_ini, drift, sigma, n_years,
     return market_returns
 
 
-def create_market_shares(market, mean=100000, stdv=10000):
+@typechecked
+def create_market_shares(market: Market, mean: float=100000, stdv: float=10000) -> pd.Series:
     """
     Creates a list of randomly generated numbers of shares for a market.
     The number of shares is generated from a normal distribution.
@@ -752,7 +786,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(weights, covmat))
 
         # Normalizing
         normalized_fitness_from_return = fitness_from_return / sum(fitness_from_return)
@@ -782,7 +816,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(weights, covmat))
 
         # Combining the 2 fitnesses
         fitness_value = [ lamb * fitness_from_return[x]
@@ -809,7 +843,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(weights, covmat))
 
         # Combining the 2 fitnesses
         fitness_value = [fitness_from_return[x] / fitness_from_vol[x]  for x in range(len(fitness_from_return))]
