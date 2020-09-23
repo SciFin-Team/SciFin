@@ -3,23 +3,23 @@
 # This module is for analysing and classifying time series and other objects.
 
 # Standard library imports
-from datetime import datetime
-from datetime import timedelta
 import itertools
 from typing import Union
-import random as random
-
+import multiprocessing as mp
 
 # Third party imports
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
-from sklearn.cluster import KMeans
+from sklearn import cluster
+from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
+from sklearn.tree import DecisionTreeClassifier
 from typeguard import typechecked
+import statsmodels.discrete.discrete_model
 
 # Local application imports
 from .. import timeseries as ts
@@ -29,7 +29,8 @@ from .. import timeseries as ts
 
 # DISTANCES
 
-def euclidean_distance(ts1, ts2):
+@typechecked
+def euclidean_distance(ts1: ts.TimeSeries, ts2: ts.TimeSeries) -> float:
     """
     Returns the Euclidean distance between two TimeSeries.
     
@@ -56,15 +57,19 @@ def euclidean_distance(ts1, ts2):
         assert(ts1.data.index.tolist() == ts2.data.index.tolist())
     except IndexError:
         raise IndexError("Time series do not have the same index.")
-    
-        
+
     # Return distance
     squares = (ts1.data - ts2.data)**2
     return np.sqrt(float(squares.sum()))
     
     
-    
-def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
+@typechecked
+def dtw_distance(ts1: ts.TimeSeries,
+                 ts2: ts.TimeSeries,
+                 window: int=None,
+                 mode: str='abs',
+                 verbose: bool=False
+                 ) -> float:
     """
     Returns the Dynamic Time Warping (DTW) distance between two TimeSeries.
     A locality constraint can be used by specifying the size of a window.
@@ -97,10 +102,8 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
     """
     
     # Checks
-    if not isinstance(ts1, ts.TimeSeries) and not isinstance(ts2, ts.TimeSeries):
-        raise AssertionError("Series have to be of type TimeSeries.")
-    if not isinstance(mode, str) and not mode in ('abs', 'square'):
-        raise AssertionError("mode must be a string, either 'abs' or 'square'.")
+    if mode not in ('abs', 'square'):
+        raise AssertionError("Argument mode must be a string, either 'abs' or 'square'.")
 
     # Initializations
     # Window size
@@ -133,6 +136,172 @@ def dtw_distance(ts1, ts2, window=None, mode='abs', verbose=False):
         return dtw[N1, N2]
     elif mode=='square':
         return np.sqrt(dtw[N1, N2])
+
+
+@typechecked
+def dtw_distance_matrix_from_ts(list_ts: list,
+                                window: int=None,
+                                mode: str='abs',
+                                normalize: bool=False
+                                ) -> pd.DataFrame:
+    """
+    Computes the dtw distance between time series of a list.
+
+    Parameters
+    ----------
+    list_ts : list
+      List of time series.
+    window : int
+      Size of restrictive search window.
+    mode : str
+      Mode to choose among:
+      - 'abs' for absolute value distance based calculation.
+      - 'square' for squared value distance based calculation, with sqrt taken at the end.
+
+    Returns
+    -------
+    pd.DataFrame
+      DataFrame containing dtw-distances between time series.
+    """
+
+    # Checks
+    N = len(list_ts)
+    if N < 2:
+        raise AssertionError("Argument list_ts must have at least 2 time series in it.")
+
+    # Initialization
+    list_names = [list_ts[i].name for i in range(N)]
+    dtw_matrix = pd.DataFrame(index=list_names, data=np.zeros((N,N)), columns=list_names)
+
+    # Compute dtw distances
+    for i in range(N):
+        # Diagonal elements left untouched (null by definition)
+        for j in range(i+1,N,1):
+            dist_ij = dtw_distance(list_ts[i], list_ts[j], window=window, mode=mode)
+            dtw_matrix.iloc[i,j] = dist_ij
+            # Use symmetry
+            dtw_matrix.iloc[j,i] = dist_ij
+
+    # Return matrix
+    if normalize:
+        dtw_matrix_min = dtw_matrix.values.min()
+        dtw_matrix_max = dtw_matrix.values.max()
+        return 2 * (dtw_matrix - dtw_matrix_min) / (dtw_matrix_max - dtw_matrix_min) - 1.
+    else:
+        return dtw_matrix
+
+
+@typechecked
+def support_dtw_distance_matrix_from_ts_multi_proc(info: (np.ndarray, list, list, int, int, str)) -> np.ndarray:
+    """
+    Support function for dtw_distance_matrix_from_ts_multi_proc().
+    Performs the DTW distance matrix calculation for the time series of interest.
+    The calculation is done by one processor, through all the rows that are requested
+    by 'parts' and restricting the evaluations to the upper triangle part of the matrix.
+
+    Arguments
+    ---------
+    info : np.ndarray, list, list, int, int, str
+      All necessary variables for the evaluation:
+      - block: the empty matrix to be filled.
+      - list_ts: the time series to be used for that.
+      - parts: the list of values defining the matrix segmentation.
+      - k: the part to be computed in this block.
+      - window: value of window for dtw_distance().
+      - mode: value of mode for dtw_distance().
+
+    Returns
+    -------
+    np.ndarray
+      Array corresponding to the segmented block of the DTW distance matrix.
+    """
+
+    # Unpacking the transferred quantities for a single processor calculation
+    block, list_ts, parts, k, window, mode = info
+
+    # Compute dtw distances
+    # Run over the block's rows
+    for i in range(block.shape[0]):
+        # Run over the block's columns,
+        # avoiding some part of the matrix lower triangle
+        for j in range(parts[k-1]+i, block.shape[1]):
+            block[i,j] = dtw_distance(list_ts[parts[k-1]+i], list_ts[j], window=window, mode=mode)
+
+    return np.array(block)
+
+
+@typechecked
+def dtw_distance_matrix_from_ts_multi_proc(list_ts: list,
+                                           window: int=None,
+                                           mode: str='abs',
+                                           normalize: bool=False,
+                                           n_proc: int=2
+                                          ) -> pd.DataFrame:
+    """
+    Computes the dtw distance between time series of a list. It uses multi-processing
+    with n_proc processors in parallel.
+
+    Parameters
+    ----------
+    list_ts : list
+      List of time series.
+    window : int
+      Size of restrictive search window.
+    mode : str
+      Mode to choose among:
+      - 'abs' for absolute value distance based calculation.
+      - 'square' for squared value distance based calculation, with sqrt taken at the end.
+    n_proc : int
+      Number of processors to use.
+
+    Returns
+    -------
+    pd.DataFrame
+      DataFrame containing dtw-distances between time series.
+    """
+
+    # Checks
+    N = len(list_ts)
+    if N < 2:
+        raise AssertionError("Argument list_ts must have at least 2 time series in it.")
+
+    # Initializations
+    list_names = [list_ts[i].name for i in range(N)]
+    parts = np.ceil(np.linspace(0, N, min(n_proc, N)+1)).astype(int)
+
+    # Creating the jobs
+    jobs = []
+    for k in range(1, len(parts)):
+        block = np.zeros(shape=(parts[k]-parts[k-1],N))
+        jobs.append((block, list_ts, parts, k, window, mode))
+
+    # Running the jobs and combining results
+    pool = mp.Pool(processes=n_proc)
+    outputs = pool.map(support_dtw_distance_matrix_from_ts_multi_proc, jobs)
+    is_started = False
+    for output_block in outputs:
+        if not is_started:
+            matrix = output_block.copy()
+            is_started = True
+        else:
+            matrix = np.concatenate((matrix, output_block))
+    pool.close()
+    pool.join()
+
+    # Copying the upper triangle into the lower triangle
+    for i in range(1,N):
+        for j in range(0,i):
+            matrix[i,j] = matrix[j,i]
+
+    # Return matrix
+    dtw_matrix = pd.DataFrame(index=list_names, data=matrix, columns=list_names)
+    if normalize:
+        dtw_matrix_min = dtw_matrix.values.min()
+        dtw_matrix_max = dtw_matrix.values.max()
+        return 2 * (dtw_matrix - dtw_matrix_min) / (dtw_matrix_max - dtw_matrix_min) - 1.
+    else:
+        return dtw_matrix
+
 
 
 # KMEANS CLUSTERING
@@ -196,7 +365,7 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
     for i in range(2, max_num_clusters+1):
 
         # Define model and fit
-        kmeans_current = KMeans(n_clusters=i, **kwargs).fit(X)
+        kmeans_current = cluster.KMeans(n_clusters=i, **kwargs).fit(X)
 
         # Compute silhouette score
         silh_current = silhouette_samples(X, kmeans_current.labels_)
@@ -225,7 +394,6 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
     silh_score = pd.Series(silh_score, index=X.index)
 
     return clustered_corr, clusters, silh_score
-
 
 
 @typechecked
@@ -396,10 +564,280 @@ def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
             return corr_new, clusters_new, silh_new
         
 
-        
+@typechecked
+def convert_clusters_into_list_of_labels(list_ts: list, clusters: dict) -> list:
+    """
+
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    clusters : dict
+      Dictionary containing the labels and time series names.
+
+    Returns
+    -------
+    list of int
+      List with the clustering labels.
+    """
+
+    # Get the names and labels as they were returned from clustering
+    clustered_names = []
+    clustered_labels = []
+    for cluster in clusters.items():
+        for name in cluster[1]:
+            clustered_names.append(name)
+            clustered_labels.append(cluster[0])
+
+    # Reorganise them in the same way as it is in list_ts
+    labels = []
+    for tsi in list_ts:
+        labels.append(clustered_labels[clustered_names.index(tsi.name)])
+
+    return labels
+
+
+@typechecked
+def cluster_observation_matrix(X: pd.DataFrame,
+                               n_clust_range: range,
+                               model: cluster,
+                               verbose: bool=True,
+                               **kwargs
+                               ) -> (dict, dict):
+    """
+    Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
+
+    Parameters
+    ----------
+    X : pd.DataFrame
+      The Observation matrix on which the clustering is based.
+    n_clust_range: range
+      Range of integer values for the number of clusters to be tested.
+    model : sklearn.cluster
+      The clustering model to be used from sklearn.
+    verbose : bool
+      Verbose option.
+    **kwargs :
+      Arguments for the clustering model.
+
+    Returns
+    -------
+    dict
+      Labels corresponding to the different clusters.
+    dict
+      Quality corresponding to the different clusters.
+
+    Notes
+    -----
+      To learn more about sklearn.cluster:
+      https://scikit-learn.org/stable/modules/classes.html?highlight=cluster#module-sklearn.cluster
+    """
+
+    # Initialization
+    save_labels = {}
+    save_quality = {}
+    n_clust_range_min = n_clust_range[0]
+    n_clust_range_max = n_clust_range[-1]
+    n_clust_range_step = int(n_clust_range[-1] - n_clust_range[-2])
+
+    # Looping
+    for k in n_clust_range:
+
+        # Build clusters
+        fitted_model = model(n_clusters=k, **kwargs).fit(X)
+        save_labels[k] = fitted_model.labels_.tolist()
+
+        # Compute scores
+        silh = silhouette_samples(X, fitted_model.labels_)
+        save_quality[k] = silh.mean() / silh.std()
+
+    # Plot qualities
+    if verbose:
+        plt.xticks(ticks=n_clust_range)
+        plt.plot(n_clust_range, list(save_quality.values()))
+
+        # Make it cute
+        plt.title("Normalized Silhouette Score")
+        plt.xlabel("Number of clusters")
+        plt.ylabel("Score")
+
+
+    # Make bars containing the clusters composition
+    m = len(save_labels)
+    assert(m == len(n_clust_range))
+    bars = np.zeros(shape=(m,n_clust_range_max))
+
+    # Loop over max number of clusters
+    for k in n_clust_range:
+
+        # Count appearing values
+        count_vals = []
+        for j in range(n_clust_range_max):
+            count_vals.append(int(save_labels[k].count(j)))
+
+        # Distribute these values to build bars
+        for i in range(n_clust_range_max):
+            bars[(k-n_clust_range_min)//n_clust_range_step,i] = count_vals[i]
+
+
+    # Plot clusters compositions with bar plot
+    if verbose:
+        plt.figure(figsize=(10,5))
+        m = bars.shape[0]
+        sum_bars = [0] * m
+
+        for i in range(n_clust_range_max):
+            if i>0:
+                sum_bars += bars[:,i-1]
+            plt.bar(n_clust_range, bars[:,i], width=0.8, bottom=sum_bars)
+
+        # Make it cute
+        plt.xticks(ticks=n_clust_range)
+        plt.title("Composition of clusters")
+        plt.xlabel("Number of clusters")
+        plt.ylabel("Composition")
+
+    # Return labels
+    return save_labels, save_quality
+
+
+@typechecked
+def reorganize_observation_matrix(X: pd.DataFrame, labels: list) -> pd.DataFrame:
+    """
+    Reorganize a square observation matrix from labels obtained from clustering.
+
+    Parameters
+    ----------
+    X : pd.DataFrame
+      Observation matrix to reorganize.
+    labels : list of int
+      Labels to use to reorganize the matrix.
+
+    Returns
+    -------
+    pd.DataFrame
+      Reorganized observation matrix.
+    """
+
+    # Checks
+    if X.shape[0] != X.shape[1]:
+        raise AssertionError("The observation matrix must be a square matrix.")
+    if X.shape[0] != len(labels):
+        raise AssertionError("Argument labels must have the same dimension as the observation matrix side.")
+
+    # Reoganize X according to this clustering
+    new_idx = np.argsort(labels)
+    clustered_X = X.iloc[new_idx].iloc[:, new_idx]
+
+    return clustered_X
+
+
+@typechecked
+def print_clusters_content(list_ts: list, labels: list) -> None:
+    """
+    Print clusters content and cluster times series for a set of labels.
+
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    labels : list of int
+      Labels to apply to the time series.
+
+    Returns
+    -------
+    None
+      None
+    """
+
+    # Checks
+    if len(list_ts) != len(labels):
+        raise AssertionError("Arguments list_ts and labels must have same length.")
+
+    # Get the clusters for this clustering
+    list_ts_names = [tsi.name for tsi in list_ts]
+    # print(list_ts_names)
+    masks = [(labels==i) for i in np.unique(labels)]
+    clusters = {}
+    for i in range(len(masks)):
+        clusters[i] = [list_ts_names[k] for k in range(len(list_ts_names)) if masks[i][k]]
+
+    # Group time series according to clusters and print them
+    for label in np.unique(labels):
+        # Print cluster content names
+        print("Composition of cluster " + str(label))
+        print(clusters[label])
+        # Plot cluster content time series
+        cluster_idx = np.argsort(labels)[np.sort(labels)==label]
+        cluster = [list_ts[idx] for idx in cluster_idx]
+        print()
+        print("Plotting cluster " + str(label))
+        ts.multi_plot(cluster, title="Content of cluster"+str(label))
+
+    return None
+
+
+@typechecked
+def show_clustering_results(list_ts: list, labels: list, expected_truth: list) -> pd.DataFrame:
+    """
+    Compute the data frame showing the cluster content from a clustering.
+
+    Parameters
+    ----------
+    list_ts : list of ts.TimeSeries
+      List of time series used to compute labels.
+    labels : list of int
+      Labels to apply to the time series.
+    expected_truth : list of str
+      Name of expected clusters true content.
+
+    Returns
+    -------
+    pd.DataFrame
+      Data Frame showing the content of clusters.
+    """
+
+    # Checks
+    if len(list_ts) != len(labels):
+        raise AssertionError("Arguments list_ts and labels must have same length.")
+
+    # Initializations
+    k = len(np.unique(labels))
+    N = len(expected_truth)
+
+    # Get the clusters for this clustering
+    list_ts_names = [tsi.name for tsi in list_ts]
+    masks = [(labels==i) for i in np.unique(labels)]
+    clusters = {}
+    for i in range(len(masks)):
+        clusters[i] = [list_ts_names[k] for k in range(len(list_ts_names)) if masks[i][k]]
+
+    # Analyse clusters content
+    resu = np.zeros(shape=(N,k))
+    reverse_dict = dict(zip(expected_truth, range(len(expected_truth))))
+    for i in clusters.keys():
+        for name in clusters[i]:
+            resu[i,reverse_dict[name[:2]]] += 1
+
+    # Build a DataFrame
+    resu_df = pd.DataFrame(index=["Cluster " + str(i) for i in range(k)],
+                           data=resu.astype(int),
+                           columns=expected_truth)
+
+    return resu_df
+
+
+
 # FEATURE IMPORTANCE
 
-def generate_random_classification(n_features, n_informative, n_redundant, n_samples, random_state=0, sigma_std=0.):
+@typechecked
+def generate_random_classification(n_features: int,
+                                   n_informative: int,
+                                   n_redundant: int,
+                                   n_samples: int,
+                                   random_state: int=0,
+                                   sigma_std: float=0.
+                                   ) -> (pd.DataFrame, pd.Series):
     """
     Generate a random dataset for a classification problem.
     
@@ -465,9 +903,13 @@ def generate_random_classification(n_features, n_informative, n_redundant, n_sam
         X['R_' + str(k)] = X['I_' + str(j)] + np.random.normal(size=X.shape[0]) * sigma_std
         
     return X, y
-        
-        
-def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
+
+
+@typechecked
+def feature_importance_pvalues(fit: statsmodels.discrete.discrete_model.BinaryResultsWrapper,
+                               plot: bool=False,
+                               figsize: (float,float)=(10,10)
+                               ) -> pd.DataFrame:
     """
     Plot the p-values of features from a fit.
     
@@ -504,13 +946,19 @@ def feature_importance_pvalues(fit, plot=False, figsize=(10,10)):
     return pvals_df
 
 
-def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
+@typechecked
+def feature_importance_mdi(classifier: BaggingClassifier,
+                           X: pd.DataFrame,
+                           y: pd.Series,
+                           plot: bool=False,
+                           figsize: (float,float)=(10,10)
+                           ) -> pd.DataFrame:
     """
     Feature importance based on in-sample Mean-Decrease Impurity (MDI).
     
     Arguments
     ---------
-    classifier : tree classifier
+    classifier : sklearn.ensemble._bagging.BaggingClassifier
       Tree classifier to apply on data.
     X : pandas.DataFrame
       Data Frame with features as columns and samples as rows.
@@ -563,15 +1011,22 @@ def feature_importance_mdi(classifier, X, y, plot=False, figsize=(10,10)):
         plt.show()
     
     return fimp_df
-        
-    
-def feature_importance_mda(classifier, X, y, n_splits=10, plot=False, figsize=(10,10)):
+
+
+@typechecked
+def feature_importance_mda(classifier: BaggingClassifier,
+                           X: pd.DataFrame,
+                           y: pd.Series,
+                           n_splits: int=10,
+                           plot: bool=False,
+                           figsize: (float,float)=(10,10)
+                           ) -> pd.DataFrame:
     """
     Feature importance based out-of-sample Mean-Decrease Accuracy (MDA).
     
     Arguments
     ---------
-    classifier : tree classifier
+    classifier : sklearn.ensemble._bagging.BaggingClassifier
       Tree classifier to apply on data.
     X : pandas.DataFrame
       Data Frame with features as columns and samples as rows.

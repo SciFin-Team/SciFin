@@ -93,7 +93,7 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
 # These models describe the evolution of time series.
 
 
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
+def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -125,6 +125,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose option.
     
     Returns
     -------
@@ -168,9 +170,9 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
             x[t] += coeffs[p] * x[t-p-1]
     
     # Compute theoretical expectation value
-    E = cst / (1 - sum(coeffs))
-    print("Under stationarity assumption, the expected value for this AR("
-          + str(P) + ") model is: " + str(E) + "\n")
+    if verbose:
+        E = cst / (1 - sum(coeffs))
+        print("Under stationarity assumption, the expected value for this AR({str(P)}) model is: {str(E)} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -313,7 +315,7 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name=""):
+def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -348,7 +350,9 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
       Unit of the time series values.
     name : str
       Name or nickname of the series.
-      
+    verbose : bool
+      Verbose option.
+
     Returns
     -------
     TimeSeries
@@ -389,13 +393,14 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
                 x[t] -= coeffs[q] * a[t-q-1]
     
     # Compute theoretical values
-    V = 1.
-    for q in range(Q):
-        V += coeffs[q]**2
-    V *= sigma**2
-    print("The expected value for this MA(" + str(Q) + ") model is: " + str(cst))
-    print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
-          " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
+    if verbose:
+        V = 1.
+        for q in range(Q):
+            V += coeffs[q]**2
+        V *= sigma**2
+        print(f"The expected value for this MA({str(Q)}) model is: {str(cst)}")
+        print(f"The estimation of the variance for this MA({str(Q)}) model is: {str(V)}" + \
+              f" , i.e. a standard deviation of: {str(np.sqrt(V))} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -602,7 +607,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name=""):
+def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name="", verbose=False):
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -635,6 +640,8 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose option.
       
     Returns
     -------
@@ -689,12 +696,11 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
         a[t] = sig * eps[t]
     
     # Compute theoretical values
-    print("The expected value for this ARCH(" + str(M) \
-          + ") model is 0, like any other ARCH model, and the estimated value is : " \
-          + str(np.mean(a)))
-    V = cst / (1 - sum(coeffs))
-    print("The theoretical standard deviation value for this ARCH(" + str(M) \
-          + ") model is: " + str(V))
+    if verbose:
+        print(f"The expected value for this ARCH({str(M)}) model is 0, like any other ARCH model," \
+              + f" and the estimated value is: {str(np.mean(a))}")
+        V = cst / (1 - sum(coeffs))
+        print(f"The theoretical standard deviation value for this ARCH({str(M)}) model is: {str(V)}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
@@ -703,7 +709,7 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
     return rs
 
 
-def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name=""):
+def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name="", verbose=False):
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -741,6 +747,8 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
       Unit of the time series values.
     name : str
       Name or nickname of the series.
+    verbose : bool
+      Verbose option.
       
     Returns
     -------
@@ -801,9 +809,9 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
         a[t] = sig[t] * eps[t]
 
     # Compute theoretical values
-    V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
-    print("The theoretical standard deviation for this GARCH(" + str(M) \
-          + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+    if verbose:
+        V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
+        print(f"The theoretical standard deviation for this GARCH({str(M)}, {str(S)}) model is: {str(np.sqrt(V))}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)

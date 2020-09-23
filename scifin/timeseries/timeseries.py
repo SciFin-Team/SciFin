@@ -110,8 +110,8 @@ class Series:
             # Deal with time
             if type(data.index[0]) == 'str':
                 data.index = pd.to_datetime(data.index, format=fmt)
-                self.start_utc = datetime.strptime(str(new_index[0]), fmt)
-                self.end_utc = datetime.strptime(str(new_index[-1]), fmt)
+                self.start_utc = datetime.strptime(str(data.index[0]), fmt)
+                self.end_utc = datetime.strptime(str(data.index[-1]), fmt)
                 self.nvalues = data.shape[0]
             else:
                 self.start_utc = data.index[0]
@@ -1120,8 +1120,7 @@ class TimeSeries(Series):
         
         # Check if actually we need to do something
         if self.is_sampling_uniform() == True:
-            print("Time series already has a uniform sampling. \
-                  Returning the same time series.")
+            print("Time series already has a uniform sampling. Returning the same time series.")
             return self
         
         # Prepare the new index
@@ -2113,7 +2112,7 @@ def imbalance(tick_imb_ts, ts=None, name=None):
     return tickval_imb_ts
 
 
-def multi_plot(Series, figsize=(12,5), dpi=100):
+def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
     """
     Plots multiple time series together.
     
@@ -2125,6 +2124,13 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
       Dimensions of the figure.
     dpi : int
       Dots-per-inch definition of the figure.
+    title : str
+      New title to eventually use.
+
+    Returns
+    -------
+    None
+      None
     """
 
     # Checks
@@ -2184,8 +2190,8 @@ def multi_plot(Series, figsize=(12,5), dpi=100):
             plt.plot(Series[i].data.index, Series[i].data.values)
         
     # Make it cute
-    title = "Multiplot of time series from " + str(min_date)[:10] \
-            + " to " + str(max_date)[:10]
+    if title is None:
+        title = f"Multi-plot of time series from {str(min_date)[:10]} to {str(max_date)[:10]}"
     if Series[0].tz is None:
         xlabel = 'Date'
     else:
