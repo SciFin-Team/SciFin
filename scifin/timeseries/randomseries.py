@@ -13,7 +13,6 @@ from typeguard import typechecked
 
 # Local application imports
 from . import TimeSeries
-from .timeseries import T_TimeSeries
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -31,7 +30,7 @@ def constant(start_date: Union[str, datetime.date],
              cst: float=0.,
              sigma: float=0.,
              tz=None, unit=None, name=""
-             ) -> T_TimeSeries:
+             ) -> TimeSeries:
     """
     Defines a time series with constant numerical value
     and eventually add a noise to it.
@@ -109,7 +108,7 @@ def auto_regressive(start_date: Union[str, datetime.date],
                     unit: str=None,
                     name: str="",
                     verbose: bool=False
-                    ) -> T_TimeSeries:
+                    ) -> TimeSeries:
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -208,7 +207,7 @@ def random_walk(start_date: Union[str, datetime.date],
                 tz: str=None,
                 unit: str=None,
                 name: str=""
-                ) -> T_TimeSeries:
+                ) -> TimeSeries:
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -286,7 +285,7 @@ def drift_random_walk(start_date: Union[str, datetime.date],
                       tz: str=None,
                       unit: str=None,
                       name: str=""
-                      ) -> T_TimeSeries:
+                      ) -> TimeSeries:
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -368,7 +367,7 @@ def moving_average(start_date: Union[str, datetime.date],
                    unit: str=None,
                    name: str="",
                    verbose: bool=False
-                   ) -> T_TimeSeries:
+                   ) -> TimeSeries:
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -478,7 +477,7 @@ def arma(start_date: Union[str, datetime.date],
          tz: str=None,
          unit: str=None,
          name: str=""
-         ) -> T_TimeSeries:
+         ) -> TimeSeries:
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -586,7 +585,7 @@ def rca(start_date: Union[str, datetime.date],
         tz: str=None,
         unit: str=None,
         name: str=""
-        ) -> T_TimeSeries:
+        ) -> TimeSeries:
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -700,7 +699,7 @@ def arch(start_date: Union[str, datetime.date],
          unit: str=None,
          name: str="",
          verbose: bool=False
-         ) -> T_TimeSeries:
+         ) -> TimeSeries:
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -817,7 +816,7 @@ def garch(start_date: Union[str, datetime.date],
           unit: str=None,
           name: str="",
           verbose: bool=False
-          ) -> T_TimeSeries:
+          ) -> TimeSeries:
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -940,7 +939,7 @@ def charma(start_date: Union[str, datetime.date],
            tz: str=None,
            unit: str=None,
            name: str=""
-           ) -> T_TimeSeries:
+           ) -> TimeSeries:
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.

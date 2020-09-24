@@ -38,10 +38,6 @@ DPOA = {'D': 365, 'B': 252, 'W': 52,
 fmt = "%Y-%m-%d %H:%M:%S"
 fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
-# New Variables Types
-T_Series = TypeVar('T_Series')
-T_TimeSeries = TypeVar('T_TimeSeries')
-
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 

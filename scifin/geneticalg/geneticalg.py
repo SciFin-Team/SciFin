@@ -6,7 +6,7 @@
 import copy
 from datetime import datetime
 import random as random
-from typing import TypeVar, Union
+from typing import Union
 
 # Third party imports
 import numpy as np
@@ -15,10 +15,6 @@ from typeguard import typechecked
 
 # Local application imports
 from .. import marketdata
-
-# New Variables Types
-Individual = TypeVar('T_Individual')
-T_Population = TypeVar('T_Population')
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -40,7 +36,7 @@ class Individual:
       Name of the individual.
     """
 
-    def __init__(self: Individual,
+    def __init__(self,
                  genes: Union[list, np.ndarray]=None,
                  genes_names: list=None,
                  birth_date: Union[str, datetime.timestamp]=None,
@@ -65,13 +61,14 @@ class Individual:
     
     
     @classmethod
-    def generate_random_genes(cls: Individual,
+    def generate_random_genes(cls,
                               n_genes: int,
                               lower_limit: float,
                               upper_limit: float,
                               sum_target: float=None,
                               birth_date: Union[str, datetime.timestamp]=None,
-                              name: str="") -> Individual:
+                              name: str=""
+                              ) -> 'Individual':
         """
         Generates genes values randomly between upper_limit and lower_limit
         (values before normalization), with possibility to impose a target value for their sum.
@@ -137,7 +134,7 @@ class Population:
     Creates a population, i.e. a table of individuals with their respective genes values.
     """
     
-    def __init__(self: T_Population,
+    def __init__(self,
                  df: pd.DataFrame=None,
                  n_genes: int=None,
                  name: str=""
@@ -159,7 +156,7 @@ class Population:
         self.history = None
         
 
-    def geIndividual(self: T_Population, num: int=None, name: str=None) -> Individual:
+    def get_individual(self, num: int=None, name: str=None) -> Individual:
         """
         Returns an individual from a position in the population.
         """
@@ -188,9 +185,15 @@ class Population:
         return indiv
         
         
-
-def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
-                               sum_target, birth_date, name_indiv="Indiv"):
+@typechecked
+def generate_random_population(n_indiv: int,
+                               n_genes: int,
+                               upper_limit: float,
+                               lower_limit: float,
+                               sum_target: float,
+                               birth_date: Union[str, datetime.date],
+                               name_indiv: str="Indiv"
+                               ) -> Population:
     """
     Creates a population of individuals from random values.
     
@@ -206,7 +209,7 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
       Minimum value taken by the genes, before normalization. Can be negative.
     sum_target : float  
       Target value for the sum of the genes after normalization.
-    birth_date : str
+    birth_date : str, datetime.date
       Date specifying the time individuals of that population were created.
     name_indiv : str
       Name we choose for the individuals of this population.
@@ -240,9 +243,15 @@ def generate_random_population(n_indiv, n_genes, upper_limit, lower_limit,
     return pop
 
     
-    
-def get_generation(population, environment, current_eval_date, next_eval_date,
-                   lamb=0.5, fitness_method="Last Return and Vol", date_format="%Y-%m"):
+@typechecked
+def get_generation(population: Population,
+                   environment: Market,
+                   current_eval_date: datetime.date,
+                   next_eval_date: datetime.date,
+                   lamb: float=0.5,
+                   fitness_method: str="Last Return and Vol",
+                   date_format: str="%Y-%m"
+                   ) -> Population:
     """
     Takes a population, propagate its elements to the next evaluation event, and compute their fitness.
     A generation is defined as a population with computed fitness and ranked by it.
@@ -337,8 +346,8 @@ def get_generation(population, environment, current_eval_date, next_eval_date,
     return generation
 
 
-
-def roulette(cum_sum, chance):
+@typechecked
+def roulette(cum_sum: pd.Series, chance: float) -> int:
     """
     Takes the cumulative sums and the randomly generated value for the selection process
     and returns the number of the selected individual.
@@ -358,9 +367,14 @@ def roulette(cum_sum, chance):
     Returns
     -------
     int
-      Number refering to selected row.
+      Number referring to selected row.
     """
 
+    # Checks
+    if (chance < 0) or (chance > 1):
+        raise AssertionError("Argument chance must be in [0,1].")
+
+    # Computation
     variable = list(cum_sum.copy())
     variable.append(chance)
     variable = sorted(variable)
@@ -368,8 +382,8 @@ def roulette(cum_sum, chance):
     return variable.index(chance)
 
 
-
-def selection(generation, method='Fittest Half'):
+@typechecked
+def selection(generation: Population, method: str='Fittest Half') -> Population:
     """
     Operates the selection among a generation based on the last fitness.
     
@@ -442,8 +456,11 @@ def selection(generation, method='Fittest Half'):
     return new_pop
 
 
-
-def pairing(elite, selected, method = 'Fittest'):
+@typechecked
+def pairing(elite: Population,
+            selected: Population,
+            method: str = 'Fittest'
+            ) -> Union[list, pd.DataFrame]:
     """
     Establishes the pairing of the selected population and elite all together.
     
@@ -487,28 +504,28 @@ def pairing(elite, selected, method = 'Fittest'):
     M = individuals.shape[0]
     
     # odd_indiv = False
-    if M%2 != 0:
+    if M % 2 != 0:
         raise ValueError("Number of individuals is odd, creating impossible pairing!")
     
     # Start the pairing
     pairs = []
     if method == 'Fittest':
-        parents_pairs = [[individuals.index[x], individuals.index[x+1]] for x in range(0,M,2)]
-        parents_values = [[individuals.iloc[x], individuals.iloc[x+1]] for x in range(0,M,2)]
+        parents_pairs = [[individuals.index[x], individuals.index[x+1]] for x in range(0, M, 2)]
+        parents_values = [[individuals.iloc[x], individuals.iloc[x+1]] for x in range(0, M, 2)]
         
     if method == 'Random':
         pairs = [x for x in range(M)]
         random.shuffle(pairs)
         parents_pairs = []
         parents_values = []
-        for x in range(0,M,2):
+        for x in range(0, M, 2):
             parents_pairs.append([individuals.index[pairs[x]], individuals.index[pairs[x+1]]])
             parents_values.append([individuals.iloc[pairs[x]], individuals.iloc[pairs[x+1]]])
                 
     # Note: This method does not allow a parent to reproduce with himself,
     #       but allows some parents to reproduce several times!
     if method == 'Weighted Random':
-        Normalized_Fitness = sorted([Fitness[x]/sum(Fitness) for x in range(len(Fitness))], reverse = True)
+        Normalized_Fitness = sorted([Fitness[x]/sum(Fitness) for x in range(len(Fitness))], reverse=True)
         Cumulative_Sum = np.array(Normalized_Fitness).cumsum()
         parents_pairs = []
         parents_values = []
@@ -524,8 +541,8 @@ def pairing(elite, selected, method = 'Fittest'):
     return parents_pairs, parents_values
 
 
-
-def non_adjacent_random_list(Nmin, Nmax, Npoints):
+@typechecked
+def non_adjacent_random_list(Nmin: int, Nmax: int, Npoints: int) -> list:
     """
     Generates a list of Npoints non-adjacent numbers at random,
     taken from a list of integers between Nmin and Nmax.
@@ -552,15 +569,15 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
     """
     
     # Initial tests
-    if Nmin%1!=0 or Nmax%1!=0 or Npoints%1!=0:
+    if Nmin % 1 != 0 or Nmax % 1 != 0 or Npoints % 1 != 0:
         raise TypeError("Nmin, Nmax and Npoints must be integers.")
 
     if Npoints > int((Nmax-Nmin-2)/3):
-        print("For Nmin =",Nmin,"and Nmax =",Nmax,"we must have Npoints <=",int((Nmax-Nmin-2)/5))
+        print(f"For Nmin = {Nmin} and Nmax = {Nmax} we must have Npoints <= {int((Nmax - Nmin - 2) / 5)}")
         raise ValueError("Please take a lower value to avoid slowness.")
 
     # Initialization
-    list_pts=[]
+    list_pts = []
     count = 0
 
     # Process
@@ -568,12 +585,12 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
         pt = random.randint(Nmin+1, Nmax-1) 
         pt_is_fine = True
         for p in list_pts:
-            if np.abs(p-pt)<2:
+            if np.abs(p-pt) < 2:
                 pt_is_fine = False
                 continue
         if pt_is_fine:
             list_pts.append(pt)
-            count +=1
+            count += 1
             
     # For visual check
     # fig = plt.figure(figsize=(15,5))
@@ -582,8 +599,12 @@ def non_adjacent_random_list(Nmin, Nmax, Npoints):
     return sorted(list_pts)
 
 
-
-def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=None):
+@typechecked
+def mating_pair(pair_of_parents: (pd.DataFrame, pd.DataFrame),
+                mating_date: Union[str, datetime.date],
+                method: str='Single Point',
+                n_points: int=None
+                ) -> (pd.DataFrame, pd.DataFrame):
     """
     Takes a pair of parents and makes a reproduction of them to produce two offsprings.
     This is done by exchanging sequences of genes between parents.
@@ -747,8 +768,13 @@ def mating_pair(pair_of_parents, mating_date, method='Single Point', n_points=No
     return offsprings
 
 
-
-def get_offsprings(parents_values, mating_date, method='Single Point', n_points=None, name_indiv="Offspring"):
+@typechecked
+def get_offsprings(parents_values: list,
+                   mating_date: Union[str, datetime.date],
+                   method: str='Single Point',
+                   n_points: int=None,
+                   name_indiv: str="Offspring"
+                   ) -> Population:
     """
     Takes all the pairs of parents values and proceeds to their mating in order
     to produce two offsprings for each, putting all of them in a Population.
@@ -760,7 +786,7 @@ def get_offsprings(parents_values, mating_date, method='Single Point', n_points=
     
     Parameters
     ----------
-    parent_values : List of DataFrames
+    parents_values : List of DataFrames
       List of data frames containing the parents genes.
     mating_date : str or Period date
       Mating date.
@@ -792,15 +818,21 @@ def get_offsprings(parents_values, mating_date, method='Single Point', n_points=
     return Population(df=offsprings_pop, n_genes=Ngenes)
 
 
-
-def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
-                      mutation_rate=2, method='Reset', standard_deviation = 0.001):
+@typechecked
+def mutate_individual(input_individual: Individual,
+                      upper_limit: float,
+                      lower_limit: float,
+                      sum_target: float,
+                      mutation_rate: int=2,
+                      method: str = 'Reset',
+                      standard_deviation: float = 0.001
+                      ) -> Individual:
     """
     Makes the mutation of a single individual.
     
     Different methods can be used:
     - 'Gauss': normal-distributed modification of affected genes.
-    - 'Reset': uniformly distributed modificatio of affected genes.
+    - 'Reset': uniformly distributed modification of affected genes.
     
     Parameters
     ----------
@@ -813,7 +845,7 @@ def mutate_individual(input_individual, upper_limit, lower_limit, sum_target,
       Lower limit of the gene (asset allocation), before renormalization.
       Only for 'Reset' method.
     sum_target : float
-      Tarket sum of genes (asset allocations) used for renormalization.
+      Target sum of genes (asset allocations) used for renormalization.
       Only for 'Reset' method.
     mutation_rate : int
       Number of mutations to apply.
@@ -896,7 +928,7 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
       List of lists of genes positions to be mutated.
     """
     
-    if num_genes <= 1 :
+    if num_genes <= 1:
         return 0
     
     mutated_genes = []
@@ -906,6 +938,7 @@ def mutation_set(num_indiv, num_genes, num_mut=0):
             tmp_set[1] = random.randint(0, num_genes-1)
         mutated_genes.append(tmp_set)
 
+    print(mutated_genes)
     return mutated_genes
 
 
