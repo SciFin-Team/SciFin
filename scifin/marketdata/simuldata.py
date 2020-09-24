@@ -17,7 +17,7 @@ from typeguard import typechecked
 # Local application imports
 from . import marketdata
 from ..timeseries import TimeSeries
-from ..geneticalg import Individual
+from ..geneticalg import Individual, Population
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.

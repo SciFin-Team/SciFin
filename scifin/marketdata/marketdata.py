@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Union
 
 # Third party imports
-from IPython.display import display, clear_output
+# from IPython.display import display, clear_output
 import numpy as np
 import pandas as pd
 import pandas_datareader as pdr
@@ -16,7 +16,7 @@ from typeguard import typechecked
 # Local application imports
 from .. import exceptions
 from . import simuldata
-from .simuldata import T_Market
+from ..marketdata import Market
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -25,10 +25,6 @@ from .simuldata import T_Market
 def get_sp500_tickers() -> list:
     """
     Gets the SP500 tickers from Wikipedia.
-    
-    Parameters
-    ----------
-    None
     
     Returns
     -------
@@ -110,8 +106,9 @@ def get_assets_from_yahoo(list_assets: list,
         print(i)
         
         # Printing status of execution
-        clear_output(wait=True)
-        display("Running... " + str(int(counter/N*100)) + '%')
+        # clear_output(wait=True)
+        # display("Running... " + str(int(counter/N*100)) + '%')
+        print("Running... " + str(int(counter/N*100)) + '%')
         counter += 1
         
         try:
@@ -127,7 +124,7 @@ def get_assets_from_yahoo(list_assets: list,
 
 
 @typechecked
-def market_EWindex(market: T_Market, name: str="Market EW Index") -> pd.DataFrame:
+def market_EWindex(market: Market, name: str="Market EW Index") -> pd.DataFrame:
     """
     Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
     
@@ -158,7 +155,7 @@ def market_EWindex(market: T_Market, name: str="Market EW Index") -> pd.DataFram
 
 
 @typechecked
-def get_marketcap_today(market: T_Market) -> pd.Series:
+def get_marketcap_today(market: Market) -> pd.Series:
     """
     Returns the market capitalization as it is today.
     
@@ -183,7 +180,7 @@ def get_marketcap_today(market: T_Market) -> pd.Series:
 
 
 @typechecked
-def market_CWindex(market: T_Market, marketcap: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
+def market_CWindex(market: Market, marketcap: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
     """
     Function that returns the Cap-Weighted (CW) index associated
     with the assets of a market.

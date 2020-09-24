@@ -4,7 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Callable, Union
 import warnings
 
 # Third party imports
@@ -40,18 +40,18 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
-def get_list_timezones():
+@typechecked
+def get_list_timezones() -> None:
     """
     Lists all the time zone names that can be used.
     """
     print(pytz.all_timezones)
     return None
-        
 
 
 # CLASS Series
 
+@typechecked
 class Series:
     """
     Abstract class defining a Series and its methods.
@@ -80,13 +80,17 @@ class Series:
       Timezone associated with dates.
     """
     
-    def __init__(self, data=None, tz=None, unit=None, name=""):
+    def __init__(self,
+                 data: Union[pd.Series, pd.DataFrame]=None,
+                 tz: str=None,
+                 unit: str=None,
+                 name: str="") -> None:
         """
         Receives a panda.Series or pandas.DataFrame as an argument and initializes the time series.
         """
         
         # Deal with DataFrame / Series
-        if (data is None) or (data.empty == True):
+        if (data is None) or (data.empty is True):
             self.data = pd.Series(index=None, data=None)
             self.start_utc = None
             self.end_utc = None
@@ -97,10 +101,10 @@ class Series:
             # Making sure the user entered a pandas.Series or pandas.DataFrame
             # with just an index and one column for values
             if isinstance(data, pd.DataFrame):
-                if data.shape[1]!=1:
+                if data.shape[1] != 1:
                     raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
                 else:
-                    self.data = pd.Series(data.iloc[:,0])
+                    self.data = pd.Series(data.iloc[:, 0])
             elif not isinstance(data, pd.Series):
                 raise AssertionError("Time series must be built from a pandas.Series or a pandas.DataFrame with only one value column.")
             else:
@@ -135,24 +139,28 @@ class Series:
         # Deal with name (nickname)
         self.name = name
         
-        
-    def get_start_date_local(self):
+
+    def get_start_date_local(self) -> datetime.date:
         """
         Returns the attribute UTC start date in local time zone defined by attribute timezine.
         """
+
         start_tmp = datetime.strptime(str(self.start_utc), fmt).astimezone(self.timezone)
+
         return datetime.strftime(start_tmp, format=fmtz)
     
     
-    def get_end_date_local(self):
+    def get_end_date_local(self) -> datetime.date:
         """
         Returns the attribute UTC end date in local time zone defined by attribute timezine.
         """
+
         end_tmp = datetime.strptime(str(self.end_utc), fmt).astimezone(self.timezone)
+
         return datetime.strftime(end_tmp, format=fmtz)
 
     
-    def specify_data(self, start, end):
+    def specify_data(self, start: Union[str, datetime.date], end: Union[str, datetime.date]) -> pd.DataFrame:
         """
         Returns the appropriate data according to user's specifying
         or not the desired start and end dates.
@@ -174,22 +182,24 @@ class Series:
         return data
 
     
-    def start_end_names(self, start, end):
+    def start_end_names(self, start: Union[str, datetime.date], end: Union[str, datetime.date]) -> pd.DataFrame:
         """
         Recasts the time series dates to 10 characters strings
         if the date hasn't been re-specified (i.e. value is 'None').
         """
+
         s = str(self.start_utc)[:10] if (start is None) else start
         e = str(self.end_utc)[:10] if (end is None) else end
 
-        return s,e
+        return s, e
     
     
-    def is_sampling_uniform(self):
+    def is_sampling_uniform(self) -> bool:
         """
         Tests if the sampling of a time series is uniform or not.
         Returns a boolean value True when the sampling is uniform, False otherwise.
         """
+
         # Prepare data
         sampling = [datetime.timestamp(x) for x in self.data.index]
         assert(len(sampling)==self.nvalues)
@@ -203,13 +213,13 @@ class Series:
         return True
     
 
-    
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 # CLASS TimeSeries
 
+@typechecked
 class TimeSeries(Series):
     """
     Class defining a time series and its methods.
@@ -240,7 +250,11 @@ class TimeSeries(Series):
       Unit of the time series values.
     """
     
-    def __init__(self, data=None, tz=None, unit=None, name=""):
+    def __init__(self,
+                 data: Union[pd.Series, pd.DataFrame]=None,
+                 tz: str=None,
+                 unit: str=None,
+                 name: str="") -> None:
         """
         Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
         """
@@ -254,7 +268,10 @@ class TimeSeries(Series):
     
     ### Plot INFORMATION ABOUT THE TIME SERIES ###
     
-    def simple_plot(self, figsize=(12,5), dpi=100):
+    def simple_plot(self,
+                    figsize: (float, float) = (12, 5),
+                    dpi: float=100
+                    ) -> None:
         """
         Plots the time series in a simple way.
 
@@ -295,8 +312,15 @@ class TimeSeries(Series):
         
         return None
     
-    
-    def distribution(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
+
+    @typechecked
+    def distribution(self,
+                     start: Union[str, datetime.date]=None,
+                     end: Union[str, datetime.date]=None,
+                     bins: int=20,
+                     figsize: (float, float) = (8, 4),
+                     dpi: float=100
+                     ) -> None:
         """
         Plots the distribution of values between two dates.
         """
@@ -317,7 +341,13 @@ class TimeSeries(Series):
         return None
         
         
-    def density(self, start=None, end=None, bins=20, figsize=(8,4), dpi=100):
+    def density(self,
+                start: Union[str, datetime.date]=None,
+                end: Union[str, datetime.date]=None,
+                bins: int=20,
+                figsize: (float, float) = (8, 4),
+                dpi: float=100
+                ) -> None:
         """
         Plots the density of values between two dates.
         """
@@ -338,7 +368,13 @@ class TimeSeries(Series):
         return None
     
 
-    def simple_plot_distrib(self, start=None, end=None, bins=20, figsize=(10,4), dpi=100):
+    def simple_plot_distrib(self,
+                            start: Union[str, datetime.date]=None,
+                            end: Union[str, datetime.date]=None,
+                            bins: int=20,
+                            figsize: (float, float) = (10, 4),
+                            dpi: float=100
+                            ) -> None:
         """
         Plots the time series and its associated distribution of values between two dates.
         """
@@ -381,7 +417,7 @@ class TimeSeries(Series):
         return None
     
     
-    def get_sampling_interval(self):
+    def get_sampling_interval(self) -> Union[str, datetime.date]:
         """
         Returns the sampling interval for a uniformly-sampled time series.
         """
@@ -394,7 +430,12 @@ class TimeSeries(Series):
             return intv
         
 
-    def lag_plot(self, lag=1, figsize=(5,5), dpi=100, alpha=0.5):
+    def lag_plot(self,
+                 lag: int=1,
+                 figsize: (float, float) = (5, 5),
+                 dpi: float=100,
+                 alpha: float=0.5
+                 ) -> None:
         """
         Returns the scatter plot x_t v.s. x_{t-l}.
         """
@@ -420,7 +461,12 @@ class TimeSeries(Series):
         return None
         
         
-    def lag_plots(self, nlags=5, figsize=(10,10), dpi=100, alpha=0.5):
+    def lag_plots(self,
+                  nlags: int=5,
+                  figsize: (float, float) = (10, 10),
+                  dpi: float=100,
+                  alpha: float=0.5
+                  ) -> None:
         """
         Returns a number of scatter plots x_t v.s. x_{t-l}
         where l is the lag value taken from [0,...,nlags].
@@ -437,10 +483,10 @@ class TimeSeries(Series):
             
         # Rule for the number of rows/cols
         ncols = int(np.sqrt(nlags))
-        if(nlags%ncols==0):
-            nrows = nlags//ncols
+        if(nlags % ncols == 0):
+            nrows = nlags // ncols
         else:
-            nrows = nlags//ncols + 1
+            nrows = nlags // ncols + 1
         
         # Do the plots
         fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True,
@@ -456,7 +502,7 @@ class TimeSeries(Series):
         else:
             tmp_name = self.name
         title = "Multiple lag plots of time series " + tmp_name
-        fig.suptitle(title, )
+        fig.suptitle(title)
         plt.show()
         
         return None
@@ -464,7 +510,7 @@ class TimeSeries(Series):
     
     ### SIMPLE DATA EXTRACTION ON THE TIME SERIES ###
     
-    def hist_avg(self, start=None, end=None):
+    def hist_avg(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the historical average of the time series
         between two dates (default is the whole series).
@@ -475,7 +521,7 @@ class TimeSeries(Series):
         return avg
     
     
-    def hist_std(self, start=None, end=None):
+    def hist_std(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the historical standard deviation of the time series
         between two dates (default is the whole series).
@@ -486,7 +532,7 @@ class TimeSeries(Series):
         return std
         
         
-    def hist_variance(self, start=None, end=None):
+    def hist_variance(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the historical variance of the time series
         between two dates (default is the whole series).
@@ -497,7 +543,7 @@ class TimeSeries(Series):
         return var
     
     
-    def hist_skewness(self, start=None, end=None):
+    def hist_skewness(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the historical skew of the time series
         between two dates (default is the whole series).
@@ -508,7 +554,7 @@ class TimeSeries(Series):
         return skew
     
     
-    def hist_kurtosis(self, start=None, end=None):
+    def hist_kurtosis(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the historical (Fisher) kurtosis of the time series
         between two dates (default is the whole series).
@@ -519,7 +565,7 @@ class TimeSeries(Series):
         return kurt
     
     
-    def min(self, start=None, end=None):
+    def min(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the minimum of the series.
         """
@@ -529,7 +575,7 @@ class TimeSeries(Series):
         return ts_min
     
     
-    def max(self, start=None, end=None):
+    def max(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> float:
         """
         Returns the maximum of the series.
         """
@@ -539,7 +585,7 @@ class TimeSeries(Series):
         return ts_max
     
     
-    def describe(self, start=None, end=None):
+    def describe(self, start: Union[str, datetime.date]=None, end: Union[str, datetime.date]=None) -> None:
         """
         Returns description of time series between two dates.
         This uses the pandas function having same name.
@@ -551,7 +597,11 @@ class TimeSeries(Series):
     
     ### METHODS THAT ARE CLOSER TO FINANCIAL APPLICATIONS ###
     
-    def percent_change(self, start=None, end=None, name=""):
+    def percent_change(self,
+                       start: Union[str, datetime.date]=None,
+                       end: Union[str, datetime.date]=None,
+                       name: str=""
+                       ) -> 'TimeSeries':
         """
         Returns the percent change of the series (in %).
         
@@ -572,7 +622,11 @@ class TimeSeries(Series):
     net_returns = percent_change
     
     
-    def gross_returns(self, start=None, end=None, name=""):
+    def gross_returns(self,
+                      start: Union[str, datetime.date]=None,
+                      end: Union[str, datetime.date]=None,
+                      name: str=""
+                      ) -> 'TimeSeries':
         """
         Returns the gross returns of the series (in %),
         i.e. percent change + 1.
@@ -590,7 +644,11 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def hist_vol(self, start=None, end=None, verbose=True):
+    def hist_vol(self,
+                 start: Union[str, datetime.date]=None,
+                 end: Union[str, datetime.date]=None,
+                 verbose: bool=True
+                 ) -> 'TimeSeries':
         """
         Computes the net returns of the time series and
         returns their associated historical volatility
@@ -625,7 +683,11 @@ class TimeSeries(Series):
         return std
     
     
-    def annualized_vol(self, start=None, end=None, verbose=True):
+    def annualized_vol(self,
+                       start: Union[str, datetime.date]=None,
+                       end: Union[str, datetime.date]=None,
+                       verbose: bool=True
+                       ) -> 'TimeSeries':
         """
         Returns the annualized volatility of the time series
         between two dates (default is the whole series),
@@ -641,7 +703,11 @@ class TimeSeries(Series):
             raise ValueError('Annualized volatility could not be evaluated.')
 
     
-    def annualized_return(self, start=None, end=None, verbose=True):
+    def annualized_return(self,
+                          start: Union[str, datetime.date]=None,
+                          end: Union[str, datetime.date]=None,
+                          verbose: bool=True
+                          ) -> float:
         """
         Returns the annualized return of the time series
         between two dates (default is the whole series),
@@ -683,7 +749,11 @@ class TimeSeries(Series):
             raise ValueError('Annualized return could not be evaluated.')
     
     
-    def risk_ratio(self, start=None, end=None, verbose=True):
+    def risk_ratio(self,
+                   start: Union[str, datetime.date]=None,
+                   end: Union[str, datetime.date]=None,
+                   verbose: bool=True
+                   ) -> float:
         """
         Returns the risk ratio, i.e. the ratio of annualized return
         over annualized volatility.
@@ -695,7 +765,12 @@ class TimeSeries(Series):
         return ann_return / ann_volatility
 
     
-    def annualized_Sharpe_ratio(self, risk_free_rate=0, start=None, end=None, verbose=True):
+    def annualized_Sharpe_ratio(self,
+                                risk_free_rate: float=0,
+                                start: Union[str, datetime.date]=None,
+                                end: Union[str, datetime.date]=None,
+                                verbose: bool=True
+                                ) -> float:
         """
         Returns the Sharpe ratio, also known as risk adjusted return.
         """
@@ -709,7 +784,11 @@ class TimeSeries(Series):
     
     ### METHODS RELATED TO VALUE AT RISK ###
     
-    def hist_var(self, p, start=None, end=None):
+    def hist_var(self,
+                 p: float,
+                 start: Union[str, datetime.date]=None,
+                 end: Union[str, datetime.date]=None
+                 ) -> float:
         """
         Returns the historical p-VaR (Value at Risk) between two dates.
         
@@ -732,7 +811,11 @@ class TimeSeries(Series):
         return np.percentile(data.values, int(100*p))
     
     
-    def hist_cvar(self, p, start=None, end=None):
+    def hist_cvar(self,
+                  p: float,
+                  start: Union[str, datetime.date]=None,
+                  end: Union[str, datetime.date]=None
+                  ) -> float:
         """
         Returns the historical CVaR (Conditional Value at Risk) between two dates.
         This quantity is also known as the Expected Shortfall (ES).
@@ -770,7 +853,11 @@ class TimeSeries(Series):
     hist_expected_shortfall = hist_cvar
     
     
-    def cornish_fisher_var(self, p, start=None, end=None):
+    def cornish_fisher_var(self,
+                           p: float,
+                           start: Union[str, datetime.date]=None,
+                           end: Union[str, datetime.date]=None
+                           ) -> float:
         """
         Returns the VaR (Value at Risk) between two dates from
         the Cornish-Fisher expansion.
@@ -802,7 +889,11 @@ class TimeSeries(Series):
     
     ### AUTOCORRELATION COMPUTATION ###
     
-    def autocorrelation(self, lag=1, start=None, end=None):
+    def autocorrelation(self,
+                        lag: int=1,
+                        start: Union[str, datetime.date]=None,
+                        end: Union[str, datetime.date]=None
+                        ) -> float:
         """
         Returns the autocorrelation of the time series for a specified lag.
         
@@ -835,15 +926,21 @@ class TimeSeries(Series):
         return numerator / denominator
     
     
-    def plot_autocorrelation(self, lag_min=0, lag_max=25, start=None, end=None,
-                             figsize=(8,4), dpi=100):
+    def plot_autocorrelation(self,
+                             lag_min: int=0,
+                             lag_max: int=25,
+                             start: Union[str, datetime.date]=None,
+                             end: Union[str, datetime.date]=None,
+                             figsize: (float, float) = (8, 4),
+                             dpi: float=100
+                             ) -> None:
         """
         Uses autocorrelation method in order to return a plot
         of the autocorrelation againts the lag values.
         """
         
         # Checks
-        assert(lag_max>lag_min)
+        assert(lag_max > lag_min)
         
         # Computing autocorrelation
         x_range = list(range(lag_min, lag_max+1, 1))
@@ -861,7 +958,11 @@ class TimeSeries(Series):
         return None
         
     
-    def acf_pacf(self, lag_max=25, figsize=(12,3), dpi=100):
+    def acf_pacf(self,
+                 lag_max: int=25,
+                 figsize: (float, float) = (12, 3),
+                 dpi: float=100
+                 ) -> None:
         """
         Returns a plot of the AutoCorrelation Function (ACF)
         and Partial AutoCorrelation Function (PACF) from statsmodels.
@@ -878,7 +979,10 @@ class TimeSeries(Series):
     
     ### SIMPLE TRANSFORMATIONS OF THE TIME SERIES TO CREATE A NEW TIME SERIES ###
     
-    def trim(self, new_start, new_end):
+    def trim(self,
+             new_start: Union[str, datetime.date],
+             new_end: Union[str, datetime.date]
+             ) -> 'TimeSeries':
         """
         Method that trims the time series to the desired dates
         and send back a new time series.
@@ -889,7 +993,9 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def add_cst(self, cst=0):
+    def add_cst(self,
+                cst: float=0
+                ) -> 'TimeSeries':
         """
         Method that adds a constant to the time series.
         """
@@ -899,7 +1005,9 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def mult_by_cst(self, cst=1):
+    def mult_by_cst(self,
+                    cst: float=1
+                    ) -> 'TimeSeries':
         """
         Method that multiplies the time series by a constant.
         """
@@ -909,7 +1017,10 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def linear_combination(self, other_ts, factor1=1, factor2=1):
+    def linear_combination(self,
+                           other_ts: 'TimeSeries',
+                           factor1: float=1,
+                           factor2: float=1):
         """
         Method that adds a time series to the current one
         according to linear combination:
@@ -922,7 +1033,13 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def convolve(self, func, x_min, x_max, n_points, normalize=False):
+    def convolve(self,
+                 func: Callable[[float], float],
+                 x_min: float,
+                 x_max: float,
+                 n_points: int,
+                 normalize: bool=False
+                 ) -> 'TimeSeries':
         """
         Performs a convolution of the time series with a function 'func'.
         The 'normalize' option allows to renormalize 'func' such that
@@ -940,10 +1057,12 @@ class TimeSeries(Series):
           Number of points to consider in the function.
         normalize: bool
           Option to impose the sum of func values to be 1.
+
+        Returns
+        -------
+        TimeSeries
+          Convolved time series.
         """
-        
-        # Checks
-        assert(isinstance(n_points, int))
         
         # Getting the time series values
         ts = self.data.values
@@ -964,7 +1083,11 @@ class TimeSeries(Series):
         return convolved_ts
     
     
-    def get_drawdowns(self, start=None, end=None, name=""):
+    def get_drawdowns(self,
+                      start: Union[str, datetime.date]=None,
+                      end: Union[str, datetime.date]=None,
+                      name: str=""
+                      ) -> 'TimeSeries':
         """
         Computes the drawdowns and returns a new time series from them.
         
@@ -987,7 +1110,11 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def max_drawdown(self, start=None, end=None, name=""):
+    def max_drawdown(self,
+                     start: Union[str, datetime.date]=None,
+                     end: Union[str, datetime.date]=None,
+                     name: str=""
+                     ) -> 'TimeSeries':
         """
         Returns the maximum drawdown of a time series.
         
@@ -1003,11 +1130,18 @@ class TimeSeries(Series):
         # Compute drawdowns
         trailing_max = data.cummax()
         drawdowns = (data - trailing_max) / trailing_max
-        
-        return -drawdowns.values.min()
+        max_drawdowns = -drawdowns.values.min()
+        new_ts = TimeSeries(max_drawdowns, tz=self.tz, name=name)
+
+        return new_ts
     
     
-    def divide_by_timeseries(self, other_ts, start=None, end=None, name=""):
+    def divide_by_timeseries(self,
+                             other_ts: 'TimeSeries',
+                             start: Union[str, datetime.date]=None,
+                             end: Union[str, datetime.date]=None,
+                             name: str=""
+                             ) -> 'TimeSeries':
         """
         Returns a time series from the division of the current time series
         with another time series (current_ts / other_ts).
@@ -1033,7 +1167,13 @@ class TimeSeries(Series):
         return new_ts
         
     
-    def add_gaussian_noise(self, mu, sigma, start=None, end=None, name=""):
+    def add_gaussian_noise(self,
+                           mu: float,
+                           sigma: float,
+                           start: Union[str, datetime.date]=None,
+                           end: Union[str, datetime.date]=None,
+                           name: str=""
+                           ) -> 'TimeSeries':
         """
         Adds a Gaussian noise to the current time series.
         
@@ -1043,9 +1183,9 @@ class TimeSeries(Series):
           Mean parameter of the noise.
         sigma : float
           Standard deviation of the noise.
-        start_utc : str
+        start : str
           Starting date.
-        end_utc : str
+        end : str
           Ending date.
         name : str
           Name or nickname of the series.
@@ -1073,11 +1213,12 @@ class TimeSeries(Series):
         return new_ts
     
     
-    
-    
+
     ### FITTING METHODS ###
     
-    def rolling_avg(self, pts=1):
+    def rolling_avg(self,
+                    pts: int=1
+                    ) -> 'TimeSeries':
         """
         Transforms the time series into a rolling window average time series.
         """
@@ -1088,12 +1229,16 @@ class TimeSeries(Series):
         return new_ts
     
     
-    def polyfit(self, order=1, start=None, end=None):
+    def polyfit(self,
+                order: int = 1,
+                start: Union[str, datetime.date] = None,
+                end: Union[str, datetime.date] = None
+                ) -> 'TimeSeries':
         """
         Provides a polynomial fit of the time series.
         """
         
-        # Prepar data
+        # Prepare data
         data = self.specify_data(start, end)
         new_index = [datetime.timestamp(x) for x in data.index]
         new_values = [data.values.tolist()[x] for x in range(len(data))]
@@ -1112,7 +1257,7 @@ class TimeSeries(Series):
         return new_ts
 
     
-    def sample_uniformly(self):
+    def sample_uniformly(self) -> 'TimeSeries':
         """
         Returns a new time series for which the sampling is uniform.
         """
@@ -1169,8 +1314,13 @@ class TimeSeries(Series):
         return new_ts
         
     
-    def decompose(self, polyn_order=None, start=None, end=None, 
-                  extract_seasonality=False, period=None):
+    def decompose(self,
+                  polyn_order: int=None,
+                  start: Union[str, datetime.date]=None,
+                  end: Union[str, datetime.date]=None,
+                  extract_seasonality: bool=False,
+                  period: int=None
+                  ) -> list:
         """
         Performs a decomposition of the time series
         and returns the different components.
@@ -1179,9 +1329,9 @@ class TimeSeries(Series):
         ----------
         polyn_order : None or int
           Order of the polynomial when fitting a non-linear component.
-        start_utc : str
+        start : str
           Starting date.
-        end_utc : str
+        end : str
           Ending date.
         extract_seasonality : bool
           Option to extract seasonality signal.
@@ -1193,6 +1343,7 @@ class TimeSeries(Series):
         List of TimeSeries
           Content of the list depends on choices in arguments.
         """
+
         # Check
         if polyn_order is not None:
             try:
@@ -1241,8 +1392,7 @@ class TimeSeries(Series):
                 assert(period)
                 assert(isinstance(period, int))
             except AssertionError:
-                raise AssertionError("Period must be specified for \
-                                        extrac_seasonality=True mode.")
+                raise AssertionError("Period must be specified for 'extrac_seasonality = True' mode.")
             P = period
 
             # Cut the series into seasonality-period chunks
@@ -1287,10 +1437,17 @@ class TimeSeries(Series):
             else:
                 return [lin_trend_ts, rest_ts]
 
-    
 
-    def gaussian_process(self, rbf_scale, rbf_scale_bounds, noise, noise_bounds,
-                         alpha=1e-10, plotting=False, figsize=(12,5), dpi=100):
+    def gaussian_process(self,
+                         rbf_scale: float,
+                         rbf_scale_bounds: (float, float),
+                         noise: float,
+                         noise_bounds: (float, float),
+                         alpha: float=1e-10,
+                         plotting: bool=False,
+                         figsize: (float, float) = (12, 5),
+                         dpi: float=100
+                         ) -> ['TimeSeries', 'TimeSeries', 'TimeSeries']:
         """
         Employs Gaussian Process Regression (GPR) from scikit-learn to fit a time series. 
         
@@ -1371,7 +1528,7 @@ class TimeSeries(Series):
         return [ts_mean, ts_std_m, ts_std_p]
 
     
-    def make_selection(self, threshold, mode):
+    def make_selection(self, threshold: float, mode: bool) -> 'TimeSeries':
         """
         Make a time series from selected events and the values of the time series.
 
@@ -1437,6 +1594,7 @@ class TimeSeries(Series):
 
 # CLASS CatTimeSeries
 
+@typechecked
 class CatTimeSeries(Series):
     """
     Class defining a categoric time series and its methods.
@@ -1467,7 +1625,12 @@ class CatTimeSeries(Series):
       Type of the series.
     """
     
-    def __init__(self, data=None, tz=None, unit=None, name=""):
+    def __init__(self,
+                 data: pd.DataFrame=None,
+                 tz: str=None,
+                 unit: str=None,
+                 name: str=""
+                 ) -> None:
         """
         Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
         """
@@ -1478,7 +1641,7 @@ class CatTimeSeries(Series):
         self.type = 'CatTimeSeries'
 
     
-    def prepare_cat_plot(self):
+    def prepare_cat_plot(self) -> (list, list, dict):
         """
         Returns an appropriate dictionary to plot values of a CatTimeSeries.
         """
@@ -1486,7 +1649,6 @@ class CatTimeSeries(Series):
         # Initialization
         set_cats = sorted(list(set(self.data.values.flatten())))
         n_cats = len(set_cats)
-        
         try:
             assert(n_cats<=10)
         except ValueError:
@@ -1517,7 +1679,10 @@ class CatTimeSeries(Series):
         return X, y, D
     
     
-    def simple_plot(self, figsize=(12,5), dpi=100):
+    def simple_plot(self,
+                    figsize: (float, float) = (12, 5),
+                    dpi: float = 100
+                    ) -> None:
         """
         Plots the categorical time series in a simple way.
         The number of categories is limited to 10 in order to easily handle colors.
@@ -1576,10 +1741,11 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-def type_to_series(series_type):
+@typechecked
+def type_to_series(series_type: str) -> 'TimeSeries':
     """
     Returns the class TimeSeries or CatTimeSeries
-    depending on wheter it receives 'TS' or 'CTS' argument.
+    depending on whether it receives 'TS' or 'CTS' argument.
     """
     
     if series_type == 'TS':
@@ -1591,9 +1757,15 @@ def type_to_series(series_type):
         return TimeSeries
     else:
         raise ValueError("Series type not recognized.")
-        
 
-def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
+
+@typechecked
+def build_from_csv(tz: Union[str, list]=None,
+                   unit: Union[str, list]=None,
+                   name: Union[str, list]=None,
+                   type: Union[str, list]=None,
+                   **kwargs: Any
+                   ) -> list:
     """
     Returns a list of time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
@@ -1666,7 +1838,13 @@ def build_from_csv(tz=None, unit=None, name=None, type=None, **kwargs):
         return ts_list
 
 
-def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
+@typechecked
+def build_from_excel(tz: Union[str, list]=None,
+                     unit: Union[str, list]=None,
+                     name: Union[str, list]=None,
+                     type: Union[str, list]=None,
+                     **kwargs: Any
+                     ) -> list:
     """
     Returns a list of time series from the reading of an excel file.
     This function uses the function pandas.read_excel().
@@ -1738,8 +1916,13 @@ def build_from_excel(tz=None, unit=None, name=None, type=None, **kwargs):
         return ts_list
 
 
-    
-def build_from_dataframe(data, tz=None, unit=None, name=None, type=None):
+@typechecked
+def build_from_dataframe(data: pd.DataFrame,
+                         tz: Union[str, list]=None,
+                         unit: Union[str, list]=None,
+                         name: Union[str, list]=None,
+                         type: Union[str, list]=None
+                         ) -> list:
     """
     Returns a list of time series from the reading of Pandas DataFrame.
     
@@ -1755,8 +1938,6 @@ def build_from_dataframe(data, tz=None, unit=None, name=None, type=None):
       Time series name or list of time series names.
     type : str or list of str
       Time series type or list of time series types.
-    **kwargs
-        Arbitrary keyword arguments for pandas.read_csv().
     
     Returns
     -------
@@ -1807,7 +1988,13 @@ def build_from_dataframe(data, tz=None, unit=None, name=None, type=None):
         return ts_list
 
 
-def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
+@typechecked
+def build_from_list(list_values: list,
+                    tz: str=None,
+                    unit: str=None,
+                    name: str="",
+                    **kwargs: Any
+                    ) -> 'TimeSeries':
     """
     Returns a time series or categorical time series from the reading of a list.
     
@@ -1815,6 +2002,8 @@ def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
     ----------
     list_values : list of float or str
       List of values to generate either a TimeSeries or a CatTimeSeries.
+    tz : str
+      Time zone of the time series.
     unit : str
       Unit of the time series values when generating a TimeSeries.
     name : str
@@ -1856,16 +2045,24 @@ def build_from_list(list_values, tz=None, unit=None, name="", **kwargs):
     return ts
 
 
-def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
+@typechecked
+def build_from_lists(list_dates: list,
+                     list_values: list,
+                     tz: str=None,
+                     unit: str=None,
+                     name: str=""
+                     ) -> Union['TimeSeries', 'CatTimeSeries']:
     """
     Returns a time series or categorical time series from the reading of lists.
     
     Parameters
     ----------
-    list_dates : list of timedates or str
+    list_dates : list of datetimes or str
       List of values to generate either a TimeSeries or a CatTimeSeries.
     list_values : list of float or str
       List of values to generate either a TimeSeries or a CatTimeSeries.
+    tz : str
+      Time zone of the time series.
     unit : str
       Unit of the time series values when generating a TimeSeries.
     name : str
@@ -1897,11 +2094,10 @@ def build_from_lists(list_dates, list_values, tz=None, unit=None, name=""):
 
 
 
-    
 ### FUNCTIONS USING TIMESERIES AS ARGUMENTS ###
 
-
-def linear_tvalue(data):
+@typechecked
+def linear_tvalue(data: Union[list, np.ndarray, pd.Series]) -> float:
     """
     Compute the t-value from a linear trend.
     
@@ -1944,7 +2140,11 @@ def linear_tvalue(data):
     return tval
 
 
-def bins_from_trend(ts, max_span, return_df=False):
+@typechecked
+def bins_from_trend(ts: TimeSeries,
+                    max_span: list,
+                    return_df: bool=False
+                    ) -> Union[pd.DataFrame, ('CatTimeSeries', pd.DataFrame)]:
     """
     Derive labels from the sign of the t-value of linear trend
     and return a CatTimeSeries representing the labels.
@@ -2011,8 +2211,9 @@ def bins_from_trend(ts, max_span, return_df=False):
     else:
         return cts
 
-    
-def tick_imbalance(ts, name=None):
+
+@typechecked
+def tick_imbalance(ts: TimeSeries, name: str=None) -> TimeSeries:
     """
     Computes the tick imbalance from a time series.
     
@@ -2034,10 +2235,6 @@ def tick_imbalance(ts, name=None):
       Marcos López de Prado (2018).
     """
     
-    # Checks
-    if not isinstance(ts, TimeSeries):
-        raise AssertionError("ts must be a TimeSeries.")
-    
     # Initialization
     delta = ts.percent_change()
     T = delta.nvalues
@@ -2057,7 +2254,8 @@ def tick_imbalance(ts, name=None):
     return tick_imb_ts
 
 
-def imbalance(tick_imb_ts, ts=None, name=None):
+@typechecked
+def imbalance(tick_imb_ts: TimeSeries, ts: TimeSeries=None, name: str=None) -> TimeSeries:
     """
     Compute the value imbalance from tick imbalance and a time series.
     
@@ -2099,7 +2297,6 @@ def imbalance(tick_imb_ts, ts=None, name=None):
     if ts is None:
         tickval_imb_df = pd.DataFrame(index=tick_imb_ts.data.index, data=tick_imb_ts.data.cumsum())
     else:
-        # assert(tick_imb_ts.nvalues == ts.nvalues-1)
         assert((tick_imb_ts.data.index == ts.data.index[1:]).all())
         T = tick_imb_ts.nvalues
         new_data = [tick_imb_ts.data.values[t] * ts.data.values[t+1] for t in range(T)]
@@ -2111,7 +2308,8 @@ def imbalance(tick_imb_ts, ts=None, name=None):
     return tickval_imb_ts
 
 
-def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
+@typechecked
+def multi_plot(Series: list, figsize: (float, float) = (12, 5), dpi: float=100, title: str=None) -> None:
     """
     Plots multiple time series together.
     
@@ -2153,7 +2351,6 @@ def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
             min_val = min(min(Series[i].data.values.flatten()), min_val)
             max_val = max(max(Series[i].data.values.flatten()), max_val)
 
-    
     # Loop through the series
     for i in range(N):
             
@@ -2201,7 +2398,8 @@ def multi_plot(Series, figsize=(12,5), dpi=100, title=None):
     return None
 
 
-def multi_plot_distrib(Series, bins=20, figsize=(10,4), dpi=100):
+@typechecked
+def multi_plot_distrib(Series: list, bins: int=20, figsize: (float, float) = (10, 4), dpi: float=100) -> None:
     """
     Plots multiple time series together and their distributions of values.
     Only TimeSeries are allowed here, not CatTimeSeries.
