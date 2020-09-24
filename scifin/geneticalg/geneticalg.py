@@ -6,7 +6,7 @@
 import copy
 from datetime import datetime
 import random as random
-from typing import TypeVar, Generic, Union
+from typing import TypeVar, Union
 
 # Third party imports
 import numpy as np
@@ -17,14 +17,14 @@ from typeguard import typechecked
 from .. import marketdata
 
 # New Variables Types
-T_Individual = TypeVar('T_Individual')
+Individual = TypeVar('T_Individual')
 T_Population = TypeVar('T_Population')
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 @typechecked
-class Individual(Generic[T_Individual]):
+class Individual:
     """
     Defines an individual.
     
@@ -40,7 +40,7 @@ class Individual(Generic[T_Individual]):
       Name of the individual.
     """
 
-    def __init__(self: T_Individual,
+    def __init__(self: Individual,
                  genes: Union[list, np.ndarray]=None,
                  genes_names: list=None,
                  birth_date: Union[str, datetime.timestamp]=None,
@@ -65,13 +65,13 @@ class Individual(Generic[T_Individual]):
     
     
     @classmethod
-    def generate_random_genes(cls: T_Individual,
+    def generate_random_genes(cls: Individual,
                               n_genes: int,
                               lower_limit: float,
                               upper_limit: float,
                               sum_target: float=None,
                               birth_date: Union[str, datetime.timestamp]=None,
-                              name: str="") -> T_Individual:
+                              name: str="") -> Individual:
         """
         Generates genes values randomly between upper_limit and lower_limit
         (values before normalization), with possibility to impose a target value for their sum.
@@ -132,13 +132,16 @@ class Individual(Generic[T_Individual]):
 
 
 @typechecked
-class Population(Generic[T_Population]):
+class Population:
     """
-    Creates a population, i.e. a table of individuals
-    with their respective genes values.
+    Creates a population, i.e. a table of individuals with their respective genes values.
     """
     
-    def __init__(self: T_Population, df: pd.DataFrame=None, n_genes: int=None, name: str="") -> None:
+    def __init__(self: T_Population,
+                 df: pd.DataFrame=None,
+                 n_genes: int=None,
+                 name: str=""
+                 ) -> None:
 
         # Basic features of a population
         if (df is None) or (df.empty == True):
@@ -155,8 +158,8 @@ class Population(Generic[T_Population]):
         # Others
         self.history = None
         
-        
-    def get_individual(self: T_Population, num: int=None, name: str=None) -> Individual:
+
+    def geIndividual(self: T_Population, num: int=None, name: str=None) -> Individual:
         """
         Returns an individual from a position in the population.
         """

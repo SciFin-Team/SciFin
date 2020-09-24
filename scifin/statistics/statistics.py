@@ -94,7 +94,7 @@ def covariance_to_correlation(cov: Union[list, np.ndarray, pd.DataFrame]) -> Uni
 
 
 @typechecked
-def correlation_to_covariance(corr: Union[list, np.ndarray], std: float) -> np.ndarray:
+def correlation_to_covariance(corr: Union[list, np.ndarray], std: Union[list, np.ndarray]) -> np.ndarray:
     """
     Derive the covariance matrix from the correlation matrix.
 
@@ -102,8 +102,8 @@ def correlation_to_covariance(corr: Union[list, np.ndarray], std: float) -> np.n
     ---------
     corr : numpy.array or list of lists
       Correlation matrix.
-    std : float
-      Standard deviation.
+    std : numpy.array or list
+      Standard deviations.
 
     Returns
     -------
@@ -213,7 +213,7 @@ def denoise_covariance(cov: np.ndarray,
                                                          bwidth=bwidth,
                                                          kernel=kernel,
                                                          n_pts=n_pts)
-    
+
     # Remove noise from correlation matrix
     # by fixing random eigenvalues.
     eval_ = np.diag(e_val).copy()
@@ -230,7 +230,8 @@ def denoise_covariance(cov: np.ndarray,
 def get_subcovariance(n_features: int,
                       n_obs: int,
                       sigma: float,
-                      random_state: int=None) -> np.ndarray:
+                      random_state: Union[int, float, np.random.mtrand.RandomState]=None
+                      ) -> np.ndarray:
     """
     Generate sub-covariance matrix with dimensions n_features x n_features,
     simulating n_features x n_obs to generate the data.
@@ -243,7 +244,7 @@ def get_subcovariance(n_features: int,
       Number of facts to generate data.
     sigma : float
       Standard deviation of the noise.
-    random_state : int
+    random_state : int, float, np.random.mtrand.RandomState
       Random State.
       
     Returns
@@ -276,7 +277,7 @@ def random_block_covariance(n_features: int,
                             n_blocks: int,
                             min_block_size: int=1,
                             sigma: float=1.,
-                            random_state: int=None
+                            random_state: Union[int, float, np.random.mtrand.RandomState]=None
                             ) -> np.ndarray:
     """
     Generate a block random covariance matrix.
@@ -291,7 +292,7 @@ def random_block_covariance(n_features: int,
       Minimum block size.
     sigma : float
       Standard deviation of the noise.
-    random_state : int
+    random_state : int, float, np.random.mtrand.RandomState
       Random State.
       
     Returns
@@ -339,7 +340,7 @@ def random_block_correlation(n_features: int,
                              min_block_size: int=1,
                              sigma_base: float=1.,
                              sigma_noise: float=0.5,
-                             random_state: int=None
+                             random_state: Union[int, float, np.random.mtrand.RandomState]=None
                              ) -> pd.DataFrame:
     """
     Form block random correlation matrix of dimension n_features x n_features with n_blocks blocks.
@@ -357,7 +358,7 @@ def random_block_correlation(n_features: int,
       Standard deviation of the noise in base blocks.
     sigma_noise : float
       Standard deviation for the noise added to each matrix element.
-    random_state : int
+    random_state : int, float, np.random.mtrand.RandomState
       Random State.
       
     Returns
@@ -490,9 +491,8 @@ def marcenko_pastur_pdf(n_features: int,
     
     return pdf
 
-
 @typechecked
-def marcenko_pastur_loss(sigma: float,
+def marcenko_pastur_loss(sigma: Union[float, np.ndarray],
                          n_features: int,
                          n_obs: int,
                          e_val: np.ndarray,
@@ -530,10 +530,10 @@ def marcenko_pastur_loss(sigma: float,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Compute Theoretical PDF
-    pdf0 = marcenko_pastur_pdf(n_features, n_obs, sigma, n_pts)
-    
+    pdf0 = marcenko_pastur_pdf(n_features, n_obs, sigma[0], n_pts)
+
     # Compute Empirical PDF
     # Fit kernel to a series of observations
     if len(e_val.shape)==1:
@@ -549,7 +549,7 @@ def marcenko_pastur_loss(sigma: float,
 
     # Return loss
     loss = np.sum((pdf1-pdf0)**2)
-    
+
     return loss
 
 
@@ -589,13 +589,14 @@ def marcenko_pastur_fit_params(n_features: int,
     """
     
     # Checks
-    assert(n_features==len(e_val))
+    assert(n_features == len(e_val))
     
     # Initializations
     ratio = n_obs/n_features
     
     # Minimize loss
-    out = minimize(lambda *x: marcenko_pastur_loss(*x),
+    loss_function = (lambda *x: marcenko_pastur_loss(*x))
+    out = minimize(loss_function,
                    x0=sigma_ini,
                    args=(n_features, n_obs, np.diag(e_val), bwidth, kernel, n_pts),
                    bounds=((1E-5, 1-1E-5),))
@@ -735,7 +736,8 @@ def entropy_info(X: Union[list, np.ndarray],
                  Y: Union[list, np.ndarray],
                  bins: int,
                  returns: str=None,
-                 verbose: bool=False):
+                 verbose: bool=False
+                 ) -> Union[float, None]:
     """
     Display entropy information between two random vectors X and Y.
     Or returns any quantity that is wished for.
@@ -770,7 +772,7 @@ def entropy_info(X: Union[list, np.ndarray],
     # Checks
     if len(X) != len(Y):
         raise AssertionError("Vectors X and Y must have same length.")
-    if returns not in ["joint", "marginal_X", "marginal_Y", "mutual_info", "mutual_info_norm", \
+    if returns not in [None, "joint", "marginal_X", "marginal_Y", "mutual_info", "mutual_info_norm", \
       "joint_entropy", "conditional_entropy_X", "conditional_entropy_Y", "variation_info", "variation_info_norm"]:
         raise AssertionError("Argument 'returns' choice not correct.")
     
