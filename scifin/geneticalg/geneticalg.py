@@ -15,6 +15,7 @@ from typeguard import typechecked
 
 # Local application imports
 from .. import marketdata
+from ..marketdata.simuldata import Market
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#

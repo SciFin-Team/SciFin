@@ -4,7 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
-from typing import Any, Union
+from typing import Union
 
 # Third party imports
 import numpy as np

@@ -2144,7 +2144,7 @@ def linear_tvalue(data: Union[list, np.ndarray, pd.Series]) -> float:
 def bins_from_trend(ts: TimeSeries,
                     max_span: list,
                     return_df: bool=False
-                    ) -> Union[pd.DataFrame, ('CatTimeSeries', pd.DataFrame)]:
+                    ) -> Union[CatTimeSeries, pd.DataFrame]:
     """
     Derive labels from the sign of the t-value of linear trend
     and return a CatTimeSeries representing the labels.

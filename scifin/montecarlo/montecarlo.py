@@ -3,13 +3,13 @@
 # This module is for generating Monte Carlo simulations.
 
 # Standard library imports
-from typing import Any
+from typing import Any, Callable
 
 # Third party imports
 from typeguard import typechecked
 
 # Local application imports
-from ..timeseries.timeseries import T_TimeSeries
+from ..timeseries.timeseries import TimeSeries
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -18,7 +18,7 @@ from ..timeseries.timeseries import T_TimeSeries
 def generate_series(n: int=1,
                     generate_names: bool=True,
                     names_base: str="rs",
-                    series_model: T_TimeSeries=None,
+                    series_model: Callable[[], TimeSeries]=None,
                     **kwargs: Any
                     ) -> list:
     """
