@@ -710,7 +710,9 @@ def compute_return(returns: Union[list, np.ndarray],
     
 
 @typechecked
-def compute_vol(cov_matrix: Union[np.ndarray, pd.Series], weights: Union[list, np.ndarray, pd.DataFrame]) -> float:
+def compute_vol(cov_matrix: Union[list, np.ndarray, pd.DataFrame],
+                weights: Union[list, np.ndarray, pd.Series, pd.DataFrame]
+                ) -> float:
     """
     Computes the volatility from a covariance matrix of assets
     and a list of arbitrary weights.
@@ -820,7 +822,7 @@ def fitness_calculation(population,
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(compute_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(covmat, weights))
 
         # Normalizing
         normalized_fitness_from_return = fitness_from_return / sum(fitness_from_return)

@@ -14,7 +14,7 @@ import pandas as pd
 from typeguard import typechecked
 
 # Local application imports
-from .. import marketdata
+from scifin.marketdata import simuldata
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -245,7 +245,7 @@ def generate_random_population(n_indiv: int,
     
 @typechecked
 def get_generation(population: Population,
-                   environment: marketdata.Market,
+                   environment: simuldata.Market,
                    current_eval_date: datetime.date,
                    next_eval_date: datetime.date,
                    lamb: float=0.5,
@@ -908,7 +908,7 @@ def mutate_individual(input_individual: Individual,
     return mutated_indiv
 
 
-
+# TO DO: understand why num_mut is not used !
 def mutation_set(num_indiv, num_genes, num_mut=0):
     """
     Prepares a list of genes to be mutated for the function `mutate_population`.
