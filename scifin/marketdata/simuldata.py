@@ -17,7 +17,6 @@ from typeguard import typechecked
 # Local application imports
 from scifin.marketdata import marketdata
 from .. import timeseries as ts
-#from .. import geneticalg
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
@@ -161,12 +160,12 @@ class Market:
         
         return None
 
-    # TO DO: This function is broken. Needs repair.
-    # Typechecking must also be done. Need to decide the date format.
+    # TO DO: Repair this broken function.
+    #@Typechecking
     def to_list(self,
-                start_date: Union[str, datetime.date]=None,
-                end_date: Union[str, datetime.date]=None
-                ) -> list:
+                start_date=None,
+                end_date=None
+                ):
         """
         Converts the Market data frame into a list of TimeSeries.
 
@@ -187,10 +186,21 @@ class Market:
 
         # Initialization
         list_ts = []
-        new_index = pd.to_datetime(self.data.index[start_date:end_date])
+        if (start_date is None) and (end_date is None):
+            new_index = pd.to_datetime(self.data.to_timestamp().index)
+        elif (start_date is None):
+            end_date = self.data.index[list(self.data.index).index(end_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[:end_date])
+        elif (end_date is None):
+            start_date = self.data.index[list(self.data.index).index(start_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:])
+        else:
+            start_date = self.data.index[list(self.data.index).index(start_date)]
+            end_date = self.data.index[list(self.data.index).index(end_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:end_date])
 
-        # Forming a list of timeseries
-        i=0
+        # Forming a list of time series
+        i = 0
         for c in self.data.columns:
             tmp_series = pd.Series(index=new_index, data=self.data.loc[start_date:end_date, c].values)
             if self.units is None:
@@ -199,7 +209,7 @@ class Market:
                 tmp_unit = self.units[i]
             tmp_ts = ts.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
             list_ts.append(tmp_ts)
-            i+=1
+            i += 1
 
         return list_ts
 
@@ -518,11 +528,15 @@ def propagate_individual(individual, environment: Market, name_indiv: str="Portf
     return None
 
 
-@typechecked
-def evaluation_dates(environment: Market,
-                     n_dates: int = 10,
-                     interval_type: str = 'M'
-                     ) -> list:
+#@typechecked
+#def evaluation_dates(environment: Market,
+#                     n_dates: int = 10,
+#                     interval_type: str = 'M'
+#                     ) -> Union[list, pd.PeriodIndex]:
+def evaluation_dates(environment,
+                     n_dates = 10,
+                     interval_type = 'M'
+                     ):
     """
     Produces a number of equally spaced dates
     at which the individuals will be evaluated.
@@ -566,7 +580,8 @@ def evaluation_dates(environment: Market,
         raise IndexError("Generated dates unsatisfactory !")
     if special_dates[-1] != environment.data.index[-1]:
         raise IndexError("Generated dates unsatisfactory !")
-    
+
+    print(type(special_dates), special_dates)
     return special_dates
 
 
@@ -695,7 +710,7 @@ def compute_return(returns: Union[list, np.ndarray],
     
 
 @typechecked
-def compute_vol(cov_matrix: np.ndarray, weights: Union[list, np.ndarray]) -> float:
+def compute_vol(cov_matrix: Union[np.ndarray, pd.Series], weights: Union[list, np.ndarray, pd.DataFrame]) -> float:
     """
     Computes the volatility from a covariance matrix of assets
     and a list of arbitrary weights.
@@ -881,10 +896,10 @@ def fitness_calculation(population,
 @typechecked
 def visualize_portfolios_1(market: Market,
                            propagation: pd.DataFrame,
-                           evaluation_dates: list,
+                           evaluation_dates: Union[list, pd.PeriodIndex],
                            dims: (float, float) = (10, 5),
-                           xlim: (float, float) =None,
-                           ylim: (float, float) =None
+                           xlim: float = None,
+                           ylim: float = None,
                            ) -> None:
     """
     Allows a quick visualization of the market,
@@ -900,9 +915,9 @@ def visualize_portfolios_1(market: Market,
       Dates at which we want to evaluate the individuals.
     dims : (float, float)
       (Optional) Dimensions of the plot.
-    xlim : (float, float)
+    xlim : float
       (Optional) Range in x.
-    ylim : (float, float)
+    ylim : float
       (Optional) Range in y.
     
     Returns
@@ -912,7 +927,7 @@ def visualize_portfolios_1(market: Market,
     """
     
     # Computing the EW portfolio
-    market_EW = marketdata.marketdata.market_EWindex(market)
+    market_EW = marketdata.market_EWindex(market)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims)
@@ -938,8 +953,8 @@ def visualize_portfolios_2(market: pd.DataFrame,
                            propagation: pd.DataFrame,
                            evaluation_dates: list,
                            dims: (float, float) = (10, 5),
-                           xlim: (float, float) = None,
-                           ylim: (float, float) = None,
+                           xlim: float = None,
+                           ylim: float = None,
                            savefile: bool = False,
                            namefile: str="Result.png"
                            ) -> None:
@@ -959,9 +974,9 @@ def visualize_portfolios_2(market: pd.DataFrame,
       Dates at which we want to evaluate the individuals.
     dims : (float, float)
       (Optional) Dimensions of the plot.
-    xlim : (float, float)
+    xlim : float
       (Optional) Range in x.
-    ylim : (float, float)
+    ylim : float
       (Optional) Range in y.
     savefile : bool
       Option to save the plot.

@@ -14,13 +14,13 @@ from .. import timeseries as ts
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-@typechecked
-def generate_series(n: int=1,
-                    generate_names: bool=True,
-                    names_base: str="rs",
-                    series_model: Callable[[], ts.TimeSeries]=None,
+#@typechecked
+def generate_series(n=1,
+                    generate_names=True,
+                    names_base="rs",
+                    series_model=None,
                     **kwargs: Any
-                    ) -> list:
+                    ):
     """
     Generate a list of `n` series of the type `series_model`.
     Here all series have the same building parameters.

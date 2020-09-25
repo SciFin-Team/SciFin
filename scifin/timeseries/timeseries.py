@@ -1544,7 +1544,10 @@ class TimeSeries(Series):
         return [ts_mean, ts_std_m, ts_std_p]
 
     
-    def make_selection(self, threshold: float, mode: bool) -> 'TimeSeries':
+    def make_selection(self,
+                       threshold: float,
+                       mode: str
+                       ) -> 'TimeSeries':
         """
         Make a time series from selected events and the values of the time series.
 
@@ -1554,8 +1557,6 @@ class TimeSeries(Series):
           Threshold value for selection.
         mode : str
           Mode to choose from (among ['run-ups', 'run-downs', 'symmetric']).
-        return_df : bool
-          Option to return a pandas.DataFrame with selection.
 
         Returns
         -------
@@ -2160,11 +2161,11 @@ def linear_tvalue(data: Union[list, np.ndarray, pd.Series]) -> float:
     return tval
 
 
-@typechecked
+#@typechecked
 def bins_from_trend(ts: TimeSeries,
                     max_span: list,
                     return_df: bool=False
-                    ) -> Union[CatTimeSeries, pd.DataFrame]:
+                    ):
     """
     Derive labels from the sign of the t-value of linear trend
     and return a CatTimeSeries representing the labels.

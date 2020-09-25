@@ -102,7 +102,7 @@ def get_assets_from_yahoo(list_assets: list,
     
     # Make DataFrame
     for i in range(N):
-        print(i)
+        # print(i)
         
         # Printing status of execution
         # clear_output(wait=True)
