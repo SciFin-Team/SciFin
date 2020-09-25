@@ -9,7 +9,7 @@ from typing import Any, Callable
 from typeguard import typechecked
 
 # Local application imports
-from ..timeseries.timeseries import TimeSeries
+from .. import timeseries as ts
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -18,7 +18,7 @@ from ..timeseries.timeseries import TimeSeries
 def generate_series(n: int=1,
                     generate_names: bool=True,
                     names_base: str="rs",
-                    series_model: Callable[[], TimeSeries]=None,
+                    series_model: Callable[[], ts.TimeSeries]=None,
                     **kwargs: Any
                     ) -> list:
     """

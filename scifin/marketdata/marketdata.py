@@ -16,7 +16,6 @@ from typeguard import typechecked
 # Local application imports
 from .. import exceptions
 from . import simuldata
-from ..marketdata import Market
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -124,7 +123,7 @@ def get_assets_from_yahoo(list_assets: list,
 
 
 @typechecked
-def market_EWindex(market: Market, name: str="Market EW Index") -> pd.DataFrame:
+def market_EWindex(market: simuldata.Market, name: str="Market EW Index") -> pd.DataFrame:
     """
     Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
     
@@ -155,7 +154,7 @@ def market_EWindex(market: Market, name: str="Market EW Index") -> pd.DataFrame:
 
 
 @typechecked
-def get_marketcap_today(market: Market) -> pd.Series:
+def get_marketcap_today(market: simuldata.Market) -> pd.Series:
     """
     Returns the market capitalization as it is today.
     
@@ -180,7 +179,7 @@ def get_marketcap_today(market: Market) -> pd.Series:
 
 
 @typechecked
-def market_CWindex(market: Market, marketcap: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
+def market_CWindex(market: simuldata.Market, marketcap: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
     """
     Function that returns the Cap-Weighted (CW) index associated
     with the assets of a market.

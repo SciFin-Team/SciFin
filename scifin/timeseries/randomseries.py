@@ -12,7 +12,7 @@ import pandas as pd
 from typeguard import typechecked
 
 # Local application imports
-from . import TimeSeries
+from .. import timeseries as ts
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -30,7 +30,7 @@ def constant(start_date: Union[str, datetime.date],
              cst: float=0.,
              sigma: float=0.,
              tz=None, unit=None, name=""
-             ) -> TimeSeries:
+             ) -> ts.TimeSeries:
     """
     Defines a time series with constant numerical value
     and eventually add a noise to it.
@@ -87,9 +87,9 @@ def constant(start_date: Union[str, datetime.date],
 
     # Make time series
     df = pd.DataFrame(index=data_index, data=data_vals)
-    ts = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
 
-    return ts
+    return rs
 
 
 
@@ -108,7 +108,7 @@ def auto_regressive(start_date: Union[str, datetime.date],
                     unit: str=None,
                     name: str="",
                     verbose: bool=False
-                    ) -> TimeSeries:
+                    ) -> ts.TimeSeries:
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -193,7 +193,7 @@ def auto_regressive(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -207,7 +207,7 @@ def random_walk(start_date: Union[str, datetime.date],
                 tz: str=None,
                 unit: str=None,
                 name: str=""
-                ) -> TimeSeries:
+                ) -> ts.TimeSeries:
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -270,7 +270,7 @@ def random_walk(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -285,7 +285,7 @@ def drift_random_walk(start_date: Union[str, datetime.date],
                       tz: str=None,
                       unit: str=None,
                       name: str=""
-                      ) -> TimeSeries:
+                      ) -> ts.TimeSeries:
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -350,7 +350,7 @@ def drift_random_walk(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -367,7 +367,7 @@ def moving_average(start_date: Union[str, datetime.date],
                    unit: str=None,
                    name: str="",
                    verbose: bool=False
-                   ) -> TimeSeries:
+                   ) -> ts.TimeSeries:
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -458,7 +458,7 @@ def moving_average(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -477,7 +477,7 @@ def arma(start_date: Union[str, datetime.date],
          tz: str=None,
          unit: str=None,
          name: str=""
-         ) -> TimeSeries:
+         ) -> ts.TimeSeries:
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -568,7 +568,7 @@ def arma(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -585,7 +585,7 @@ def rca(start_date: Union[str, datetime.date],
         tz: str=None,
         unit: str=None,
         name: str=""
-        ) -> TimeSeries:
+        ) -> ts.TimeSeries:
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -678,7 +678,7 @@ def rca(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -699,7 +699,7 @@ def arch(start_date: Union[str, datetime.date],
          unit: str=None,
          name: str="",
          verbose: bool=False
-         ) -> TimeSeries:
+         ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -798,7 +798,7 @@ def arch(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -816,7 +816,7 @@ def garch(start_date: Union[str, datetime.date],
           unit: str=None,
           name: str="",
           verbose: bool=False
-          ) -> TimeSeries:
+          ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -924,7 +924,7 @@ def garch(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -939,7 +939,7 @@ def charma(start_date: Union[str, datetime.date],
            tz: str=None,
            unit: str=None,
            name: str=""
-           ) -> TimeSeries:
+           ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -1021,7 +1021,7 @@ def charma(start_date: Union[str, datetime.date],
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 

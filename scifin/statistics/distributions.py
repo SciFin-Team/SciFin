@@ -13,9 +13,6 @@ from typeguard import typechecked
 # Local application imports
 # /
 
-# New Variables Types
-T_Distribution = TypeVar('T_Distribution')
-
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
@@ -84,7 +81,7 @@ class Distribution:
     """
 
     @typechecked
-    def __init__(self: T_Distribution, name: str="") -> None:
+    def __init__(self, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -109,7 +106,7 @@ class Distribution:
         # name (or nickname)
         self.name = name
     
-    def info(self: T_Distribution) -> None:
+    def info(self) -> None:
         """
         Prints the most relevant information about the distribution.
         """
@@ -358,7 +355,7 @@ class Normal(Distribution):
       Name of nickname given to the distribution.
     """
 
-    def __init__(self: T_Distribution, mu: float=0., sigma: float=1., name: str="") -> None:
+    def __init__(self, mu: float=0., sigma: float=1., name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -391,7 +388,7 @@ class Normal(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Normal distribution.
@@ -410,7 +407,7 @@ class Normal(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Normal distribution.
@@ -429,7 +426,7 @@ class Normal(Distribution):
         else:
             return cdf
     
-    def quantile(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the quantile associated to the Normal distribution.
         """
@@ -450,7 +447,7 @@ class Normal(Distribution):
     # Alias method
     var = quantile
         
-    def cvar(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Normal distribution
         for a certain probability p.
@@ -512,7 +509,7 @@ class Uniform(Distribution):
       Requires b>a.
     """
     
-    def __init__(self: T_Distribution, a: float=0., b: float=1., name: str="") -> None:
+    def __init__(self, a: float=0., b: float=1., name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -544,7 +541,7 @@ class Uniform(Distribution):
         # name (or nickname)
         self.name = name
         
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the uniform distribution.
@@ -568,7 +565,7 @@ class Uniform(Distribution):
         else:
             return np.array(pdf)
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the uniform distribution.
@@ -637,7 +634,7 @@ class Weibull(Distribution):
       Default value for 'k' is 1, making it equal to an Exponential distribution.
     """
     
-    def __init__(self: T_Distribution, k: float=1, lmbda: float=1, name: str="") -> None:
+    def __init__(self, k: float=1, lmbda: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -671,7 +668,7 @@ class Weibull(Distribution):
         # name (or nickname)
         self.name = name
         
-    def get_skewness(self: T_Distribution, k: float, lmbda: float) -> float:
+    def get_skewness(self, k: float, lmbda: float) -> float:
         """
         Computes the skewness of the Weibull distribution.
         """
@@ -684,7 +681,7 @@ class Weibull(Distribution):
         skew = (g3 * lmbda**3 - 3*mu*sig**2 - mu**3) / (sig**3)
         return skew
         
-    def get_kurtosis(self: T_Distribution, k: float, lmbda: float) -> float:
+    def get_kurtosis(self, k: float, lmbda: float) -> float:
         """
         Computes the kurtosis of the Weibull distribution.
         """
@@ -699,7 +696,7 @@ class Weibull(Distribution):
                    * mu * sig**3 - 6 * mu**2 * sig**2 - mu**4) / (sig**4)
         return kurt
         
-    def get_mode(self: T_Distribution, k: float, lmbda: float) -> float:
+    def get_mode(self, k: float, lmbda: float) -> float:
         """
         Computes the mode of the Weibull distribution.
         """
@@ -708,7 +705,7 @@ class Weibull(Distribution):
         else:
             return 0
         
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Weibull distribution.
@@ -733,7 +730,7 @@ class Weibull(Distribution):
         else:
             return np.array(pdf)
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Weibull distribution.
@@ -757,7 +754,7 @@ class Weibull(Distribution):
         else:
             return np.array(cdf)
     
-    def quantile(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the quantile associated to the Weibull distribution.
         """
@@ -778,7 +775,7 @@ class Weibull(Distribution):
     # Alias method
     var = quantile
         
-    def cvar(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Weibull distribution
         for a certain probability p.
@@ -833,7 +830,7 @@ class Rayleigh(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, sigma: float=1, name: str="") -> None:
+    def __init__(self, sigma: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -864,7 +861,7 @@ class Rayleigh(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Rayleigh distribution.
@@ -888,7 +885,7 @@ class Rayleigh(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Rayleigh distribution.
@@ -948,7 +945,7 @@ class Exponential(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, lmbda: float=1, name: str="") -> None:
+    def __init__(self, lmbda: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -979,7 +976,7 @@ class Exponential(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Exponential distribution.
@@ -1003,7 +1000,7 @@ class Exponential(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Exponential distribution.
@@ -1027,7 +1024,7 @@ class Exponential(Distribution):
         else:
             return cdf
     
-    def quantile(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the quantile associated to the Exponential distribution.
         """
@@ -1048,7 +1045,7 @@ class Exponential(Distribution):
     # Alias method
     var = quantile
         
-    def cvar(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Exponential distribution
         for a certain probability p.
@@ -1107,7 +1104,7 @@ class Gumbel(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, mu: float=0, beta: float=1, name: str="") -> None:
+    def __init__(self, mu: float=0, beta: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -1139,7 +1136,7 @@ class Gumbel(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Gumbel distribution.
@@ -1159,7 +1156,7 @@ class Gumbel(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Gumbel distribution.
@@ -1179,7 +1176,7 @@ class Gumbel(Distribution):
         else:
             return cdf
     
-    def quantile(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the quantile associated to the Gumbel distribution.
         """
@@ -1238,7 +1235,7 @@ class Laplace(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, mu=0, b=1 , name=""):
+    def __init__(self, mu=0, b=1 , name=""):
         """
         Initializes the distribution.
         """
@@ -1270,7 +1267,7 @@ class Laplace(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Laplace distribution.
@@ -1289,7 +1286,7 @@ class Laplace(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Laplace distribution.
@@ -1313,7 +1310,7 @@ class Laplace(Distribution):
         else:
             return cdf
     
-    def quantile(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def quantile(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the quantile associated to the Laplace distribution.
         """
@@ -1339,7 +1336,7 @@ class Laplace(Distribution):
     # Alias method
     var = quantile
         
-    def cvar(self: T_Distribution, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cvar(self, p: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Returns the Conditional Value At Risk (CVaR) of the Laplace distribution
         for a certain probability p.
@@ -1402,7 +1399,7 @@ class Levy(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, mu: float=0, c: float=1, name: str="") -> None:
+    def __init__(self, mu: float=0, c: float=1, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -1434,7 +1431,7 @@ class Levy(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Lévy distribution.
@@ -1461,7 +1458,7 @@ class Levy(Distribution):
         else:
             return pdf
 
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Lévy distribution.
@@ -1524,7 +1521,7 @@ class Cauchy(Distribution):
       Name of nickname given to the distribution.
     """
     
-    def __init__(self: T_Distribution, a: float=0, b: float=1 , name: str="") -> None:
+    def __init__(self, a: float=0, b: float=1 , name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -1556,7 +1553,7 @@ class Cauchy(Distribution):
         # name (or nickname)
         self.name = name
 
-    def pdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Density Function (PDF)
         for the Cauchy distribution.
@@ -1576,7 +1573,7 @@ class Cauchy(Distribution):
         else:
             return pdf
     
-    def cdf(self: T_Distribution, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF)
         for the Cauchy distribution.
@@ -1643,7 +1640,7 @@ class Poisson(Distribution):
       for the entropy calculation.
     """
     
-    def __init__(self: T_Distribution, lmbda: float=0., k_max: int=1000, name: str="") -> None:
+    def __init__(self, lmbda: float=0., k_max: int=1000, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -1677,7 +1674,7 @@ class Poisson(Distribution):
         # name (or nickname)
         self.name = name
     
-    def get_entropy(self: T_Distribution, lmbda: float) -> float:
+    def get_entropy(self, lmbda: float) -> float:
         """
         Computes the entropy for the Poisson distribution.
         """
@@ -1693,7 +1690,7 @@ class Poisson(Distribution):
 
         return lmbda * (1-np.log(lmbda)) + np.exp(-lmbda) * tmp_sum
         
-    def pmf(self: T_Distribution, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Mass Function (PMF) for the Poisson distribution.
         """
@@ -1712,7 +1709,7 @@ class Poisson(Distribution):
         else:
             return pmf
 
-    def cdf(self: T_Distribution, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF) for the Poisson distribution.
         """
@@ -1812,7 +1809,7 @@ class Binomial(Distribution):
       valid at order O(1/n).
     """
     
-    def __init__(self: T_Distribution, n: int=1, p: float=0.5, name: str="") -> None:
+    def __init__(self, n: int=1, p: float=0.5, name: str="") -> None:
         """
         Initializes the distribution.
         """
@@ -1846,7 +1843,7 @@ class Binomial(Distribution):
         # name (or nickname)
         self.name = name
         
-    def get_mode(self: T_Distribution, n: int, p: float) -> int:
+    def get_mode(self, n: int, p: float) -> int:
         """
         Computes the mode of the Binomial distribution.
         """
@@ -1859,7 +1856,7 @@ class Binomial(Distribution):
         elif test_value == n+1:
             return n
 
-    def get_median(self: T_Distribution, n: int, p: float) -> Union[float, None]:
+    def get_median(self, n: int, p: float) -> Union[float, None]:
         """
         Partially computes the median of the Binomial distribution.
         """
@@ -1871,7 +1868,7 @@ class Binomial(Distribution):
                   np.ceil(test_value), "].")
             return None
     
-    def pmf(self: T_Distribution, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def pmf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Probability Mass Function (PMF) for the binomial distribution.
         """
@@ -1894,7 +1891,7 @@ class Binomial(Distribution):
         else:
             return pmf
     
-    def cdf(self: T_Distribution, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
+    def cdf(self, k: Union[int, list, range, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
         Implements the Cumulative Distribution Function (CDF) for the binomial distribution.
         """

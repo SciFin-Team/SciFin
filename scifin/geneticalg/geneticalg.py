@@ -15,7 +15,6 @@ from typeguard import typechecked
 
 # Local application imports
 from .. import marketdata
-from ..marketdata.simuldata import Market
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -246,7 +245,7 @@ def generate_random_population(n_indiv: int,
     
 @typechecked
 def get_generation(population: Population,
-                   environment: Market,
+                   environment: marketdata.Market,
                    current_eval_date: datetime.date,
                    next_eval_date: datetime.date,
                    lamb: float=0.5,

@@ -15,9 +15,9 @@ import pytz
 from typeguard import typechecked
 
 # Local application imports
-from . import marketdata
-from ..timeseries import TimeSeries
-from ..geneticalg import Individual, Population
+from scifin.marketdata import marketdata
+from .. import timeseries as ts
+#from .. import geneticalg
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
@@ -197,7 +197,7 @@ class Market:
                 tmp_unit = None
             else:
                 tmp_unit = self.units[i]
-            tmp_ts = TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
+            tmp_ts = ts.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
             list_ts.append(tmp_ts)
             i+=1
 
@@ -472,8 +472,9 @@ def plot_market_components(market: Market, dims: (int,int)=(10,5), legend: bool=
 
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
-@typechecked
-def propagate_individual(individual: Individual, environment: Market, name_indiv: str="Portfolio") -> None:
+# TO BE REFACTORED.
+#@typechecked
+def propagate_individual(individual, environment: Market, name_indiv: str="Portfolio") -> None:
     """
     Propagates the initial individual over time by computing its sum of gene values.
 
@@ -600,8 +601,8 @@ def find_tick_before_eval(environment_dates: list,
     raise ValueError("No date was found.")
 
 
-@typechecked
-def limited_propagation(population: Population,
+#@typechecked
+def limited_propagation(population,
                         environment: Market,
                         start: Union[str, datetime.date],
                         end: Union[str, datetime.date]
@@ -723,8 +724,8 @@ def compute_vol(cov_matrix: np.ndarray, weights: Union[list, np.ndarray]) -> flo
     return (weights.T @ cov_matrix @ weights)**0.5
 
 
-@typechecked
-def fitness_calculation(population: Population,
+#@typechecked
+def fitness_calculation(population,
                         environment: Market,
                         current_eval_date: Union[str, datetime.date],
                         next_eval_date: Union[str, datetime.date],
@@ -911,7 +912,7 @@ def visualize_portfolios_1(market: Market,
     """
     
     # Computing the EW portfolio
-    market_EW = marketdata.market_EWindex(market)
+    market_EW = marketdata.marketdata.market_EWindex(market)
 
     # Plotting market
     axis = market_EW.plot(figsize=dims)

@@ -81,10 +81,11 @@ class Series:
     """
     
     def __init__(self,
-                 data: Union[pd.Series, pd.DataFrame]=None,
+                 data: Union[pd.Series, pd.DataFrame, None]=None,
                  tz: str=None,
                  unit: str=None,
-                 name: str="") -> None:
+                 name: str=None
+                 ) -> None:
         """
         Receives a panda.Series or pandas.DataFrame as an argument and initializes the time series.
         """
@@ -137,6 +138,8 @@ class Series:
             self.timezone = pytz.timezone(tz)
         
         # Deal with name (nickname)
+        if name is None:
+            name = ""
         self.name = name
         
 
@@ -160,7 +163,10 @@ class Series:
         return datetime.strftime(end_tmp, format=fmtz)
 
     
-    def specify_data(self, start: Union[str, datetime.date], end: Union[str, datetime.date]) -> pd.DataFrame:
+    def specify_data(self,
+                     start: Union[str, datetime.date],
+                     end: Union[str, datetime.date]
+                     ) -> Union[pd.Series, pd.DataFrame]:
         """
         Returns the appropriate data according to user's specifying
         or not the desired start and end dates.
@@ -182,7 +188,10 @@ class Series:
         return data
 
     
-    def start_end_names(self, start: Union[str, datetime.date], end: Union[str, datetime.date]) -> pd.DataFrame:
+    def start_end_names(self,
+                        start: Union[str, datetime.date],
+                        end: Union[str, datetime.date]
+                        ) -> (str, str):
         """
         Recasts the time series dates to 10 characters strings
         if the date hasn't been re-specified (i.e. value is 'None').
@@ -251,10 +260,11 @@ class TimeSeries(Series):
     """
     
     def __init__(self,
-                 data: Union[pd.Series, pd.DataFrame]=None,
+                 data: Union[pd.Series, pd.DataFrame, None]=None,
                  tz: str=None,
                  unit: str=None,
-                 name: str="") -> None:
+                 name: str=None
+                 ) -> None:
         """
         Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
         """
@@ -612,7 +622,7 @@ class TimeSeries(Series):
         """
         data = self.specify_data(start, end)
         new_data = data.pct_change()
-        new_ts = TimeSeries(new_data[1:], tz=self.tz, unit='%', name=name)
+        new_ts = TimeSeries(data=new_data[1:], tz=self.tz, unit='%', name=name)
         
         return new_ts
     
@@ -648,7 +658,7 @@ class TimeSeries(Series):
                  start: Union[str, datetime.date]=None,
                  end: Union[str, datetime.date]=None,
                  verbose: bool=True
-                 ) -> 'TimeSeries':
+                 ) -> float:
         """
         Computes the net returns of the time series and
         returns their associated historical volatility
@@ -687,7 +697,7 @@ class TimeSeries(Series):
                        start: Union[str, datetime.date]=None,
                        end: Union[str, datetime.date]=None,
                        verbose: bool=True
-                       ) -> 'TimeSeries':
+                       ) -> float:
         """
         Returns the annualized volatility of the time series
         between two dates (default is the whole series),
@@ -800,14 +810,14 @@ class TimeSeries(Series):
         
         # Checks
         assert(p>=0 and p<=1)
-        if 100*p%1 != 0:
-            warning_message = "Probability too precise, only closest percentile computed here." \
-            + "Hence for p = " + str(p) + " , percentile estimation is based on p = " + str(int(100*p)) + " %."
+        if 100 * p % 1 != 0:
+            warning_message = f"Probability too precise, only closest percentile computed here." \
+            + f"Hence for p = {str(p)} , percentile estimation is based on p = {str(int(100 * p))} %."
             warnings.warn(warning_message)
         
         # Prepare data
         data = self.specify_data(start, end)
-        
+
         return np.percentile(data.values, int(100*p))
     
     
@@ -1038,7 +1048,8 @@ class TimeSeries(Series):
                  x_min: float,
                  x_max: float,
                  n_points: int,
-                 normalize: bool=False
+                 normalize: bool=False,
+                 name: str=None
                  ) -> 'TimeSeries':
         """
         Performs a convolution of the time series with a function 'func'.
@@ -1057,6 +1068,8 @@ class TimeSeries(Series):
           Number of points to consider in the function.
         normalize: bool
           Option to impose the sum of func values to be 1.
+        name : str
+          New name.
 
         Returns
         -------
@@ -1065,7 +1078,7 @@ class TimeSeries(Series):
         """
         
         # Getting the time series values
-        ts = self.data.values
+        ts_vals = self.data.values
 
         # Getting the convolving function values
         X = np.linspace(x_min, x_max, n_points)
@@ -1077,8 +1090,13 @@ class TimeSeries(Series):
             func_vals /= sum_vals
         
         # Generate convolved values
-        convolved_vals = np.convolve(func_vals, ts.flatten(), mode='same')
-        convolved_ts = TimeSeries(pd.Series(index=self.data.index, data=convolved_vals), tz=self.tz)
+        convolved_vals = np.convolve(func_vals, ts_vals.flatten(), mode='same')
+        if name is None:
+            name = "Convolved-" + self.name
+        convolved_ts = TimeSeries(data=pd.Series(index=self.data.index, data=convolved_vals),
+                                  tz=self.tz,
+                                  unit=self.unit,
+                                  name=name)
         
         return convolved_ts
     
@@ -1112,9 +1130,8 @@ class TimeSeries(Series):
     
     def max_drawdown(self,
                      start: Union[str, datetime.date]=None,
-                     end: Union[str, datetime.date]=None,
-                     name: str=""
-                     ) -> 'TimeSeries':
+                     end: Union[str, datetime.date]=None
+                     ) -> float:
         """
         Returns the maximum drawdown of a time series.
         
@@ -1131,9 +1148,8 @@ class TimeSeries(Series):
         trailing_max = data.cummax()
         drawdowns = (data - trailing_max) / trailing_max
         max_drawdowns = -drawdowns.values.min()
-        new_ts = TimeSeries(max_drawdowns, tz=self.tz, name=name)
 
-        return new_ts
+        return max_drawdowns
     
     
     def divide_by_timeseries(self,
@@ -1626,10 +1642,10 @@ class CatTimeSeries(Series):
     """
     
     def __init__(self,
-                 data: pd.DataFrame=None,
+                 data: Union[pd.Series, pd.DataFrame, None]=None,
                  tz: str=None,
                  unit: str=None,
-                 name: str=""
+                 name: str=None
                  ) -> None:
         """
         Receives a pandas.Series or pandas.DataFrame as an argument and initializes the time series.
@@ -1741,8 +1757,8 @@ class CatTimeSeries(Series):
 
 ### FUNCTIONS HELPING TO CREATE A TIMESERIES ###
 
-@typechecked
-def type_to_series(series_type: str) -> 'TimeSeries':
+#@typechecked
+def type_to_series(series_type):
     """
     Returns the class TimeSeries or CatTimeSeries
     depending on whether it receives 'TS' or 'CTS' argument.
@@ -1759,13 +1775,13 @@ def type_to_series(series_type: str) -> 'TimeSeries':
         raise ValueError("Series type not recognized.")
 
 
-@typechecked
-def build_from_csv(tz: Union[str, list]=None,
-                   unit: Union[str, list]=None,
-                   name: Union[str, list]=None,
-                   type: Union[str, list]=None,
+#@typechecked
+def build_from_csv(tz: Union[str, list, None]=None,
+                   unit: Union[str, list, None]=None,
+                   name: Union[str, list, None]=None,
+                   type: Union[str, list, None]=None,
                    **kwargs: Any
-                   ) -> list:
+                   ):
     """
     Returns a list of time series from the reading of a .csv file.
     This function uses the function pandas.read_csv().
@@ -1800,41 +1816,45 @@ def build_from_csv(tz: Union[str, list]=None,
         
     # Return a time series
     if ncols == 1 :
-        return type_to_series(series_type=type)(data=data, tz=tz, unit=unit, name=name)
+        if type is not None:
+            return type_to_series(series_type=type)(data=data, tz=tz, unit=unit, name=name)
+        else:
+            return type_to_series(series_type='TS')(data=data, tz=tz, unit=unit, name=name)
     
     # or return a list of time series
     else:
         # Checks
         if tz is not None:
             assert(isinstance(tz, list))
-            assert(len(tz)==ncols)
+            assert(len(tz) == ncols)
         else:
             tz = [None] * ncols
             
         if unit is not None:
             assert(isinstance(unit, list))
-            assert(len(unit)==ncols)
+            assert(len(unit) == ncols)
         else:
             unit = [None] * ncols
             
         if name is not None:
             assert(isinstance(name, list))
-            assert(len(name)==ncols)
+            assert(len(name) == ncols)
         else:
             name = [None] * ncols
             
         if type is not None:
             assert(isinstance(type, list))
-            assert(len(type)==ncols)
+            assert(len(type) == ncols)
         else:
             type = ['TS'] * ncols
             
         # Fill up a list with time series
         ts_list = []
         for i in range(ncols):
-            ts_list.append( type_to_series(type[i])(pd.Series(data.iloc[:,i]), tz=tz[i],
-                                                                                unit=unit[i],
-                                                                                name=name[i]) )
+            ts_list.append( type_to_series(type[i])(data=pd.Series(data.iloc[:,i]),
+                                                    tz=tz[i],
+                                                    unit=unit[i],
+                                                    name=name[i]) )
         return ts_list
 
 
@@ -1989,12 +2009,12 @@ def build_from_dataframe(data: pd.DataFrame,
 
 
 @typechecked
-def build_from_list(list_values: list,
+def build_from_list(list_values: Union[list, np.ndarray],
                     tz: str=None,
                     unit: str=None,
                     name: str="",
                     **kwargs: Any
-                    ) -> 'TimeSeries':
+                    ) -> Union[TimeSeries, CatTimeSeries]:
     """
     Returns a time series or categorical time series from the reading of a list.
     
