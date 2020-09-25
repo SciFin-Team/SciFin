@@ -577,7 +577,7 @@ class Binomial(unittest.TestCase):
     def setUp(self):
         
         # Test AssertionError
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(TypeError):
             dis.Binomial(n=1., p=0.5)
         with self.assertRaises(AssertionError):
             dis.Binomial(n=-10, p=0.5)
