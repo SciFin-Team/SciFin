@@ -17,6 +17,6 @@ class TestUpperIncompleteGamma:
             upper_incomplete_gamma(a='A', z=0.3)
 
         expected_error_msg = (
-            'TypeError: type of argument "a" must be one of (int, float); got str instead'
+            'type of argument \"a\" must be one of (int, float); got str instead'
         )
         assert exc_info.match(expected_error_msg)

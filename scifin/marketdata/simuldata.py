@@ -187,17 +187,17 @@ class Market:
         # Initialization
         list_ts = []
         if (start_date is None) and (end_date is None):
-            new_index = pd.to_datetime(self.data.to_timestamp().index)
+            new_index = pd.to_datetime(self.data.index)
         elif (start_date is None):
             end_date = self.data.index[list(self.data.index).index(end_date)]
-            new_index = pd.to_datetime(self.data.to_timestamp().index[:end_date])
+            new_index = pd.to_datetime(self.data.index[:end_date])
         elif (end_date is None):
             start_date = self.data.index[list(self.data.index).index(start_date)]
-            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:])
+            new_index = pd.to_datetime(self.data.index[start_date:])
         else:
             start_date = self.data.index[list(self.data.index).index(start_date)]
             end_date = self.data.index[list(self.data.index).index(end_date)]
-            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:end_date])
+            new_index = pd.to_datetime(self.data.index[start_date:end_date])
 
         # Forming a list of time series
         i = 0
