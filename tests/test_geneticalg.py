@@ -1,104 +1,42 @@
-# Solving relative path problem
-import sys
-from os import path
-sys.path.append(path.join(path.dirname(__file__), '..'))
-
-# Import Unittest
-import unittest
-
-# Import third party packages
 import pandas as pd
 
-# Import my package
 from scifin.geneticalg import geneticalg as gen
-    
-
-#---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
-
-
-class TestIndividual(unittest.TestCase):
+class TestIndividual:
     """
     Tests the class Individual.
     """
-    
-    @classmethod
-    def setUpClass(cls):
-        #print('setupClass')
-        pass
-    
-    @classmethod
-    def tearDownClass(cls):
-        #print('tearDownClass')
-        pass
-    
-    def setUp(self):
-        #print('setUp')
-        pass
-        
-    def tearDown(self):
-        # print('tearDown')
-        pass
 
-        
     def test_Individual_init(self):
-        
         # Define Individual
-        self.i1 = gen.Individual(genes=[1,2,3], birth_date="2020-08-21", name="Albert")
-        
+        i1 = gen.Individual(genes=[1, 2, 3], birth_date="2020-08-21", name="Albert")
+
         # Test attributes values
-        self.assertIsNone(self.i1.genes_names)
-        self.assertListEqual(list(self.i1.genes), [1, 2, 3])
-        self.assertEqual(self.i1.birth_date, "2020-08-21")
-        self.assertEqual(self.i1.ngenes, 3)
-        self.assertEqual(self.i1.name, "Albert")
+        assert i1.genes_names is None
+        assert list(i1.genes) == [1, 2, 3]
+        assert i1.birth_date == "2020-08-21"
+        assert i1.ngenes == 3
+        assert i1.name == "Albert"
 
 
-    
-class TestPopulation(unittest.TestCase):
+class TestPopulation:
     """
     Tests the class Population.
     """
-    
-    @classmethod
-    def setUpClass(cls):
-        #print('setupClass')
-        pass
-    
-    @classmethod
-    def tearDownClass(cls):
-        #print('tearDownClass')
-        pass
-    
-    def setUp(self):
-        #print('setUp')
-        pass
-        
-    def tearDown(self):
-        # print('tearDown')
-        pass
 
-        
     def test_Population_init(self):
-
         # Define Population
-        test_df = pd.DataFrame(columns=['g1','g2','g3'], index=['i1','i2'])
-        test_df.loc['i1'] = {'g1':1, 'g2':2, 'g3':3}
-        test_df.loc['i2'] = {'g1':4, 'g2':5, 'g3':6}
-        self.p1 = gen.Population(df=test_df, n_genes=test_df.shape[1], name="MyPopulation")
-        
-        # Test attributes values
-        self.assertListEqual(self.p1.data.index.tolist(), ['i1','i2'])
-        self.assertListEqual(self.p1.data.iloc[0].tolist(), [1,2,3])
-        self.assertListEqual(self.p1.data.iloc[1].tolist(), [4,5,6])
-        self.assertEqual(self.p1.n_indiv, 2)
-        self.assertEqual(self.p1.n_genes, 3)
-        self.assertEqual(self.p1.name, "MyPopulation")   
-        self.assertIsNone(self.p1.history)
-    
+        test_df = pd.DataFrame(columns=['g1', 'g2', 'g3'], index=['i1', 'i2'])
+        test_df.loc['i1'] = {'g1': 1, 'g2': 2, 'g3': 3}
+        test_df.loc['i2'] = {'g1': 4, 'g2': 5, 'g3': 6}
+        p1 = gen.Population(df=test_df, n_genes=test_df.shape[1], name="MyPopulation")
 
-    
-if __name__ == '__main__':
-    unittest.main()
-    
+        # Test attributes values
+        assert p1.data.index.tolist() == ['i1', 'i2']
+        assert p1.data.iloc[0].tolist() == [1, 2, 3]
+        assert p1.data.iloc[1].tolist() == [4, 5, 6]
+        assert p1.n_indiv == 2
+        assert p1.n_genes == 3
+        assert p1.name == "MyPopulation"
+        assert p1.history is None
