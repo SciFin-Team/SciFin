@@ -4,7 +4,7 @@
 
 # Standard library imports
 import itertools
-from typing import Union
+from typing import Any, Union
 import multiprocessing as mp
 
 # Third party imports
@@ -17,7 +17,6 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import log_loss
 from sklearn.metrics import silhouette_samples
 from sklearn.model_selection._split import KFold
-from sklearn.tree import DecisionTreeClassifier
 from typeguard import typechecked
 import statsmodels.discrete.discrete_model
 
@@ -236,7 +235,7 @@ def dtw_distance_matrix_from_ts_multi_proc(list_ts: list,
                                            mode: str='abs',
                                            normalize: bool=False,
                                            n_proc: int=2
-                                          ) -> pd.DataFrame:
+                                           ) -> pd.DataFrame:
     """
     Computes the dtw distance between time series of a list. It uses multi-processing
     with n_proc processors in parallel.
@@ -310,7 +309,7 @@ def dtw_distance_matrix_from_ts_multi_proc(list_ts: list,
 def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
                            names_features: list=None,
                            max_num_clusters: int=10,
-                           **kwargs
+                           **kwargs: Any
                            ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform base clustering with Kmeans.
@@ -467,7 +466,7 @@ def make_new_outputs(corr: Union[np.array, pd.DataFrame],
 def kmeans_advanced_clustering(corr: Union[np.ndarray, pd.DataFrame],
                                names_features: list=None,
                                max_num_clusters: int=None,
-                               **kwargs
+                               **kwargs: Any
                                ) -> (pd.DataFrame, dict, pd.Series):
     """
     Perform advanced clustering with Kmeans.
@@ -602,7 +601,7 @@ def cluster_observation_matrix(X: pd.DataFrame,
                                n_clust_range: range,
                                model: cluster,
                                verbose: bool=True,
-                               **kwargs
+                               **kwargs: Any
                                ) -> (dict, dict):
     """
     Apply clustering for an arbitrary model as long as the model has an argument 'n_clusters'.
@@ -870,9 +869,9 @@ def generate_random_classification(n_features: int,
     """
     
     # Checks
-    for arg in [('n_features',n_features), ('n_informative',n_informative), ('n_redundant',n_redundant),
-                ('n_samples',n_samples), ('random_state',random_state)]:
-        if not isinstance(arg[1],int):
+    for arg in [('n_features', n_features), ('n_informative', n_informative), ('n_redundant', n_redundant),
+                ('n_samples', n_samples), ('random_state', random_state)]:
+        if not isinstance(arg[1], int):
             raise TypeError(arg[0] + " must be integer.")
     if not isinstance(arg[1], float) and not isinstance(arg[1], int):
         raise TypeError("sigma_std must be float.")
@@ -980,12 +979,6 @@ def feature_importance_mdi(classifier: BaggingClassifier,
       Marcos López de Prado (2020).
     """
     
-    # Checks
-    if not isinstance(X, pd.DataFrame):
-        raise TypeError("X must be pandas.DataFrame.")
-    if not isinstance(y, pd.Series):
-        raise TypeError("y must be pandas.Series.")
-    
     # Fit
     fit = classifier.fit(X,y)
     
@@ -1047,12 +1040,6 @@ def feature_importance_mda(classifier: BaggingClassifier,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
-    # Checks
-    if not isinstance(X, pd.DataFrame):
-        raise TypeError("X must be pandas.DataFrame.")
-    if not isinstance(y, pd.Series):
-        raise TypeError("y must be pandas.Series.")
     
     # Generate K-fold cross validation
     cv_gen = KFold(n_splits=n_splits)
