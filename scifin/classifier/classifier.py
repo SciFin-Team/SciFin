@@ -636,6 +636,10 @@ def cluster_observation_matrix(X: pd.DataFrame,
       https://scikit-learn.org/stable/modules/classes.html?highlight=cluster#module-sklearn.cluster
     """
 
+    # Checks
+    if min(n_clust_range) < 2:
+        raise AssertionError("Argument n_clust_range must have values starting at values >= 2.")
+
     # Initialization
     save_labels = {}
     save_quality = {}
