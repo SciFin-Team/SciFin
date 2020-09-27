@@ -7,7 +7,7 @@ __author__ = "Fabien Nugier"
 The :mod:`scifin.classifier` module includes methods for classification and clustering.
 """
 
-from .classifier import (euclidean_distance, dtw_distance, dtw_distance_matrix_from_ts,
+from .classifier import (euclidean_distance, dtw_distance, distance_matrix_from_ts,
                          dtw_distance_matrix_from_ts_multi_proc,
                          kmeans_base_clustering, kmeans_advanced_clustering,
                          convert_clusters_into_list_of_labels,
