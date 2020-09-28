@@ -1,12 +1,8 @@
 # Standard library imports
-import sys
-new_path = sys.path[0][:-len("/examples/timeseries")]
-sys.path.append(new_path)
-import warnings
-warnings.filterwarnings(("ignore"))
+# /
 
 # Third party imports
-import numpy as np
+# /
 
 # Local application imports
 from scifin import timeseries as ts
