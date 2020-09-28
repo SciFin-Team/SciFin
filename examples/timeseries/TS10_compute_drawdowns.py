@@ -21,7 +21,3 @@ ts2 = ts1.get_drawdowns()
 # Plot drawdowns and distribution at the same time
 ts2.simple_plot_distrib(bins=30)
 
-
-
-
-
