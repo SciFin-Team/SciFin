@@ -4,14 +4,15 @@
 
 # Standard library imports
 from datetime import datetime
+from typing import Union
 
 # Third party imports
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from typeguard import typechecked
 
 # Local application imports
-from . import TimeSeries
+from .. import timeseries as ts
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
@@ -22,8 +23,14 @@ from . import TimeSeries
 
 # Simple models
 
-
-def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=None, name=""):
+@typechecked
+def constant(start_date: Union[str, datetime.date],
+             end_date: Union[str, datetime.date],
+             frequency: str,
+             cst: float=0.,
+             sigma: float=0.,
+             tz=None, unit=None, name=""
+             ) -> ts.TimeSeries:
     """
     Defines a time series with constant numerical value
     and eventually add a noise to it.
@@ -40,6 +47,8 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
       The constant to build the time series from.
     sigma : float
       Standard deviation for the Gaussian noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -64,10 +73,6 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
     --------
       None
     """
-
-    # Checks
-    assert(isinstance(cst, int) or isinstance(cst, float))
-    assert(isinstance(sigma, int) or isinstance(sigma, float))
     
     # Generate index
     data_index = pd.date_range(start=start_date, end=end_date, freq=frequency)
@@ -82,18 +87,28 @@ def constant(start_date, end_date, frequency, cst=0., sigma=0., tz=None, unit=No
 
     # Make time series
     df = pd.DataFrame(index=data_index, data=data_vals)
-    ts = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
 
-    return ts
-
-
+    return rs
 
 
 
 # These models describe the evolution of time series.
 
-
-def auto_regressive(start_date, end_date, frequency, start_values, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
+@typechecked
+def auto_regressive(start_date: Union[str, datetime.date],
+                    end_date: Union[str, datetime.date],
+                    frequency: str,
+                    start_values: list,
+                    cst: float,
+                    order: int,
+                    coeffs: list,
+                    sigma: float,
+                    tz: str=None,
+                    unit: str=None,
+                    name: str="",
+                    verbose: bool=False
+                    ) -> ts.TimeSeries:
     """
     Generates a time series from the Auto-Regressive (AR) model of arbitrary order P.
     
@@ -121,6 +136,8 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
       Coefficients of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -172,17 +189,25 @@ def auto_regressive(start_date, end_date, frequency, start_values, cst, order, c
     # Compute theoretical expectation value
     if verbose:
         E = cst / (1 - sum(coeffs))
-        print("Under stationarity assumption, the expected value for this AR("
-              + str(P) + ") model is: " + str(E) + "\n")
+        print("Under stationarity assumption, the expected value for this AR({str(P)}) model is: {str(E)} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, unit=None, name=""):
+@typechecked
+def random_walk(start_date: Union[str, datetime.date],
+                end_date: Union[str, datetime.date],
+                frequency: str,
+                start_value: float,
+                sigma: float,
+                tz: str=None,
+                unit: str=None,
+                name: str=""
+                ) -> ts.TimeSeries:
     """
     Generates a time series from the Random Walk process,
     i.e. an AR(1) model with {cst = 0, coeff[0] = 1}.
@@ -203,6 +228,8 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, un
       Initial value of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -243,12 +270,22 @@ def random_walk(start_date, end_date, frequency, start_value, sigma, tz=None, un
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma, tz=None, unit=None, name=""):
+@typechecked
+def drift_random_walk(start_date: Union[str, datetime.date],
+                      end_date: Union[str, datetime.date],
+                      frequency: str,
+                      start_value: float,
+                      drift: float,
+                      sigma: float,
+                      tz: str=None,
+                      unit: str=None,
+                      name: str=""
+                      ) -> ts.TimeSeries:
     """
     Generates a time series from the Random Walk with Drift process,
     i.e. an AR(1) model with {cst != 0, coeffs[0] = 1}.
@@ -271,6 +308,8 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
       Value of the drift.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -311,12 +350,24 @@ def drift_random_walk(start_date, end_date, frequency, start_value, drift, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, tz=None, unit=None, name="", verbose=False):
+@typechecked
+def moving_average(start_date: Union[str, datetime.date],
+                   end_date: Union[str, datetime.date],
+                   frequency: str,
+                   cst: float,
+                   order: int,
+                   coeffs: list,
+                   sigma: float,
+                   tz: str=None,
+                   unit: str=None,
+                   name: str="",
+                   verbose: bool=False
+                   ) -> ts.TimeSeries:
     """
     Generates a time series from the Moving Average (MA) model of arbitrary order Q.
     
@@ -347,13 +398,15 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
       List of coefficients.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
       Name or nickname of the series.
     verbose : bool
       Verbose option.
-      
+    
     Returns
     -------
     TimeSeries
@@ -399,20 +452,33 @@ def moving_average(start_date, end_date, frequency, cst, order, coeffs, sigma, t
         for q in range(Q):
             V += coeffs[q]**2
         V *= sigma**2
-        print("The expected value for this MA(" + str(Q) + ") model is: " + str(cst))
-        print("The estimation of the variance for this MA(" + str(Q) + ") model is: " + str(V) + \
-              " , i.e. a standard deviation of: " + str(np.sqrt(V)) + "\n")
+
+        print(f"The expected value for this MA({str(Q)}) model is: {str(cst)}")
+        print(f"The estimation of the variance for this MA({str(Q)}) model is: {str(V)}" + \
+              f" , i.e. a standard deviation of: {str(np.sqrt(V))} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-
-def arma(start_date, end_date, frequency, start_values,
-         cst, ARorder, ARcoeffs, MAorder, MAcoeffs, sigma, tz=None, unit=None, name=""):
+@typechecked
+def arma(start_date: Union[str, datetime.date],
+         end_date: Union[str, datetime.date],
+         frequency: str,
+         start_values: list,
+         cst: float,
+         ARorder: int,
+         ARcoeffs: list,
+         MAorder: int,
+         MAcoeffs: list,
+         sigma: float,
+         tz: str=None,
+         unit: str=None,
+         name: str=""
+         ) -> ts.TimeSeries:
     """
     Function generating a time series from the Auto-Regressive Moving Average (ARMA)
     model of orders (P,Q).
@@ -446,6 +512,8 @@ def arma(start_date, end_date, frequency, start_values,
       List of coefficients for the MA part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -501,13 +569,24 @@ def arma(start_date, end_date, frequency, start_values,
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-
-def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma, tz=None, unit=None, name=""):
+@typechecked
+def rca(start_date: Union[str, datetime.date],
+        end_date: Union[str, datetime.date],
+        frequency: str,
+        cst: float,
+        order: int,
+        ARcoeffs: list,
+        cov_matrix: list,
+        sigma: float,
+        tz: str=None,
+        unit: str=None,
+        name: str=""
+        ) -> ts.TimeSeries:
     """
     Function generating a time series from the Random Coefficient Auto-Regressive (RCA)
     model of order M.
@@ -538,6 +617,8 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -598,7 +679,7 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
@@ -608,7 +689,18 @@ def rca(start_date, end_date, frequency, cst, order, ARcoeffs, cov_matrix, sigma
 
 # These models describe the volatility of a time series.
 
-def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None, name="", verbose=False):
+@typechecked
+def arch(start_date: Union[str, datetime.date],
+         end_date: Union[str, datetime.date],
+         frequency: str,
+         cst: float,
+         order: int,
+         coeffs: list,
+         tz: str=None,
+         unit: str=None,
+         name: str="",
+         verbose: bool=False
+         ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Auto-Regressive Conditional Heteroscedastic (ARCH) model of order M.
@@ -637,6 +729,8 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
       Order of the process (i.e. value of M).
     coeffs : list
       List of coefficients of the process.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -698,21 +792,32 @@ def arch(start_date, end_date, frequency, cst, order, coeffs, tz=None, unit=None
     
     # Compute theoretical values
     if verbose:
-        print("The expected value for this ARCH(" + str(M) \
-              + ") model is 0, like any other ARCH model, and the estimated value is : " \
-              + str(np.mean(a)))
+        print(f"The expected value for this ARCH({str(M)}) model is 0, like any other ARCH model," \
+              + f" and the estimated value is: {str(np.mean(a))}")
         V = cst / (1 - sum(coeffs))
-        print("The theoretical standard deviation value for this ARCH(" + str(M) \
-              + ") model is: " + str(V))
+        print(f"The theoretical standard deviation value for this ARCH({str(M)}) model is: {str(V)}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, coeffs_sig, tz=None, unit=None, name="", verbose=False):
+@typechecked
+def garch(start_date: Union[str, datetime.date],
+          end_date: Union[str, datetime.date],
+          frequency: str,
+          cst: float,
+          order_a: int,
+          coeffs_a: list,
+          order_sig: int,
+          coeffs_sig: list,
+          tz: str=None,
+          unit: str=None,
+          name: str="",
+          verbose: bool=False
+          ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Generalized ARCH (GARCH) model of order M.
@@ -746,6 +851,8 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
       Order of the sig_t part of the process (i.e. value of S).
     coeffs_sig : list
       List of coefficients of the sig_t part of the process.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -814,17 +921,26 @@ def garch(start_date, end_date, frequency, cst, order_a, coeffs_a, order_sig, co
     # Compute theoretical values
     if verbose:
         V = cst / (1 - sum(coeffs_a) - sum(coeffs_sig))
-        print("The theoretical standard deviation for this GARCH(" + str(M) \
-              + "," + str(S) + ") model is: " + str(np.sqrt(V)))
+        print(f"The theoretical standard deviation for this GARCH({str(M)}, {str(S)}) model is: {str(np.sqrt(V))}")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 
 
-def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, unit=None, name=""):
+@typechecked
+def charma(start_date: Union[str, datetime.date],
+           end_date: Union[str, datetime.date],
+           frequency: str,
+           order: int,
+           cov_matrix: list,
+           sigma: float,
+           tz: str=None,
+           unit: str=None,
+           name: str=""
+           ) -> ts.TimeSeries:
     """
     Function generating a volatility series from the
     Conditional Heterescedastic ARMA (CHARMA) model of order M.
@@ -849,6 +965,8 @@ def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, u
       Covariance matrix for the random part of the process.
     sigma : float
       Standard deviation of the Gaussian white noise.
+    tz : str
+      Timezone name.
     unit : str or None
       Unit of the time series values.
     name : str
@@ -904,7 +1022,7 @@ def charma(start_date, end_date, frequency, order, cov_matrix, sigma, tz=None, u
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=a)
-    rs = TimeSeries(df, tz=tz, unit=unit, name=name)
+    rs = ts.TimeSeries(df, tz=tz, unit=unit, name=name)
     
     return rs
 

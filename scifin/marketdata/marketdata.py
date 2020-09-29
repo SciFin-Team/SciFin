@@ -4,33 +4,26 @@
 
 # Standard library imports
 from datetime import datetime
-from datetime import timedelta
-import random as random
+from typing import Union
 
 # Third party imports
-from IPython.display import display, clear_output
-import matplotlib.pyplot as plt
+# from IPython.display import display, clear_output
 import numpy as np
 import pandas as pd
 import pandas_datareader as pdr
-import pandas_datareader.data as web
+from typeguard import typechecked
 
 # Local application imports
 from .. import exceptions
-from .. import timeseries as ts
 from . import simuldata
 
 
 #---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
-
-def get_sp500_tickers():
+@typechecked
+def get_sp500_tickers() -> list:
     """
     Gets the SP500 tickers from Wikipedia.
-    
-    Parameters
-    ----------
-    None
     
     Returns
     -------
@@ -48,8 +41,12 @@ def get_sp500_tickers():
     return tickers
 
 
-
-def get_assets_from_yahoo(list_assets, feature, start_date, end_date, name=""):
+@typechecked
+def get_assets_from_yahoo(list_assets: list,
+                          feature: str,
+                          start_date: Union[str, datetime.date],
+                          end_date: Union[str, datetime.date],
+                          name: str=""):
     """
     Extracts values associated to a feature for a list of assets
     between 2 dates, using Yahoo Finance data.
@@ -105,11 +102,12 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date, name=""):
     
     # Make DataFrame
     for i in range(N):
-        print(i)
+        # print(i)
         
         # Printing status of execution
-        clear_output(wait=True)
-        display("Running... " + str(int(counter/N*100)) + '%')
+        # clear_output(wait=True)
+        # display("Running... " + str(int(counter/N*100)) + '%')
+        print("Running... " + str(int(counter/N*100)) + '%')
         counter += 1
         
         try:
@@ -124,8 +122,8 @@ def get_assets_from_yahoo(list_assets, feature, start_date, end_date, name=""):
     return market
 
 
-
-def market_EWindex(market, name="Market EW Index"):
+@typechecked
+def market_EWindex(market: simuldata.Market, name: str="Market EW Index") -> pd.DataFrame:
     """
     Sums all assets to make an index, corresponds to the Equally-Weighed (EW) index.
     
@@ -140,7 +138,9 @@ def market_EWindex(market, name="Market EW Index"):
     ----------
     market : Market
       The market we use to sum values.
-    
+    name: str
+      Other name for the index.
+
     Returns
     -------
     DataFrame
@@ -148,13 +148,13 @@ def market_EWindex(market, name="Market EW Index"):
     """
     
     df = pd.DataFrame(market.data.sum(axis=1))
-    df.columns = ['EW sum of assets']
+    df.columns = [name]
     
     return df
 
 
-
-def get_marketcap_today(market):
+@typechecked
+def get_marketcap_today(market: simuldata.Market) -> pd.Series:
     """
     Returns the market capitalization as it is today.
     
@@ -178,8 +178,8 @@ def get_marketcap_today(market):
     return marketcap
 
 
-
-def market_CWindex(market, marketcap):
+@typechecked
+def market_CWindex(market: simuldata.Market, marketcap: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
     """
     Function that returns the Cap-Weighted (CW) index associated
     with the assets of a market.
@@ -212,8 +212,9 @@ def market_CWindex(market, marketcap):
     
     # Computing weighted returns
     M = Nassets * (market.data * marketcap / marketcap.sum()).sum(axis=1)
-    market_index_df = pd.DataFrame(data=M, index=market.data.index,
-                                columns=["Market CW Index (Cap from last day)"])
+    market_index_df = pd.DataFrame(data=M,
+                                   index=market.data.index,
+                                   columns=["Market CW Index (Cap from last day)"])
     market_index_df.columns = ['CW sum of assets']
     
     return market_index_df

@@ -5,6 +5,7 @@
 
 # Standard library imports
 from datetime import datetime
+from typeguard import typechecked
 
 # Third party imports
 import matplotlib.pyplot as plt

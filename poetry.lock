@@ -534,6 +534,18 @@ test = ["pytest", "mock"]
 
 [[package]]
 category = "main"
+description = "Run-time type checker for Python"
+name = "typeguard"
+optional = false
+python-versions = ">=3.5.3"
+version = "2.9.1"
+
+[package.extras]
+doc = ["sphinx-rtd-theme", "sphinx-autodoc-typehints (>=1.2.0)"]
+test = ["pytest", "typing-extensions"]
+
+[[package]]
+category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -924,6 +936,10 @@ threadpoolctl = [
 traitlets = [
     {file = "traitlets-4.3.3-py2.py3-none-any.whl", hash = "sha256:70b4c6a1d9019d7b4f6846832288f86998aa3b9207c6821f3578a6a6a467fe44"},
     {file = "traitlets-4.3.3.tar.gz", hash = "sha256:d023ee369ddd2763310e4c3eae1ff649689440d4ae59d7485eb4cfbbe3e359f7"},
+]
+typeguard = [
+    {file = "typeguard-2.9.1-py3-none-any.whl", hash = "sha256:e258567e62d28f9a51d4f7c71f491154e9ef0889286ad2f37e3e22e4f668b21b"},
+    {file = "typeguard-2.9.1.tar.gz", hash = "sha256:529ef3d88189cc457f4340388028412f71be8091c2c943465146d4170fb67288"},
 ]
 urllib3 = [
     {file = "urllib3-1.25.10-py2.py3-none-any.whl", hash = "sha256:e7983572181f5e1522d9c98453462384ee92a0be7fac5f1413a1e35c56cc0461"},

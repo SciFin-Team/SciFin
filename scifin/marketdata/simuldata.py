@@ -5,18 +5,18 @@
 # Standard library imports
 from datetime import datetime
 from datetime import timedelta
-import random as random
+from typing import Union
 
 # Third party imports
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytz
-import matplotlib.pyplot as plt
+from typeguard import typechecked
 
 # Local application imports
-from . import marketdata
-from .. import timeseries
-
+from scifin.marketdata import marketdata
+from .. import timeseries as ts
 
 # Dictionary of Pandas' Offset Aliases
 # and their numbers of appearance in a year.
@@ -35,6 +35,7 @@ fmtz = "%Y-%m-%d %H:%M:%S %Z%z"
 
 # CLASS FOR MARKET
 
+@typechecked
 class Market:
     """
     Creates a market.
@@ -60,11 +61,19 @@ class Market:
     units : List of str
       Unit of the market data columns.
     """
-    
-    def __init__(self, df=None, tz=None, units=None, name=""):
+
+    def __init__(self,
+                 df: pd.DataFrame=None,
+                 tz: str=None,
+                 units: Union[str, list]=None,
+                 name: str=""
+                 ) -> None:
+        """
+        Initializes the Market.
+        """
 
         # Deal with DataFrame
-        if (df is None) or (df.empty == True):
+        if (df is None) or (df.empty is True):
             self.data = pd.DataFrame(index=None, data=None)
             self.start_utc = None
             self.end_utc = None
@@ -111,13 +120,13 @@ class Market:
             self.timezone = pytz.timezone(tz)
 
 
-    def is_index_valid(self):
+    def is_index_valid(self) -> bool:
         """
         Checks if the market has a correct index, meaning no date value is repeated.
 
         Parameters
         ----------
-        market : DataFrame
+        self : DataFrame
           The market to be used.
 
         Returns
@@ -135,7 +144,7 @@ class Market:
         return True
     
     
-    def reset_index(self, new_index):
+    def reset_index(self, new_index: list) -> None:
         """
         Resets the index with a new one given in argument.
         """
@@ -144,21 +153,25 @@ class Market:
         try:
             assert(len(new_index) == self.data.shape[0])
         except AssertionError:
-            AssertionEror("New index should have same dimension as current index.")
+            AssertionError("New index should have same dimension as current index.")
     
         # Replacing index
         self.data.index = new_index
         
         return None
 
-
-    def to_list(self, start_date=None, end_date=None):
+    # TO DO: Repair this broken function.
+    #@Typechecking
+    def to_list(self,
+                start_date=None,
+                end_date=None
+                ):
         """
         Converts the Market data frame into a list of TimeSeries.
 
         Parameters
         ----------
-        market : Market
+        self : Market
           Market to convert.
         start_date : str or datetime
           Starting date we want for the time series.
@@ -170,32 +183,46 @@ class Market:
         List of TimeSeries
           The list of times series extracted from the data frame.
         """
-        
+
         # Initialization
         list_ts = []
-        new_index = pd.to_datetime(self.data.index[start_date:end_date])
-        
-        # Forming a list of timeseries
-        i=0
+        if (start_date is None) and (end_date is None):
+            new_index = pd.to_datetime(self.data.to_timestamp().index)
+        elif (start_date is None):
+            end_date = self.data.index[list(self.data.index).index(end_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[:end_date])
+        elif (end_date is None):
+            start_date = self.data.index[list(self.data.index).index(start_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:])
+        else:
+            start_date = self.data.index[list(self.data.index).index(start_date)]
+            end_date = self.data.index[list(self.data.index).index(end_date)]
+            new_index = pd.to_datetime(self.data.to_timestamp().index[start_date:end_date])
+
+        # Forming a list of time series
+        i = 0
         for c in self.data.columns:
             tmp_series = pd.Series(index=new_index, data=self.data.loc[start_date:end_date, c].values)
             if self.units is None:
                 tmp_unit = None
             else:
                 tmp_unit = self.units[i]
-            tmp_ts = timeseries.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
+            tmp_ts = ts.TimeSeries(data=tmp_series, tz=self.tz, unit=tmp_unit, name=c)
             list_ts.append(tmp_ts)
-            i+=1
+            i += 1
 
         return list_ts
 
 
-    
-    
+
 # GENERAL FUNCTIONS RELATED TO MARKET
 
-
-def set_market_names(data, date, date_type="end", interval_type='D'):
+@typechecked
+def set_market_names(data: pd.DataFrame,
+                     date: str,
+                     date_type: str="end",
+                     interval_type: str='D'
+                     ) -> None:
     """
     Sets the column and row names of the market dataframe.
       
@@ -284,10 +311,20 @@ def set_market_names(data, date, date_type="end", interval_type='D'):
     return None
 
 
-def create_market_returns(r_ini, drift, sigma, n_years,
-                          steps_per_year, n_components,
-                          date, date_type, interval_type='D',
-                          tz=None, units=None, name=""):
+@typechecked
+def create_market_returns(r_ini: float,
+                          drift: float,
+                          sigma: float,
+                          n_years: int,
+                          steps_per_year: int,
+                          n_components: int,
+                          date: str,
+                          date_type: str,
+                          interval_type: str='D',
+                          tz: str=None,
+                          units: list=None,
+                          name: str=""
+                          ) -> Market:
     """
     Creates a market from a Geometric Brownian process for each stock.
     
@@ -306,26 +343,42 @@ def create_market_returns(r_ini, drift, sigma, n_years,
       Volatility of the process.
     n_years : int
       Number of years to generate.
-    step_per_year : int
+    steps_per_year : int
       Number of steps per year.
     n_components : int
       Number of components of the market.
-    
+    date : str
+      A specific date.
+    date_type : str
+      Value "end" for 'date' specifying the data end date, "start" for the start date.
+    interval_type : str or DateOffset
+      Specifies nature of the jump between two dates ('D' for days, 'M' for months, 'Y' for years).
+    tz : str
+      Timezone name.
+    units : List of str
+      Unit of the market data columns.
+
     Notes
     -----
       All stocks are assumed to be in the same time zone.
+
+      The two ways ("end" and "start") of specifying the dates are approximative.
+      Uncertainty on the dates are of the order of the interval type.
+
+      For offset aliases available see:
+      https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#timeseries-offset-aliases.
     
     Returns
     -------
     Market
       Market of returns for the market.
     """
-    
+
     # Checks
-    assert(isinstance(n_years, int))
-    assert(isinstance(steps_per_year, int))
-    assert(isinstance(n_components, int))
-    
+    for unit in units:
+        if not isinstance(unit, str):
+            raise TypeError("Argument units must be a list of 'str'.")
+
     # Initialization
     dt = 1/steps_per_year
     n_steps = int(n_years * steps_per_year) + 1
@@ -346,7 +399,11 @@ def create_market_returns(r_ini, drift, sigma, n_years,
     return market_returns
 
 
-def create_market_shares(market, mean=100000, stdv=10000):
+@typechecked
+def create_market_shares(market: Market,
+                         mean: float = 100000,
+                         stdv: float = 10000
+                         ) -> pd.Series:
     """
     Creates a list of randomly generated numbers of shares for a market.
     The number of shares is generated from a normal distribution.
@@ -366,9 +423,6 @@ def create_market_shares(market, mean=100000, stdv=10000):
       The pandas series containing the market shares.
     """
     
-    # Checks
-    assert(isinstance(market, Market))
-    
     # Get number of assets
     n_assets = market.data.shape[1]
     
@@ -385,10 +439,10 @@ def create_market_shares(market, mean=100000, stdv=10000):
 
 
 
-
 # VISUALIZATION METHODS
 
-def plot_market_components(market, dims=(10,5), legend=True):
+@typechecked
+def plot_market_components(market: Market, dims: (int,int)=(10,5), legend: bool=True) -> None:
     """
     Plots the assets contribution to the Equally-Weighted (EW) index.
     
@@ -424,12 +478,13 @@ def plot_market_components(market, dims=(10,5), legend=True):
 
     return None
 
-        
-    
-    
+
+
 # FUNCTIONS USED WITH GENETIC ALGORITHM
 
-def propagate_individual(individual, environment, name_indiv="Portfolio"):
+# TO BE REFACTORED.
+#@typechecked
+def propagate_individual(individual, environment: Market, name_indiv: str="Portfolio") -> None:
     """
     Propagates the initial individual over time by computing its sum of gene values.
 
@@ -459,16 +514,12 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     
     # Checks
     first_row = environment.data.iloc[0]
-    is_uniform = True
     first_value = first_row[0]
     for x in first_row:
         if x != first_value:
             raise ValueError("First row of environment must be uniform in value.")
     
-    # Initializations
-    Ngenes = individual.ngenes
-    
-    # Propagating individuals
+    # Propagate individuals
     portfolio = environment.data / first_value * individual.genes
     
     # Summing contributions
@@ -477,7 +528,15 @@ def propagate_individual(individual, environment, name_indiv="Portfolio"):
     return None
 
 
-def evaluation_dates(environment, n_dates=10, interval_type='M'):
+#@typechecked
+#def evaluation_dates(environment: Market,
+#                     n_dates: int = 10,
+#                     interval_type: str = 'M'
+#                     ) -> Union[list, pd.PeriodIndex]:
+def evaluation_dates(environment,
+                     n_dates = 10,
+                     interval_type = 'M'
+                     ):
     """
     Produces a number of equally spaced dates
     at which the individuals will be evaluated.
@@ -506,7 +565,8 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
     """
     
     # Checks
-    assert(n_dates)
+    if n_dates <= 0:
+        raise AssertionError("Argument n_dates must be at least 1.")
     
     # Initialization
     n_ticks = environment.dims[0]
@@ -520,11 +580,15 @@ def evaluation_dates(environment, n_dates=10, interval_type='M'):
         raise IndexError("Generated dates unsatisfactory !")
     if special_dates[-1] != environment.data.index[-1]:
         raise IndexError("Generated dates unsatisfactory !")
-    
+
+    print(type(special_dates), special_dates)
     return special_dates
 
 
-def find_tick_before_eval(environment_dates, eval_date):
+@typechecked
+def find_tick_before_eval(environment_dates: list,
+                          eval_date: Union[str, datetime.date]
+                          ) -> Union[str, datetime.date]:
     """
     Returns the tick before the evaluation date.
     
@@ -550,9 +614,14 @@ def find_tick_before_eval(environment_dates, eval_date):
         if d == eval_date:
             return d-1
     raise ValueError("No date was found.")
-    
-    
-def limited_propagation(population, environment, start, end):
+
+
+#@typechecked
+def limited_propagation(population,
+                        environment: Market,
+                        start: Union[str, datetime.date],
+                        end: Union[str, datetime.date]
+                        ) -> None:
     """
     Propagates the population over time, like `propagate_individual`,
     but only for a limited period of time and several individuals.
@@ -574,8 +643,8 @@ def limited_propagation(population, environment, start, end):
       
     Returns
     -------
-    DataFrame
-      
+    None
+      None
     
     Notes
     -----
@@ -607,7 +676,10 @@ def limited_propagation(population, environment, start, end):
     return None
 
 
-def compute_return(returns, weights):
+@typechecked
+def compute_return(returns: Union[list, np.ndarray],
+                   weights: Union[list, np.ndarray]
+                   ) -> float:
     """
     Computes the return from a list of returns of assets
     and a list of arbitrary weights.
@@ -637,7 +709,10 @@ def compute_return(returns, weights):
     return weights.T @ returns
     
 
-def compute_vol(cov_matrix, weights):
+@typechecked
+def compute_vol(cov_matrix: Union[list, np.ndarray, pd.DataFrame],
+                weights: Union[list, np.ndarray, pd.Series, pd.DataFrame]
+                ) -> float:
     """
     Computes the volatility from a covariance matrix of assets
     and a list of arbitrary weights.
@@ -666,8 +741,14 @@ def compute_vol(cov_matrix, weights):
     return (weights.T @ cov_matrix @ weights)**0.5
 
 
-def fitness_calculation(population, environment, current_eval_date, next_eval_date,
-                        lamb=0.5, fitness_method="Last Return and Vol"):
+#@typechecked
+def fitness_calculation(population,
+                        environment: Market,
+                        current_eval_date: Union[str, datetime.date],
+                        next_eval_date: Union[str, datetime.date],
+                        lamb: float=0.5,
+                        fitness_method: str="Last Return and Vol"
+                        ) -> list:
     """
     Computes the fitness of each individual in a population.
     
@@ -684,7 +765,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
     ----------
     population : Population
       Population to evolve.
-    environment : DataFrame
+    environment : pd.DataFrame
       Environment which serves as a basis for propagation.
     current_eval_date : Period date
       Present date on which we evaluate the individuals.
@@ -741,7 +822,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(covmat, weights))
 
         # Normalizing
         normalized_fitness_from_return = fitness_from_return / sum(fitness_from_return)
@@ -771,7 +852,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(weights, covmat))
 
         # Combining the 2 fitnesses
         fitness_value = [ lamb * fitness_from_return[x]
@@ -798,7 +879,7 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
             # Taking the weights for an output portfolio
             weights = pop.loc[x]
             # Computing fitness from volatility
-            fitness_from_vol.append(portfolio_vol(weights, covmat))
+            fitness_from_vol.append(compute_vol(weights, covmat))
 
         # Combining the 2 fitnesses
         fitness_value = [fitness_from_return[x] / fitness_from_vol[x]  for x in range(len(fitness_from_return))]
@@ -814,8 +895,14 @@ def fitness_calculation(population, environment, current_eval_date, next_eval_da
 
 # VISUALIZATION METHODS
 
-def visualize_portfolios_1(market, propagation, evaluation_dates,
-                           dims=(10,5), xlim=None, ylim=None):
+@typechecked
+def visualize_portfolios_1(market: Market,
+                           propagation: pd.DataFrame,
+                           evaluation_dates: Union[list, pd.PeriodIndex],
+                           dims: (float, float) = (10, 5),
+                           xlim: float = None,
+                           ylim: float = None,
+                           ) -> None:
     """
     Allows a quick visualization of the market,
     some sparse individuals, and the evaluation dates.
@@ -830,9 +917,9 @@ def visualize_portfolios_1(market, propagation, evaluation_dates,
       Dates at which we want to evaluate the individuals.
     dims : (float, float)
       (Optional) Dimensions of the plot.
-    xlim : (float, float)
+    xlim : float
       (Optional) Range in x.
-    ylin : (float, float)
+    ylim : float
       (Optional) Range in y.
     
     Returns
@@ -862,28 +949,36 @@ def visualize_portfolios_1(market, propagation, evaluation_dates,
     return None
 
 
-def visualize_portfolios_2(market, marketcap, propagation, evaluation_dates,
-                           dims=(10,5), xlim=None, ylim=None, savefile=False,
-                           namefile="Result.png"):
+@typechecked
+def visualize_portfolios_2(market: pd.DataFrame,
+                           marketcap: pd.Series,
+                           propagation: pd.DataFrame,
+                           evaluation_dates: list,
+                           dims: (float, float) = (10, 5),
+                           xlim: float = None,
+                           ylim: float = None,
+                           savefile: bool = False,
+                           namefile: str="Result.png"
+                           ) -> None:
     """
     Allows a quick visualization of market,
     some sparse individuals, and the evaluation dates.
     
     Parameters
     ----------
-    market : DataFrame
+    market : pd.DataFrame
       Market from which we extract data about assets (i.e. genes).
-    marketcap : Panda.Series
+    marketcap : pd.Series
       Market capitalization of the assets.
-    propagation : DataFrame
+    propagation : pd.DataFrame
       Propagation of individuals over time.
     evaluation_dates : List of Period dates
       Dates at which we want to evaluate the individuals.
     dims : (float, float)
       (Optional) Dimensions of the plot.
-    xlim : (float, float)
+    xlim : float
       (Optional) Range in x.
-    ylin : (float, float)
+    ylim : float
       (Optional) Range in y.
     savefile : bool
       Option to save the plot.
@@ -938,8 +1033,14 @@ def visualize_portfolios_2(market, marketcap, propagation, evaluation_dates,
     return None
 
 
-def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
-                            savefile=False, namefile="Allocation_Distribution.png"):
+@typechecked
+def show_allocation_distrib(step: int,
+                            saved_gens: pd.DataFrame,
+                            eval_dates: list,
+                            n_bins: int=50,
+                            savefile: bool=False,
+                            namefile: str="Allocation_Distribution.png"
+                            ) -> None:
     """
     Plots the distribution of saved generations (including elites and individuals)
     for a certain step of the loop that ran in `Genetic_Portfolio_Routine`.
@@ -968,10 +1069,6 @@ def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
       None
     """
     
-    # Checks
-    assert(isinstance(step, int))
-    assert(isinstance(n_bins, int))
-    
     # Initialization
     nloops = len(saved_gens)-1
     tmp = (saved_gens[step].sum() / saved_gens[step].shape[0]).tolist()
@@ -993,7 +1090,13 @@ def show_allocation_distrib(step, saved_gens, eval_dates, n_bins=50,
     return None
 
 
-def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.png"):
+@typechecked
+def config_4n(n: (int, int, int, int),
+              market: Market,
+              vix: pd.DataFrame,
+              savefile: bool=False,
+              namefile: str="VIX_derived_quantities.png"
+              ) -> None:
     """
     Plots the evaluation dates, ndays, mutation rate and fitness lambda
     as computed from the Volatility Index (VIX) and 4 structure numbers.
@@ -1110,8 +1213,13 @@ def config_4n(n, market, vix, savefile=False, namefile="VIX_derived_quantities.p
     return None
 
 
-def plot_diff_GenPort_CW(saved_propags, market_CW, eval_dates,
-                         savefile=False, namefile="ResultDifference.png"):
+@typechecked
+def plot_diff_GenPort_CW(saved_propags: pd.DataFrame,
+                         market_CW: pd.DataFrame,
+                         eval_dates: list,
+                         savefile: bool=False,
+                         namefile: str="ResultDifference.png"
+                         ) -> None:
     """
     Computes and plots the difference between the portfolios
     of the genetic algorithm and the Cap-Weighted Portfolio.
@@ -1170,8 +1278,13 @@ def plot_diff_GenPort_CW(saved_propags, market_CW, eval_dates,
     return None
 
 
-def plot_asset_evol(n, eval_dates, saved_gens,
-                    savefile=False, namefile="asset_evol.png"):
+@typechecked
+def plot_asset_evol(n: int,
+                    eval_dates: list,
+                    saved_gens: pd.DataFrame,
+                    savefile: bool=False,
+                    namefile: str="asset_evol.png"
+                    ) -> None:
     """
     Plots the evolution of asset allocations over time.
     
@@ -1191,6 +1304,7 @@ def plot_asset_evol(n, eval_dates, saved_gens,
     Returns
     -------
     None
+      None
     """
     
     # Checks
