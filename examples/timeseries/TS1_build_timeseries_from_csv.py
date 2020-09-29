@@ -15,12 +15,12 @@ ts1 = build_from_csv(filepath_or_buffer='https://raw.githubusercontent.com/selva
 print()
 print("INFORMATION ABOUT THE TIME SERIES:")
 print("==================================")
-print("Starting date: \t\t", ts1.start_utc)
-print("Ending date: \t\t", ts1.end_utc)
-print("Number of values: \t", ts1.nvalues)
-print("Frequency of data: \t", ts1.freq)
-print("Unit of data: \t\t", ts1.unit)
-print("Name: \t\t\t", ts1.name)
+print(f"Starting date: \t\t {ts1.start_utc}")
+print(f"Ending date: \t\t {ts1.end_utc}")
+print(f"Number of values: \t {ts1.nvalues}")
+print(f"Frequency of data: \t {ts1.freq}")
+print(f"Unit of data: \t\t {ts1.unit}")
+print(f"Name: \t\t\t {ts1.name}")
 print()
 
 # Plot it
