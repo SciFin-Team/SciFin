@@ -406,7 +406,7 @@ def moving_average(start_date: Union[str, datetime.date],
       Name or nickname of the series.
     verbose : bool
       Verbose option.
-
+    
     Returns
     -------
     TimeSeries
@@ -452,6 +452,7 @@ def moving_average(start_date: Union[str, datetime.date],
         for q in range(Q):
             V += coeffs[q]**2
         V *= sigma**2
+
         print(f"The expected value for this MA({str(Q)}) model is: {str(cst)}")
         print(f"The estimation of the variance for this MA({str(Q)}) model is: {str(V)}" + \
               f" , i.e. a standard deviation of: {str(np.sqrt(V))} \n")

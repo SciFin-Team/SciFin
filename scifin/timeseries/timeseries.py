@@ -145,7 +145,7 @@ class Series:
 
     def get_start_date_local(self) -> datetime.date:
         """
-        Returns the attribute UTC start date in local time zone defined by attribute timezine.
+        Returns the attribute UTC start date in local time zone defined by attribute timezone.
         """
 
         start_tmp = datetime.strptime(str(self.start_utc), fmt).astimezone(self.timezone)
@@ -155,7 +155,7 @@ class Series:
     
     def get_end_date_local(self) -> datetime.date:
         """
-        Returns the attribute UTC end date in local time zone defined by attribute timezine.
+        Returns the attribute UTC end date in local time zone defined by attribute timezone.
         """
 
         end_tmp = datetime.strptime(str(self.end_utc), fmt).astimezone(self.timezone)
@@ -423,7 +423,8 @@ class TimeSeries(Series):
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.3, hspace=0)
         title2 = "Distribution"
         plt.gca().set(title=title2, xlabel=ylabel, ylabel="Hits")
-        
+        plt.show()
+
         return None
     
     
@@ -464,7 +465,7 @@ class TimeSeries(Series):
             tmp_name = " "
         else:
             tmp_name = self.name
-        title = "Lag plot of time series" + tmp_name
+        title = "Lag plot of time series " + tmp_name
         plt.gca().set(title=title, xlabel="x(t)", ylabel="x(t+"+str(lag)+")")
         plt.show()
         
@@ -930,8 +931,10 @@ class TimeSeries(Series):
         # General case
         assert(l < data.shape[0])
         shifted_data = data.shift(l)
-        numerator = np.mean((data - data.mean()) * (shifted_data - shifted_data.mean()))
-        denominator = data.std() * shifted_data.std()
+        mu = data.mean()
+        sigma = data.std()
+        numerator = np.mean((data - mu) * (shifted_data - mu))
+        denominator = sigma**2
         
         return numerator / denominator
     
@@ -998,7 +1001,9 @@ class TimeSeries(Series):
         and send back a new time series.
         """
         new_data = self.data[new_start:new_end]
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
@@ -1010,7 +1015,9 @@ class TimeSeries(Series):
         Method that adds a constant to the time series.
         """
         new_data = self.data + cst
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
@@ -1022,7 +1029,9 @@ class TimeSeries(Series):
         Method that multiplies the time series by a constant.
         """
         new_data = self.data * cst
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        if name is None:
+            name = self.name
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
@@ -1036,9 +1045,14 @@ class TimeSeries(Series):
         according to linear combination:
         factor1 * current_ts + factor2 * other_ts.
         """
+        # Checks
+        if (self.unit != other_ts.unit):
+            raise AssertionError("Time series to combine must have same unit.")
+
+        # Compute linear combination
         new_data = factor1 * np.array(self.data.values) + factor2 * np.array(other_ts.data.values)
         new_data = pd.Series(index=self.data.index, data=new_data)
-        new_ts = TimeSeries(data=new_data, tz=self.tz)
+        new_ts = TimeSeries(data=new_data, tz=self.tz, unit=self.unit, name=name)
         
         return new_ts
     
@@ -1088,7 +1102,11 @@ class TimeSeries(Series):
         if normalize==True:
             sum_vals = np.array(func_vals).sum()
             func_vals /= sum_vals
-        
+
+        # Dealing with name
+        if name is None:
+            name = self.name + str('-Convolved')
+
         # Generate convolved values
         convolved_vals = np.convolve(func_vals, ts_vals.flatten(), mode='same')
         if name is None:
@@ -1380,7 +1398,7 @@ class TimeSeries(Series):
         # Extract the linear trend
         lin_trend_y = model.predict(X)
         lin_trend_data = pd.Series(index=data.index, data=lin_trend_y)
-        lin_trend_ts = TimeSeries(lin_trend_data, tz=self.tz)
+        lin_trend_ts = TimeSeries(lin_trend_data, tz=self.tz, name=self.name+"-Linear")
         
         # Remove the linear trend to the initial time series
         nonlin_y = y - lin_trend_y
@@ -1391,7 +1409,7 @@ class TimeSeries(Series):
             polyn_model.fit(X, nonlin_y)
             polyn_component_y = polyn_model.predict(X)
             polyn_comp_data = pd.Series(index=data.index, data=polyn_component_y)
-            polyn_comp_ts = TimeSeries(polyn_comp_data, tz=self.tz)
+            polyn_comp_ts = TimeSeries(polyn_comp_data, tz=self.tz, name=self.name+"-Polynomial")
         
         # Generate the resting part time series
         if polyn_order is not None:
@@ -1399,7 +1417,7 @@ class TimeSeries(Series):
         else:
             rest_y = nonlin_y
         rest_data = pd.Series(index=data.index, data=rest_y)
-        rest_ts = TimeSeries(rest_data, tz=self.tz)
+        rest_ts = TimeSeries(rest_data, tz=self.tz, name=self.name+"-Rest")
         
         # Extracting seasonality
         if extract_seasonality==True:
@@ -1434,12 +1452,12 @@ class TimeSeries(Series):
             for i in range(len(rest_y)):
                 seasonal_y.append(t_avg[i%P])
             seasonal_data = pd.Series(index=data.index, data=seasonal_y)
-            seasonal_ts = TimeSeries(seasonal_data, tz=self.tz)
+            seasonal_ts = TimeSeries(seasonal_data, tz=self.tz, name=self.name+"-Seasonal")
 
             # Build the residue time series
             residue_y = rest_y - seasonal_y
             residue_data = pd.Series(index=data.index, data=residue_y)
-            residue_ts = TimeSeries(residue_data, tz=self.tz)
+            residue_ts = TimeSeries(residue_data, tz=self.tz, name=self.name+str("-Residue"))
         
         # Return results
         if polyn_order is not None:
@@ -1530,14 +1548,15 @@ class TimeSeries(Series):
         # Plot the result
         if plotting==True:
             plt.figure(figsize=figsize, dpi=dpi)
-            plt.plot(self.data.index, y_mean, color='k', lw=3)
-            plt.plot(self.data.index, y_std_m, color='k')
-            plt.plot(self.data.index, y_std_p, color='k')
+            plt.plot(self.data.index, y_mean, color='k', lw=3, label="Mean")
+            plt.plot(self.data.index, y_std_m, color='k', label="Mean - 1-sigma")
+            plt.plot(self.data.index, y_std_p, color='k', label="Mean + 1-sigma")
             plt.fill_between(self.data.index, y_std_m, y_std_p, alpha=0.5, color='gray')
-            plt.plot(self.data.index, self.data.values, color='r')
+            plt.plot(self.data.index, self.data.values, color='r', label=self.name)
             title = "Gaussian Process Regression: \n Time series " \
                     + " from " + str(self.start_utc)[:10] + " to " + str(self.end_utc)[:10]
             plt.gca().set(title=title, xlabel="Date", ylabel="Value")
+            plt.legend()
             plt.show()
         
         # Returning the time series
@@ -2140,7 +2159,7 @@ def linear_tvalue(data: Union[list, np.ndarray, pd.Series]) -> float:
     
     # Checks
     if not isinstance(data, list) and not isinstance(data, np.ndarray) and not isinstance(data, pd.Series):
-        raise AssertionError("data must be a list, a numpy.ndarray or a pandas.Series.")
+        raise TypeError("Argument data must be a list, a numpy.ndarray or a pandas.Series.")
     
     # Initializations
     if isinstance(data, list):
@@ -2306,7 +2325,7 @@ def imbalance(tick_imb_ts: TimeSeries, ts: TimeSeries=None, name: str=None) -> T
     
     # Checks
     if not isinstance(tick_imb_ts, TimeSeries):
-        raise AssertionError('tick_imb_ts must be a TimeSeries.')
+        raise TypeError('tick_imb_ts must be a TimeSeries.')
     assert(tick_imb_ts.data.values[1:].max()==1) # First value is NaN
     assert(tick_imb_ts.data.values[1:].min()==-1) # First value is NaN
     if ts is not None:
@@ -2404,7 +2423,7 @@ def multi_plot(Series: list, figsize: (float, float) = (12, 5), dpi: float=100, 
             
         # If the series is a TimeSeries
         elif Series[i].type == 'TimeSeries':
-            plt.plot(Series[i].data.index, Series[i].data.values)
+            plt.plot(Series[i].data.index, Series[i].data.values, label=Series[i].name)
         
     # Make it cute
     if title is None:
@@ -2414,6 +2433,7 @@ def multi_plot(Series: list, figsize: (float, float) = (12, 5), dpi: float=100, 
     else:
         xlabel = 'Date (' + Series[0].tz + ')'
     plt.gca().set(title=title, xlabel=xlabel, ylabel="Value")
+    plt.legend()
     plt.show()
         
     return None
