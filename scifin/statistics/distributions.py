@@ -7,13 +7,17 @@ from typing import TypeVar, Generic, Union
 
 # Third party imports
 import numpy as np
+import pandas as pd
 from scipy.special import erf, erfinv, gamma, zeta, gammaincc
 from typeguard import typechecked
+from sklearn.neighbors import KernelDensity
+from scipy.optimize import minimize
+
 
 # Local application imports
 # /
 
-#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+# ---------#---------#---------#---------#---------#---------#---------#---------#---------#
 
 
 @typechecked
@@ -1900,48 +1904,146 @@ class Binomial(Distribution):
         check_type_k(k)
         k = initialize_input(k)
         N = len(k)
-            
+
         # Check if k's are consecutive
         ks_consecutive = True
-        for i in range(N-1):
-            if (k[i+1] != k[i]+1):
+        for i in range(N - 1):
+            if (k[i + 1] != k[i] + 1):
                 ks_consecutive = False
                 break
-        
+
         # But if there is only one element
         # Consider k's not-consecutive case
-        if N==1:
+        if N == 1:
             ks_consecutive = False
-        
+
         # Compute the list of elements to sum
         t = []
         k_range = np.floor(k)
-        if ks_consecutive==True:
-            tmp_sum = sum([ np.math.factorial(self.n) \
-                           / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
-                           * np.power(self.p,i) * np.power(1-self.p,self.n-i) 
-                            for i in range(int(np.floor(k_range[0]+1))) ])
+        if ks_consecutive == True:
+            tmp_sum = sum([np.math.factorial(self.n) \
+                           / (np.math.factorial(i) * np.math.factorial(self.n - i)) \
+                           * np.power(self.p, i) * np.power(1 - self.p, self.n - i)
+                           for i in range(int(np.floor(k_range[0] + 1)))])
             t.append(tmp_sum)
-            for i in range(int(k_range[0]+1),int(k_range[-1]+1),1):
+            for i in range(int(k_range[0] + 1), int(k_range[-1] + 1), 1):
                 tmp_sum += np.math.factorial(self.n) \
-                           / (np.math.factorial(i) * np.math.factorial(self.n-i)) \
-                           * np.power(self.p,i) * np.power(1-self.p,self.n-i)
+                           / (np.math.factorial(i) * np.math.factorial(self.n - i)) \
+                           * np.power(self.p, i) * np.power(1 - self.p, self.n - i)
                 t.append(tmp_sum)
         else:
             for i in range(N):
-                tmp_sum = sum([ np.math.factorial(self.n) 
-                            / (np.math.factorial(i) * np.math.factorial(self.n-i)) 
-                            * np.power(self.p,i) * np.power(1-self.p,self.n-i) 
-                            for i in range(int(np.floor(k_range[i]+1))) ])
+                tmp_sum = sum([np.math.factorial(self.n)
+                               / (np.math.factorial(i) * np.math.factorial(self.n - i))
+                               * np.power(self.p, i) * np.power(1 - self.p, self.n - i)
+                               for i in range(int(np.floor(k_range[i] + 1)))])
                 t.append(tmp_sum)
-        
+
         # Completing the calculation
         cdf = np.array(t)
 
         # Return
-        if len(cdf)==1:
+        if len(cdf) == 1:
             return cdf[0]
         else:
             return cdf
-    
-#---------#---------#---------#---------#---------#---------#---------#---------#---------#
+
+
+#@typechecked()
+class MarcenkoPastur(Distribution):
+
+    def __init__(self, sigma: float, lambda_: float, name: str = "") -> None:
+        """
+        Initializes the distribution.
+        """
+        # Checks
+        super().__init__(name)
+
+        # Type of distribution
+        self.type = 'Marcenko-Pastur'
+        self.support = 'R'
+
+        # parameters
+        self.sigma = sigma
+        self.lambda_ = lambda_
+
+    @property
+    def _initial_params(self):
+        return [1, 0.5]
+
+    def _update_params(self, params):
+        """
+        Helper method to update the distribution parameters given a list of values
+        """
+        self.sigma = params[0]
+        self.lambda_ = params[1]
+
+    def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
+        """
+        Implements the Probability Density Function (PDF)
+        for the Marcenko-Pastur distribution.
+        """
+
+        lambda_minus = self.sigma ** 2 * (1 - self.lambda_ ** .5) ** 2
+        lambda_plus = self.sigma ** 2 * (1 + self.lambda_ ** .5) ** 2
+
+        # TODO: fix this to output zero if x is not in the [lambda_minus, lambda_plus] interval
+        pdf = ((lambda_plus - x) * (x - lambda_minus)) ** .5 / (2 * self.lambda_ * np.pi * self.sigma ** 2 * x)
+
+        if len(pdf) == 1:
+            return pdf[0]
+        else:
+            return pdf
+
+    def fit(self, X: np.ndarray, n_pts: int = 1000, kernel: str = "gaussian",
+            bandwidth: float = 2, initial_params=None) -> None:
+
+        # NOTE: Maybe min and max should be parameters of the fit function, the interval on which one want to fit
+        # Or we can infer it from the data provided for the fit
+        x_min = self.sigma ** 2 * (1 - self.lambda_ ** .5) ** 2 # X.min()
+        x_max = self.sigma ** 2 * (1 + self.lambda_ ** .5) ** 2 # X.max()
+        sampling_space = np.linspace(x_min, x_max, n_pts)
+
+        if len(X.shape) == 1:
+            X = X.reshape(-1, 1)
+
+        kde = KernelDensity(kernel=kernel, bandwidth=bandwidth)
+        kde.fit(X)
+
+        # Derive the probability of observations
+        #if len(sampling_space) == 1:
+        sampling_space = sampling_space.reshape(-1, 1)
+        log_density = kde.score_samples(sampling_space)
+        empirical_pdf = np.exp(log_density)
+
+        # define a closure that will be used as the optimization callback
+        def _loss(*args):
+            self._update_params(list(args[0]))
+            theoretical_pdf = self.pdf(sampling_space)
+
+            loss = np.sum((empirical_pdf - theoretical_pdf) ** 2)
+            print(loss)
+            return loss
+
+        # from marcenko_pastur_fit_params
+        # TODO: check initialization is consistent with the definitions
+        # It seems to me that lambda_ = ratio but lambda = N/T = n_features / n_obs ?
+        # Initializations
+        # ratio = n_obs / n_features
+
+        # Minimize loss
+        x0 = self._initial_params
+        if initial_params is not None:
+            x0 = initial_params
+        out = minimize(_loss, x0=x0)
+
+        if out['success']:
+            sigma = out['x'][0]
+            print(out['x'])
+            self._update_params(out['x'])
+        else:
+            # TODO: Throw an exception
+            print(out)
+
+
+# ---------#---------#---------#---------#---------#---------#---------#---------#---------#
