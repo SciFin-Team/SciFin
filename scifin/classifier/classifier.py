@@ -343,10 +343,6 @@ def kmeans_base_clustering(corr: Union[np.ndarray, pd.DataFrame],
       https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans
     """
 
-    # Checks
-    if not isinstance(max_num_clusters, int):
-        raise TypeError("max_num_clusters must be integer.")
-
     # Initializations
     corr = pd.DataFrame(data=corr, index=names_features, columns=names_features)
     silh_score = pd.Series()
@@ -978,7 +974,7 @@ def feature_importance_mdi(classifier: BaggingClassifier,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Fit
     fit = classifier.fit(X,y)
     
@@ -1040,7 +1036,7 @@ def feature_importance_mda(classifier: BaggingClassifier,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Generate K-fold cross validation
     cv_gen = KFold(n_splits=n_splits)
     scr0 = pd.Series()

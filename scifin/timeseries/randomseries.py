@@ -189,7 +189,7 @@ def auto_regressive(start_date: Union[str, datetime.date],
     # Compute theoretical expectation value
     if verbose:
         E = cst / (1 - sum(coeffs))
-        print("Under stationarity assumption, the expected value for this AR({str(P)}) model is: {str(E)} \n")
+        print(f"Under stationarity assumption, the expected value for this AR({str(P)}) model is: {str(E)} \n")
     
     # Combine them into a time series
     df = pd.DataFrame(index=data_index, data=x)
@@ -406,7 +406,7 @@ def moving_average(start_date: Union[str, datetime.date],
       Name or nickname of the series.
     verbose : bool
       Verbose option.
-    
+
     Returns
     -------
     TimeSeries

@@ -195,7 +195,7 @@ def denoise_covariance(cov: np.ndarray,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Initialization
     n_features = cov.shape[0]
     
@@ -257,7 +257,7 @@ def get_subcovariance(n_features: int,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Initializations
     rng = check_random_state(random_state)
     
@@ -305,7 +305,7 @@ def random_block_covariance(n_features: int,
       Function adapted from "Machine Learning for Asset Managers",
       Marcos López de Prado (2020).
     """
-    
+
     # Initializations
     rng = check_random_state(random_state)
     
