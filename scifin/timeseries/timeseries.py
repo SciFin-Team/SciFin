@@ -4,7 +4,7 @@
 
 # Standard library imports
 from datetime import datetime
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union
 import warnings
 
 # Third party imports
@@ -2349,7 +2349,12 @@ def imbalance(tick_imb_ts: TimeSeries, ts: TimeSeries=None, name: str=None) -> T
 
 
 @typechecked
-def multi_plot(Series: list, figsize: (float, float) = (12, 5), dpi: float=100, title: str=None) -> None:
+def multi_plot(Series: list,
+               figsize: (float, float) = (12, 5),
+               dpi: float = 100,
+               title: Optional[str] = None,
+               legend: bool = False
+               ) -> None:
     """
     Plots multiple time series together.
     
@@ -2433,7 +2438,8 @@ def multi_plot(Series: list, figsize: (float, float) = (12, 5), dpi: float=100, 
     else:
         xlabel = 'Date (' + Series[0].tz + ')'
     plt.gca().set(title=title, xlabel=xlabel, ylabel="Value")
-    plt.legend()
+    if legend is True:
+        plt.legend()
     plt.show()
         
     return None

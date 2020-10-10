@@ -4,10 +4,12 @@
 
 # Standard library imports
 from datetime import datetime
-from typing import Union
+import itertools
+import multiprocessing as mp
+from typing import Optional, Union
 
 # Third party imports
-# from IPython.display import display, clear_output
+from IPython.display import display, clear_output
 import numpy as np
 import pandas as pd
 import pandas_datareader as pdr
@@ -42,11 +44,59 @@ def get_sp500_tickers() -> list:
 
 
 @typechecked
+def call_yahoo_finance(arguments: (Union[str, list], str, Union[str, datetime.date], Union[str, datetime.date])
+                       ) -> Union[pd.Series, pd.DataFrame, None]:
+    """
+    Get data from Yahoo, either processing one tick at a time, or a list of them (for multi-processing).
+
+    Parameters
+    ----------
+    arguments :
+      All following arguments packed together:
+        - assets : str
+          Ticker name we want to extract from Yahoo Finance.
+        - feature : str
+          The feature name among 'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.
+        - start_date : str or datetime
+          The start date of extraction.
+        - end_date : str or datetime
+          The end date of extraction.
+
+    Returns
+    -------
+    pd.Series or None for single asset call, pd.DataFrame for multi-assets call.
+      Data from Yahoo Finance either in the form of a Pandas Series or a Pandas DataFrame.
+    """
+
+    # Initializations
+    (assets, feature, start_date, end_date) = arguments
+
+    if isinstance(assets, str):
+        try:
+            resu_call = pdr.get_data_yahoo(assets, start=start_date, end=end_date)[feature]
+            return resu_call
+        except:
+            return None
+    else:
+        imported_data = pd.DataFrame(data=None, columns=assets)
+        for i in range(len(assets)):
+            try:
+                resu_call = pdr.get_data_yahoo(assets[i], start=start_date, end=end_date)[feature]
+                imported_data[assets[i]] = resu_call
+            except:
+                print(f"Data for {assets[i]} could not be imported.")
+        return imported_data
+
+
+@typechecked
 def get_assets_from_yahoo(list_assets: list,
                           feature: str,
                           start_date: Union[str, datetime.date],
                           end_date: Union[str, datetime.date],
-                          name: str=""):
+                          name: str = "",
+                          n_proc: Optional[int] = None,
+                          verbose: bool = False
+                          ) -> simuldata.Market:
     """
     Extracts values associated to a feature for a list of assets
     between 2 dates, using Yahoo Finance data.
@@ -61,11 +111,15 @@ def get_assets_from_yahoo(list_assets: list,
       The start date of extraction.
     end_date : str or datetime
       The end date of extraction.
+    n_proc : int
+      Number of processors used in multi-processing.
+    verbose : bool
+      Verbose option.
     
     Returns
     -------
     Market
-      A market made of timeseries having same index and distinctive names.
+      A market made of time series having same index and distinctive names.
     
     Raises
     ------
@@ -93,28 +147,50 @@ def get_assets_from_yahoo(list_assets: list,
         'High', 'Low', 'Open', 'Close', 'Volume', 'Adj Close'.")
     
     # Sort list
-    listassets = np.sort(list_assets)
+    sorted_assets = list(np.sort(list_assets))
     
     # Initialization
-    assets = pd.DataFrame(data=None, columns=listassets)
-    N = len(listassets)
+    N = len(sorted_assets)
     counter = 1
-    
-    # Make DataFrame
-    for i in range(N):
-        # print(i)
-        
-        # Printing status of execution
-        # clear_output(wait=True)
-        # display("Running... " + str(int(counter/N*100)) + '%')
-        print("Running... " + str(int(counter/N*100)) + '%')
-        counter += 1
-        
-        try:
-            tmp = pdr.get_data_yahoo(listassets[i], start=start_date, end=end_date)[feature]
-            assets[listassets[i]] = tmp
-        except:
-            print(listassets[i], " could not be imported.")
+
+    # Make a DataFrame with all assets data (when found)
+    # With multi-processing
+    if n_proc is not None:
+        assets = pd.DataFrame(data=None, columns=None)
+
+        # Prepare parts for multi-processing (if requested)
+        parts = np.ceil( np.linspace(0, N, min(n_proc, N)+1) ).astype(int)
+        jobs = []
+        for i in range(1, len(parts)):
+            jobs.append(sorted_assets[parts[i-1]:parts[i]])
+
+        # Do the processing
+        pool = mp.Pool(processes = n_proc)
+        arguments = [i for i in itertools.zip_longest(jobs, itertools.repeat(feature, len(jobs))
+                                                          , itertools.repeat(start_date, len(jobs))
+                                                          , itertools.repeat(end_date, len(jobs)))]
+        outputs = pool.map(call_yahoo_finance, arguments)
+
+        # Combine results from different processors
+        for out_ in outputs:
+            assets = pd.concat([assets, out_], axis=1, sort=False)
+        pool.close()
+        pool.join()
+
+    # Without multi-processing (slow for large amount of assets)
+    else:
+        assets = pd.DataFrame(data=None, columns=sorted_assets)
+
+        for i in range(N):
+            # Print status of execution
+            if verbose:
+                clear_output(wait=True)
+                display("Running... " + str(int(counter/N*100)) + '%')
+                counter += 1
+            # Get data from Yahoo Finance
+            call_resu = call_yahoo_finance((sorted_assets[i], feature, start_date, end_date))
+            if call_resu is not None:
+                assets[sorted_assets[i]] = call_resu
 
     # Make Market
     market = simuldata.Market(df=assets, name=name)
