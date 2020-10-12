@@ -468,13 +468,13 @@ class TestMarcenkoPastur:
                                                              e_val=np.diag(X),
                                                              bwidth=0.01)
 
-        print(sigma1)
+        assert sigma1 == 0.9917039380076902
 
-        mp_dist = dis.MarcenkoPastur(0.5, 0.1)
-        #X2 = np.diag(X2)
-        print(X2.shape)
-        # Should n_pts be the same as n_features??
-        mp_dist.fit(X2, n_pts=100, bandwidth=0.01, initial_params=[np.sqrt(0.5), 0.1])
+        lambda_ = n_obs0 / n_features0
+        sigma = np.sqrt(0.5)
+        mp_dist = dis.MarcenkoPastur(sigma, lambda_)
+        mp_dist.fit(X2, mp_dist.lambda_minus, mp_dist.lambda_plus,
+                    n_pts=1000, bandwidth=0.01, param_values=[sigma],
+                    param_names=["sigma"], param_bounds=[(1E-5, 1-1E-5)])
 
-        print(mp_dist.sigma)
-        print(mp_dist.lambda_)
+        assert mp_dist.sigma == 0.99999

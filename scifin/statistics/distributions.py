@@ -3,7 +3,7 @@
 # This module is for probability distributions.
 
 # Standard library imports
-from typing import TypeVar, Generic, Union
+from typing import TypeVar, Generic, Union, Tuple, Iterable
 
 # Third party imports
 import numpy as np
@@ -1966,17 +1966,21 @@ class MarcenkoPastur(Distribution):
         # parameters
         self.sigma = sigma
         self.lambda_ = lambda_
+        self.lambda_minus = self.sigma ** 2 * (1 - self.lambda_ ** .5) ** 2
+        self.lambda_plus = self.sigma ** 2 * (1 + self.lambda_ ** .5) ** 2
 
     @property
     def _initial_params(self):
         return [1, 0.5]
 
-    def _update_params(self, params):
+    def _update_params(self, param_values, param_names):
         """
         Helper method to update the distribution parameters given a list of values
         """
-        self.sigma = params[0]
-        self.lambda_ = params[1]
+        if param_names is None:
+            param_names = ["sigma"]
+        for name, value in zip(param_names, param_values):
+            setattr(self, name, value)
 
     def pdf(self, x: Union[int, float, list, np.ndarray]) -> Union[float, list, np.ndarray]:
         """
@@ -1984,24 +1988,25 @@ class MarcenkoPastur(Distribution):
         for the Marcenko-Pastur distribution.
         """
 
-        lambda_minus = self.sigma ** 2 * (1 - self.lambda_ ** .5) ** 2
-        lambda_plus = self.sigma ** 2 * (1 + self.lambda_ ** .5) ** 2
-
-        # TODO: fix this to output zero if x is not in the [lambda_minus, lambda_plus] interval
-        pdf = ((lambda_plus - x) * (x - lambda_minus)) ** .5 / (2 * self.lambda_ * np.pi * self.sigma ** 2 * x)
+        numerator = ((self.lambda_plus - x) * (x - self.lambda_minus)) ** .5
+        denominator = (2 * self.lambda_ * np.pi * self.sigma ** 2 * x)
+        pdf = numerator / denominator
+        # set to zero nan values (arising if x < lambda_minus or x > lambda_plus)
+        pdf = np.nan_to_num(pdf)
 
         if len(pdf) == 1:
             return pdf[0]
         else:
             return pdf
 
-    def fit(self, X: np.ndarray, n_pts: int = 1000, kernel: str = "gaussian",
-            bandwidth: float = 2, initial_params=None) -> None:
+    def fit(self, X: np.ndarray, x_min: float, x_max: float, n_pts: int = 1000, kernel: str = "gaussian",
+            bandwidth: float = 2, param_names: list = None, param_values: list = None,
+            param_bounds: Iterable[Tuple] = None):
 
-        # NOTE: Maybe min and max should be parameters of the fit function, the interval on which one want to fit
-        # Or we can infer it from the data provided for the fit
-        x_min = self.sigma ** 2 * (1 - self.lambda_ ** .5) ** 2 # X.min()
-        x_max = self.sigma ** 2 * (1 + self.lambda_ ** .5) ** 2 # X.max()
+        if param_names is not None and param_values is not None:
+            msg = "Length of initial parameter values and parameter names must be equal."
+            assert len(param_names) == len(param_values), msg
+
         sampling_space = np.linspace(x_min, x_max, n_pts)
 
         if len(X.shape) == 1:
@@ -2011,39 +2016,29 @@ class MarcenkoPastur(Distribution):
         kde.fit(X)
 
         # Derive the probability of observations
-        #if len(sampling_space) == 1:
-        sampling_space = sampling_space.reshape(-1, 1)
-        log_density = kde.score_samples(sampling_space)
+        reshaped_sampling_space = sampling_space
+        if len(sampling_space.shape) == 1:
+            reshaped_sampling_space = sampling_space.reshape(-1, 1)
+        log_density = kde.score_samples(reshaped_sampling_space)
         empirical_pdf = np.exp(log_density)
 
         # define a closure that will be used as the optimization callback
         def _loss(*args):
-            self._update_params(list(args[0]))
+            self._update_params(list(args[0]), param_names)
             theoretical_pdf = self.pdf(sampling_space)
-
             loss = np.sum((empirical_pdf - theoretical_pdf) ** 2)
-            print(loss)
             return loss
-
-        # from marcenko_pastur_fit_params
-        # TODO: check initialization is consistent with the definitions
-        # It seems to me that lambda_ = ratio but lambda = N/T = n_features / n_obs ?
-        # Initializations
-        # ratio = n_obs / n_features
 
         # Minimize loss
         x0 = self._initial_params
-        if initial_params is not None:
-            x0 = initial_params
-        out = minimize(_loss, x0=x0)
+        if param_values is not None:
+            x0 = param_values
+        out = minimize(_loss, x0=x0, bounds=param_bounds)
 
         if out['success']:
-            sigma = out['x'][0]
-            print(out['x'])
-            self._update_params(out['x'])
+            self._update_params(out['x'], param_names)
         else:
-            # TODO: Throw an exception
-            print(out)
+            raise Exception("Could not fit distribution: {}".format(out['error']))
 
 
 # ---------#---------#---------#---------#---------#---------#---------#---------#---------#
