@@ -589,7 +589,7 @@ def marcenko_pastur_fit_params(n_features: int,
     """
     
     # Checks
-    assert(n_features == len(e_val))
+    assert(n_obs == len(e_val))
     
     # Initializations
     ratio = n_obs/n_features
